@@ -1,0 +1,45 @@
+*.log
+.DS_Store
+.env
+.env.backup
+.env.production
+.phpactor.json
+.phpunit.result.cache
+/.fleet
+/.idea
+/.nova
+/.phpunit.cache
+/.vscode
+/.zed
+/auth.json
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+Homestead.json
+Homestead.yaml
+Thumbs.db
+
+# Debug files
+test-parent-login.php
+debug.log
+error.log
+
+# MD files
+*.md
+!README.md
+
+# Zip files
+*.zip
+*.rar
+*.tar
+*.gz
+
+# PDF files
+*.pdf
+
+# Files folder
+/files
