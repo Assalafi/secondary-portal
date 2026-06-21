@@ -17,12 +17,18 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ClassSubjectController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\LocationController;
+use App\Http\Controllers\LandingPageController;
+use App\Http\Controllers\Student\StudentDashboardController;
+use App\Http\Controllers\Student\StudentPortalController;
+use App\Http\Controllers\Student\StudentPaymentController;
 use Illuminate\Support\Facades\Route;
 
+// Landing Page
+Route::get('/', [LandingPageController::class, 'index'])->name('landing');
+
 // Authentication Routes
-Route::get('/', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/', [AuthController::class, 'login']);
-Route::get('/login', [AuthController::class, 'showLoginForm']);
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::get('/login/{role}', [AuthController::class, 'showLoginForm'])->name('login.role');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -33,7 +39,7 @@ Route::post('/parent/register', [AuthController::class, 'registerParent'])->name
 // Public Report Verification Route
 Route::get('/verify-result/{verificationCode}', [ReportCardController::class, 'verifyResult'])->name('verify-result');
 
-// Student Portal Routes
+// Student Report Card Routes (outside main student group to avoid conflicts)
 Route::middleware(['auth'])->prefix('student')->name('student.')->group(function () {
     Route::get('/report-cards', [ReportCardController::class, 'studentReports'])->name('report-cards');
     Route::get('/report-cards/{id}', [ReportCardController::class, 'studentReportShow'])->name('report-cards.show');
@@ -400,9 +406,34 @@ Route::middleware(['auth'])->group(function () {
     
     // Student Routes
     Route::prefix('student')->name('student.')->middleware(['auth'])->group(function () {
-        Route::get('/dashboard', function () {
-            return view('student.dashboard');
-        })->name('dashboard');
+        Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
+
+        // Results
+        Route::prefix('results')->name('results.')->group(function () {
+            Route::get('/', [StudentPortalController::class, 'results'])->name('index');
+        });
+
+        // Attendance
+        Route::prefix('attendance')->name('attendance.')->group(function () {
+            Route::get('/', [StudentPortalController::class, 'attendance'])->name('index');
+        });
+
+        // Timetable
+        Route::get('/timetable', [StudentPortalController::class, 'timetable'])->name('timetable');
+
+        // Profile
+        Route::get('/profile', [StudentPortalController::class, 'profile'])->name('profile');
+        Route::post('/profile', [StudentPortalController::class, 'updateProfile'])->name('profile.update');
+        Route::post('/password', [StudentPortalController::class, 'updatePassword'])->name('password.update');
+
+        // Payments
+        Route::prefix('payments')->name('payments.')->group(function () {
+            Route::get('/', [StudentPaymentController::class, 'index'])->name('index');
+            Route::get('/{id}', [StudentPaymentController::class, 'show'])->name('show');
+            Route::get('/{id}/receipt', [StudentPaymentController::class, 'downloadReceipt'])->name('receipt');
+            Route::post('/remita/initiate', [StudentPaymentController::class, 'initiateRemita'])->name('remita.initiate');
+            Route::post('/remita/verify', [StudentPaymentController::class, 'verifyRemita'])->name('remita.verify');
+        });
     });
     
     // Parent Routes

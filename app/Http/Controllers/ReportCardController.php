@@ -624,7 +624,9 @@ class ReportCardController extends Controller
 
     public function studentReports()
     {
-        $studentId = auth()->id(); // Assuming student is logged in
+        $user = auth()->user();
+        $student = $user->student;
+        $studentId = $student ? $student->id : 0;
         $reportCards = ReportCard::where('student_id', $studentId)
             ->where('status', 'published')
             ->with(['class', 'academicSession', 'term'])
@@ -636,7 +638,9 @@ class ReportCardController extends Controller
 
     public function studentReportShow($id)
     {
-        $studentId = auth()->id();
+        $user = auth()->user();
+        $student = $user->student;
+        $studentId = $student ? $student->id : 0;
         $reportCard = ReportCard::where('id', $id)
             ->where('student_id', $studentId)
             ->where('status', 'published')

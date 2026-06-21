@@ -94,6 +94,16 @@ class StudentSeeder extends Seeder
                 'class_id' => $jss3->id,
                 'class_arm_id' => $armA->id,
                 'status' => 'Active'
+            ],
+            [
+                'first_name' => 'Mackensie',
+                'last_name' => 'Powers',
+                'middle_name' => '',
+                'email' => 'mackensie.powers@student.com',
+                'gender' => 'Female',
+                'class_id' => $ss1->id,
+                'class_arm_id' => $armA->id,
+                'status' => 'Active'
             ]
         ];
 

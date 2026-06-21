@@ -185,4 +185,12 @@ class User extends Authenticatable
     {
         return $this->role && in_array($this->role->name, ['Admin', 'Principal', 'Vice Principal', 'Teacher', 'Staff']);
     }
+
+    /**
+     * Check if user has student role.
+     */
+    public function isStudent(): bool
+    {
+        return $this->role && $this->role->name === 'Student';
+    }
 }
