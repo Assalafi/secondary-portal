@@ -5,6 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Parent Registration - {{ $globalSettings['school_name'] }}</title>
+    @if(!empty($globalSettings['favicon']))
+        <link rel="icon" type="image/x-icon" href="{{ asset('storage/' . $globalSettings['favicon']) }}">
+        <link rel="shortcut icon" href="{{ asset('storage/' . $globalSettings['favicon']) }}">
+        <link rel="apple-touch-icon" href="{{ asset('storage/' . $globalSettings['favicon']) }}">
+    @elseif(!empty($globalSettings['school_logo']))
+        <link rel="icon" href="{{ asset('storage/' . $globalSettings['school_logo']) }}">
+        <link rel="shortcut icon" href="{{ asset('storage/' . $globalSettings['school_logo']) }}">
+    @endif
     <style>
         * {
             margin: 0;

@@ -29,6 +29,7 @@ class ViewServiceProvider extends ServiceProvider
             $settings = $schoolSettings ? [
                 'school_name' => $schoolSettings->school_name ?? 'Secondary School Portal',
                 'school_logo' => $schoolSettings->school_logo,
+                'favicon' => $schoolSettings->favicon,
                 'phone_number' => $schoolSettings->phone_number ?? 'N/A',
                 'email' => $schoolSettings->email ?? 'info@school.edu',
                 'website' => $schoolSettings->website ?? 'www.school.edu',
@@ -39,6 +40,7 @@ class ViewServiceProvider extends ServiceProvider
             ] : [
                 'school_name' => 'Secondary School Portal',
                 'school_logo' => null,
+                'favicon' => null,
                 'phone_number' => 'N/A',
                 'email' => 'info@school.edu',
                 'website' => 'www.school.edu',

@@ -79,8 +79,6 @@
         }
     </style>
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ asset('assets/images/favicon.png') }}">
     <!-- Title -->
     <title>@yield('title', $globalSettings['school_name'])</title>
 </head>

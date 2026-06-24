@@ -68,7 +68,6 @@
         }
     </style>
 
-    <link rel="icon" type="image/png" href="{{ asset('assets/images/favicon.png') }}">
     <title>@yield('title', $globalSettings['school_name']) - Student Portal</title>
 </head>
 

@@ -6,6 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $globalSettings['school_name'] ?? 'School Portal' }} - Complete School Management System</title>
     <meta name="description" content="Complete school management portal for Nursery, Primary, JSS and SSS. Manage admissions, results, attendance, payments and more.">
+    @if(!empty($globalSettings['favicon']))
+        <link rel="icon" type="image/x-icon" href="{{ asset('storage/' . $globalSettings['favicon']) }}">
+        <link rel="shortcut icon" href="{{ asset('storage/' . $globalSettings['favicon']) }}">
+        <link rel="apple-touch-icon" href="{{ asset('storage/' . $globalSettings['favicon']) }}">
+    @elseif(!empty($globalSettings['school_logo']))
+        <link rel="icon" href="{{ asset('storage/' . $globalSettings['school_logo']) }}">
+        <link rel="shortcut icon" href="{{ asset('storage/' . $globalSettings['school_logo']) }}">
+    @endif
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
