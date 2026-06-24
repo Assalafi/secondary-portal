@@ -371,23 +371,43 @@ function initiatePayment() {
     .then(r => r.json())
     .then(data => {
         if (data.success) {
+            // Close the modal before opening Remita widget
+            var modal = bootstrap.Modal.getInstance(document.getElementById('paymentModal'));
+            if (modal) modal.hide();
+
             var paymentEngine = RmPaymentEngine.init({
                 key: data.data.merchantId,
                 processRrr: false,
                 transactionId: data.data.orderId,
                 channel: '',
-                extendedData: { customFields: [{ name: "merchant_id", value: data.data.merchantId }] },
-                onSuccess: function(response) { verifyPayment(data.data.orderId, response.paymentReference); },
-                onError: function(response) { alert('Payment failed. Please try again.'); resetBtn(); },
-                onClose: function() { resetBtn(); }
+                extendedData: {
+                    customFields: [
+                        { name: "merchant_id", value: data.data.merchantId },
+                        { name: "payer_name", value: '{{ Auth::user()->name }}' },
+                        { name: "payer_email", value: '{{ Auth::user()->email }}' }
+                    ]
+                },
+                onSuccess: function(response) {
+                    verifyPayment(data.data.orderId, response.paymentReference);
+                },
+                onError: function(response) {
+                    showAlert('danger', 'Payment failed. Please try again or contact the school office.');
+                    resetBtn();
+                },
+                onClose: function() {
+                    resetBtn();
+                }
             });
             paymentEngine.showPaymentWidget();
         } else {
-            alert(data.message || 'Failed to initiate payment.');
+            showAlert('danger', data.message || 'Failed to initiate payment. Please try again.');
             resetBtn();
         }
     })
-    .catch(err => { alert('An error occurred.'); resetBtn(); });
+    .catch(err => {
+        showAlert('danger', 'A network error occurred. Please check your connection and try again.');
+        resetBtn();
+    });
 
     function resetBtn() {
         btn.disabled = false;
@@ -396,6 +416,9 @@ function initiatePayment() {
 }
 
 function verifyPayment(orderId, rrr) {
+    // Show verifying state
+    showAlert('info', '<span class="spinner-border spinner-border-sm me-2"></span>Verifying payment, please wait...');
+
     fetch('{{ route("student.payments.remita.verify") }}', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
@@ -404,12 +427,25 @@ function verifyPayment(orderId, rrr) {
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            alert('Payment successful!');
-            window.location.reload();
+            showAlert('success', '<i class="ri-check-line me-1"></i>' + (data.message || 'Payment successful!'));
+            setTimeout(() => window.location.reload(), 2000);
         } else {
-            alert(data.message || 'Verification failed.');
+            showAlert('warning', data.message || 'Payment verification pending. Please check back later.');
         }
+    })
+    .catch(err => {
+        showAlert('warning', 'Could not verify payment. Please refresh the page to check your payment status.');
     });
+}
+
+function showAlert(type, message) {
+    let alertContainer = document.getElementById('paymentAlerts');
+    if (!alertContainer) {
+        alertContainer = document.createElement('div');
+        alertContainer.id = 'paymentAlerts';
+        document.querySelector('.tab-content').insertAdjacentElement('beforebegin', alertContainer);
+    }
+    alertContainer.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
 }
 </script>
 @endpush
