@@ -192,9 +192,9 @@
         <form method="POST" action="{{ route('login') }}">
             @csrf
             <div class="form-group">
-                <label class="form-label" for="email">Email or Student ID:</label>
-                <input type="email" id="email" name="email" class="form-input"
-                    placeholder="Email or Student ID:" value="{{ old('email') }}" required autofocus>
+                <label class="form-label" for="email">Email or Admission Number:</label>
+                <input type="text" id="email" name="email" class="form-input"
+                    placeholder="Enter email or admission number" value="{{ old('email') }}" required autofocus>
             </div>
 
             <div class="form-group">
@@ -215,7 +215,13 @@
             </a>
         </div>
 
-        <div style="margin-top: 30px; padding-top: 30px; border-top: 1px solid #eee;">
+        <div style="margin-top: 25px; text-align: center;">
+            <a href="{{ route('landing') }}" style="display: inline-flex; align-items: center; gap: 6px; color: #555; text-decoration: none; font-size: 14px; font-weight: 500; padding: 10px 24px; border: 1px solid #ddd; border-radius: 25px; transition: all 0.3s;">
+                ← Back to Home Page
+            </a>
+        </div>
+
+        <div style="margin-top: 25px; padding-top: 25px; border-top: 1px solid #eee;">
             <p style="font-size: 12px; color: #999;">
                 {{ $globalSettings['email'] }} | {{ $globalSettings['phone_number'] }}<br>
                 {{ $globalSettings['school_address'] }}

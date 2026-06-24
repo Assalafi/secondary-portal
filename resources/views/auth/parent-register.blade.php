@@ -339,9 +339,14 @@
             </button>
         </form>
 
-        <a href="{{ route('login') }}" class="back-link">
-            ← Back to Login
-        </a>
+        <div style="display: flex; justify-content: center; gap: 20px; margin-top: 20px; flex-wrap: wrap;">
+            <a href="{{ route('login') }}" class="back-link">
+                ← Back to Login
+            </a>
+            <a href="{{ route('landing') }}" class="back-link" style="color: #0066cc;">
+                ← Back to Home Page
+            </a>
+        </div>
     </div>
 </body>
 

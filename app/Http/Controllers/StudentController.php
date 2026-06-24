@@ -111,7 +111,7 @@ class StudentController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
-            'email' => 'required|email|unique:users,email',
+            'email' => 'nullable|email|unique:users,email',
             'date_of_birth' => 'required|date',
             'gender' => 'required|in:Male,Female',
             'state_of_origin' => 'nullable|string|max:255',
@@ -128,12 +128,18 @@ class StudentController extends Controller
             // Generate admission number
             $admissionNumber = $this->generateAdmissionNumber();
             
+            // Generate email from admission number if not provided
+            $studentEmail = $request->email ?: strtolower($admissionNumber) . '@student.portal.com';
+            
+            // Default password is the admission number (simple for students)
+            $defaultPassword = $admissionNumber;
+            
             // Create user account for student
             $studentRole = Role::where('name', 'Student')->first();
             $user = User::create([
                 'name' => $request->first_name . ' ' . $request->last_name,
-                'email' => $request->email,
-                'password' => Hash::make('password123'), // Default password
+                'email' => $studentEmail,
+                'password' => Hash::make($defaultPassword),
                 'role_id' => $studentRole ? $studentRole->id : 5,
                 'status' => 'Active'
             ]);
@@ -165,7 +171,7 @@ class StudentController extends Controller
             DB::commit();
             
             return redirect()->route('admin.students.index')
-                           ->with('success', 'Student registered successfully! Admission Number: ' . $admissionNumber);
+                           ->with('success', 'Student registered successfully! Admission No: ' . $admissionNumber . ' | Login: ' . $studentEmail . ' (or ' . $admissionNumber . ') | Password: ' . $defaultPassword);
                            
         } catch (\Exception $e) {
             DB::rollback();
@@ -591,11 +597,13 @@ class StudentController extends Controller
         try {
             // Create user account for student
             $studentRole = Role::where('name', 'Student')->first();
-            $defaultPassword = $step2Data['admission_number'] . '2024'; // StudentID + 2024 pattern
+            $admissionNo = $step2Data['admission_number'];
+            $defaultPassword = $admissionNo; // Simple: admission number is the default password
+            $studentEmail = strtolower($admissionNo) . '@student.portal.com';
             $user = User::create([
                 'name' => $step1Data['first_name'] . ' ' . $step1Data['last_name'],
-                'email' => $step2Data['admission_number'] . '@student.portal.com', // Generate email from admission number
-                'password' => Hash::make($defaultPassword), // Default password using StudentID2024 pattern
+                'email' => $studentEmail,
+                'password' => Hash::make($defaultPassword),
                 'role_id' => $studentRole ? $studentRole->id : 5,
                 'status' => 'Active'
             ]);

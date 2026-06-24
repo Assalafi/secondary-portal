@@ -28,11 +28,22 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email' => 'required|string',
             'password' => 'required|string|min:6',
         ]);
 
-        $credentials = $request->only('email', 'password');
+        $loginInput = trim($request->email);
+        $email = $loginInput;
+
+        // If input is not an email, try to find user by admission number
+        if (!filter_var($loginInput, FILTER_VALIDATE_EMAIL)) {
+            $student = Student::where('admission_no', $loginInput)->first();
+            if ($student && $student->user) {
+                $email = $student->user->email;
+            }
+        }
+
+        $credentials = ['email' => $email, 'password' => $request->password];
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();

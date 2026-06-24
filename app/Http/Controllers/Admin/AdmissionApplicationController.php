@@ -85,10 +85,14 @@ class AdmissionApplicationController extends Controller
             $studentRole = Role::where('name', 'Student')->first();
 
             // Create user account for student
+            // Login: admission number or email | Password: admission number
+            $admissionNo = $request->admission_no;
+            $studentEmail = strtolower($admissionNo) . '@student.portal.com';
+            $defaultPassword = $admissionNo;
             $user = User::create([
                 'name' => $application->full_name,
-                'email' => strtolower(str_replace(' ', '', $application->first_name) . '.' . str_replace(' ', '', $application->last_name) . '@student.com'),
-                'password' => Hash::make('password123'), // Default password
+                'email' => $studentEmail,
+                'password' => Hash::make($defaultPassword),
                 'role_id' => $studentRole->id,
                 'phone' => $application->guardian_phone,
                 'address' => $application->home_address,
@@ -147,7 +151,7 @@ class AdmissionApplicationController extends Controller
             DB::commit();
 
             return redirect()->route('admin.admissions.show', $application->id)
-                ->with('success', 'Application approved! Student has been enrolled successfully.');
+                ->with('success', 'Application approved! Student enrolled. Login: ' . $admissionNo . ' | Password: ' . $defaultPassword);
 
         } catch (\Exception $e) {
             DB::rollBack();
