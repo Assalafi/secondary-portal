@@ -8,6 +8,7 @@ use App\Models\Student;
 use App\Models\SchoolClass;
 use App\Models\ClassArm;
 use App\Models\AcademicSession;
+use App\Models\Role;
 use Illuminate\Support\Facades\Hash;
 
 class StudentSeeder extends Seeder
@@ -107,13 +108,15 @@ class StudentSeeder extends Seeder
             ]
         ];
 
+        $studentRole = Role::where('name', 'Student')->first();
+
         foreach ($studentsData as $index => $studentData) {
             // Create user account for student
             $user = User::create([
                 'name' => $studentData['first_name'] . ' ' . $studentData['last_name'],
                 'email' => $studentData['email'],
                 'password' => Hash::make('password123'),
-                'role_id' => 5, // Student role
+                'role_id' => $studentRole ? $studentRole->id : 5,
                 'status' => $studentData['status']
             ]);
 

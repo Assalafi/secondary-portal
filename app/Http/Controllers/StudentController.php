@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Models\Role;
 
 class StudentController extends Controller
 {
@@ -128,11 +129,12 @@ class StudentController extends Controller
             $admissionNumber = $this->generateAdmissionNumber();
             
             // Create user account for student
+            $studentRole = Role::where('name', 'Student')->first();
             $user = User::create([
                 'name' => $request->first_name . ' ' . $request->last_name,
                 'email' => $request->email,
                 'password' => Hash::make('password123'), // Default password
-                'role_id' => 5, // Student role
+                'role_id' => $studentRole ? $studentRole->id : 5,
                 'status' => 'Active'
             ]);
             
@@ -588,12 +590,13 @@ class StudentController extends Controller
 
         try {
             // Create user account for student
+            $studentRole = Role::where('name', 'Student')->first();
             $defaultPassword = $step2Data['admission_number'] . '2024'; // StudentID + 2024 pattern
             $user = User::create([
                 'name' => $step1Data['first_name'] . ' ' . $step1Data['last_name'],
                 'email' => $step2Data['admission_number'] . '@student.portal.com', // Generate email from admission number
                 'password' => Hash::make($defaultPassword), // Default password using StudentID2024 pattern
-                'role_id' => 5, // Student role
+                'role_id' => $studentRole ? $studentRole->id : 5,
                 'status' => 'Active'
             ]);
 
