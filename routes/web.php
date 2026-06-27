@@ -429,6 +429,7 @@ Route::middleware(['auth'])->group(function () {
         // Assignments
         Route::prefix('assignments')->name('assignments.')->group(function () {
             Route::get('/', [StudentPortalController::class, 'assignments'])->name('index');
+            Route::get('/{assignment}', [StudentPortalController::class, 'assignmentShow'])->name('show');
         });
 
         // Timetable

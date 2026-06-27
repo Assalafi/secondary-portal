@@ -45,9 +45,11 @@
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
                                         <td>
-                                            <p class="mb-0 fw-medium">{{ $assignment->title }}</p>
+                                            <a href="{{ route('student.assignments.show', $assignment) }}" class="text-decoration-none fw-medium">
+                                                {{ $assignment->title }}
+                                            </a>
                                             @if($assignment->instructions)
-                                                <small class="text-muted">{{ Str::limit($assignment->instructions, 50) }}</small>
+                                                <br><small class="text-muted">{{ Str::limit($assignment->instructions, 50) }}</small>
                                             @endif
                                         </td>
                                         <td>{{ $assignment->subject->name ?? '-' }}</td>

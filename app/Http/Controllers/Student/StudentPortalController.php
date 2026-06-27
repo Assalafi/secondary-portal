@@ -137,6 +137,25 @@ class StudentPortalController extends Controller
         return view('student.assignments.index', compact('assignments', 'student'));
     }
 
+    public function assignmentShow(Assignment $assignment)
+    {
+        $user = Auth::user();
+        $student = $user->student;
+
+        if (!$student) {
+            return redirect()->route('student.assignments.index')->with('error', 'Student profile not found.');
+        }
+
+        // Verify the assignment is for the student's class arm
+        if ($assignment->class_arm_id != $student->current_class_arm_id) {
+            return redirect()->route('student.assignments.index')->with('error', 'You do not have access to this assignment.');
+        }
+
+        $assignment->load(['subject', 'class', 'classArm', 'teacher']);
+
+        return view('student.assignments.show', compact('assignment', 'student'));
+    }
+
     // ─── Profile ───
     public function profile()
     {
