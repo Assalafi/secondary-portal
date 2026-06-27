@@ -44,6 +44,7 @@
         }
         .icon-badge.attendance { color: #10b981; border-color: #d1fae5; background: #ecfdf5; }
         .icon-badge.assignment { color: #3b82f6; border-color: #dbeafe; background: #eff6ff; }
+        .icon-badge.timetable { color: #06b6d4; border-color: #cffafe; background: #ecfeff; }
         .icon-badge.schedule { color: #f59e0b; border-color: #fef3c7; background: #fffbeb; }
         .icon-badge.score { color: #8b5cf6; border-color: #ede9fe; background: #f5f3ff; }
         .icon-badge.result { color: #ec4899; border-color: #fce7f3; background: #fdf2f8; }
@@ -80,6 +81,22 @@
                     </div>
                     <h6 class="mb-1 text-dark fw-semibold fs-18">Assignment</h6>
                     <p class="text-muted mb-0 small">Create and manage student assignments</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Timetable -->
+        <div class="col-lg-4 col-md-6">
+            <a href="{{ route('admin.academic-management.timetables.index') }}" class="text-decoration-none">
+                <div class="quick-card">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="icon-badge timetable">
+                            <i class="ri-calendar-schedule-line"></i>
+                        </div>
+                        <i class="ri-arrow-right-s-line text-muted fs-5"></i>
+                    </div>
+                    <h6 class="mb-1 text-dark fw-semibold fs-18">Timetable</h6>
+                    <p class="text-muted mb-0 small">Manage class timetables and schedules</p>
                 </div>
             </a>
         </div>
