@@ -116,13 +116,13 @@
                             <!-- Initial row -->
                             <div class="timetable-row" data-row="0">
                                 <div class="row">
-                                    <div class="col-md-3 mb-2">
+                                    <div class="col-md-4 mb-2">
                                         <label class="form-label small">Subject <span class="text-danger">*</span></label>
                                         <select class="form-select form-select-sm subject-select" name="entries[0][subject_id]" required disabled>
                                             <option value="">Select Class Arm First</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-2 mb-2">
+                                    <div class="col-md-4 mb-2">
                                         <label class="form-label small">Day <span class="text-danger">*</span></label>
                                         <select class="form-select form-select-sm" name="entries[0][day]" required>
                                             @foreach($days as $day)
@@ -130,26 +130,34 @@
                                             @endforeach
                                         </select>
                                     </div>
-                                    <div class="col-md-2 mb-2">
-                                        <label class="form-label small">Start Time <span class="text-danger">*</span></label>
-                                        <input type="time" class="form-control form-control-sm" name="entries[0][start_time]" required>
-                                    </div>
-                                    <div class="col-md-2 mb-2">
-                                        <label class="form-label small">End Time <span class="text-danger">*</span></label>
-                                        <input type="time" class="form-control form-control-sm" name="entries[0][end_time]" required>
-                                    </div>
-                                    <div class="col-md-2 mb-2">
-                                        <label class="form-label small">Room</label>
-                                        <input type="text" class="form-control form-control-sm" name="entries[0][room]" placeholder="Room">
-                                    </div>
-                                    <div class="col-md-1 mb-2">
-                                        <label class="form-label small">Teacher</label>
+                                    <div class="col-md-4 mb-2">
+                                        <label class="form-label small">Lecturer</label>
                                         <select class="form-select form-select-sm" name="entries[0][teacher_id]">
                                             <option value="">None</option>
                                             @foreach($teachers as $teacher)
                                                 <option value="{{ $teacher->id }}">{{ $teacher->name }}</option>
                                             @endforeach
                                         </select>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-3 mb-2">
+                                        <label class="form-label small">Start Time <span class="text-danger">*</span></label>
+                                        <input type="time" class="form-control form-control-sm" name="entries[0][start_time]" required>
+                                    </div>
+                                    <div class="col-md-3 mb-2">
+                                        <label class="form-label small">End Time <span class="text-danger">*</span></label>
+                                        <input type="time" class="form-control form-control-sm" name="entries[0][end_time]" required>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <label class="form-label small">Room</label>
+                                        <input type="text" class="form-control form-control-sm" name="entries[0][room]" placeholder="Room">
+                                    </div>
+                                    <div class="col-md-2 mb-2">
+                                        <label class="form-label small">&nbsp;</label>
+                                        <button type="button" class="btn btn-outline-danger btn-sm w-100 remove-row-btn">
+                                            <i class="ri-delete-bin-line"></i> Delete
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -269,40 +277,42 @@ document.getElementById('addRowBtn').addEventListener('click', function() {
     
     newRow.innerHTML = `
         <div class="row">
-            <div class="col-md-3 mb-2">
+            <div class="col-md-4 mb-2">
                 <label class="form-label small">Subject <span class="text-danger">*</span></label>
                 <select class="form-select form-select-sm subject-select" name="entries[${rowCount}][subject_id]" required ${availableSubjects.length === 0 ? 'disabled' : ''}>
                     ${subjectOptions}
                 </select>
             </div>
-            <div class="col-md-2 mb-2">
+            <div class="col-md-4 mb-2">
                 <label class="form-label small">Day <span class="text-danger">*</span></label>
                 <select class="form-select form-select-sm" name="entries[${rowCount}][day]" required>
                     ${dayOptions}
                 </select>
             </div>
-            <div class="col-md-2 mb-2">
-                <label class="form-label small">Start Time <span class="text-danger">*</span></label>
-                <input type="time" class="form-control form-control-sm" name="entries[${rowCount}][start_time]" required>
-            </div>
-            <div class="col-md-2 mb-2">
-                <label class="form-label small">End Time <span class="text-danger">*</span></label>
-                <input type="time" class="form-control form-control-sm" name="entries[${rowCount}][end_time]" required>
-            </div>
-            <div class="col-md-2 mb-2">
-                <label class="form-label small">Room</label>
-                <input type="text" class="form-control form-control-sm" name="entries[${rowCount}][room]" placeholder="Room">
-            </div>
-            <div class="col-md-1 mb-2">
-                <label class="form-label small">Teacher</label>
+            <div class="col-md-4 mb-2">
+                <label class="form-label small">Lecturer</label>
                 <select class="form-select form-select-sm" name="entries[${rowCount}][teacher_id]">
                     ${teacherOptions}
                 </select>
             </div>
-            <div class="col-md-1 mb-2">
+        </div>
+        <div class="row">
+            <div class="col-md-3 mb-2">
+                <label class="form-label small">Start Time <span class="text-danger">*</span></label>
+                <input type="time" class="form-control form-control-sm" name="entries[${rowCount}][start_time]" required>
+            </div>
+            <div class="col-md-3 mb-2">
+                <label class="form-label small">End Time <span class="text-danger">*</span></label>
+                <input type="time" class="form-control form-control-sm" name="entries[${rowCount}][end_time]" required>
+            </div>
+            <div class="col-md-4 mb-2">
+                <label class="form-label small">Room</label>
+                <input type="text" class="form-control form-control-sm" name="entries[${rowCount}][room]" placeholder="Room">
+            </div>
+            <div class="col-md-2 mb-2">
                 <label class="form-label small">&nbsp;</label>
                 <button type="button" class="btn btn-outline-danger btn-sm w-100 remove-row-btn">
-                    <i class="ri-delete-bin-line"></i>
+                    <i class="ri-delete-bin-line"></i> Delete
                 </button>
             </div>
         </div>
