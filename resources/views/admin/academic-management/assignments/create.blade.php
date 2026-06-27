@@ -65,11 +65,17 @@
                     </div>
                     <div class="col-12 col-md-6">
                         <label class="form-label">Class</label>
-                        <select name="class_id" id="classSelect" class="form-select">
-                            <option value="">All Classes</option>
+                        <select name="class_id" id="classSelect" class="form-select" onchange="loadClassArms()">
+                            <option value="">Select Class</option>
                             @foreach(\App\Models\SchoolClass::all() as $class)
                                 <option value="{{ $class->id }}" data-level="{{ $class->level }}">{{ $class->name }}</option>
                             @endforeach
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Arm</label>
+                        <select name="class_arm_id" id="armSelect" class="form-select">
+                            <option value="">All Arms</option>
                         </select>
                     </div>
                     <div class="col-md-6">
@@ -158,6 +164,32 @@ function filterClasses() {
 
     // Reset class selection
     classSelect.value = '';
+    // Reset arm selection
+    document.getElementById('armSelect').innerHTML = '<option value="">All Arms</option>';
+}
+
+function loadClassArms() {
+    const classId = document.getElementById('classSelect').value;
+    const armSelect = document.getElementById('armSelect');
+
+    if (!classId) {
+        armSelect.innerHTML = '<option value="">All Arms</option>';
+        return;
+    }
+
+    // Fetch class arms for the selected class
+    fetch(`/api/class-arms/${classId}`)
+        .then(response => response.json())
+        .then(data => {
+            armSelect.innerHTML = '<option value="">All Arms</option>';
+            data.arms.forEach(arm => {
+                armSelect.innerHTML += `<option value="${arm.id}">${arm.name}</option>`;
+            });
+        })
+        .catch(error => {
+            console.error('Error loading class arms:', error);
+            armSelect.innerHTML = '<option value="">Error loading arms</option>';
+        });
 }
 </script>
 @endpush

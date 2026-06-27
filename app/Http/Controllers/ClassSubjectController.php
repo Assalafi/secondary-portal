@@ -641,4 +641,13 @@ class ClassSubjectController extends Controller
 
         return response()->json(['classNames' => $classNames, 'groups' => $groups]);
     }
+
+    public function getClassArmsByClass($classId)
+    {
+        $classArms = ClassArm::where('school_class_id', $classId)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return response()->json(['arms' => $classArms]);
+    }
 }

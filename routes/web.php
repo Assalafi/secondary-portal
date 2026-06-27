@@ -136,7 +136,10 @@ Route::middleware(['auth'])->group(function () {
     
     // API Routes for AJAX calls
     Route::get('/api/students/all', [PaymentController::class, 'getStudents'])->middleware(['auth'])->name('api.students.all');
-    
+
+    // Class Arms API
+    Route::get('/api/class-arms/{classId}', [ClassSubjectController::class, 'getClassArmsByClass'])->middleware(['auth'])->name('api.class-arms.by-class');
+
     // Location API routes
     Route::get('/api/locations/states', [LocationController::class, 'getStates'])->name('api.locations.states');
     Route::get('/api/locations/lgas', [LocationController::class, 'getLgas'])->name('api.locations.lgas');
