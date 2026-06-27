@@ -24,7 +24,7 @@
                     <i class="ri-add-line"></i>
                     Record Payment
                 </button>
-                <button class="btn btn-primary d-flex align-items-center gap-2">
+                <button class="btn btn-primary d-flex align-items-center gap-2" onclick="printFees()">
                     <i class="ri-printer-line"></i>
                     Print Statement
                 </button>
@@ -167,7 +167,7 @@
                         <li><a class="dropdown-item" href="#">3rd Term</a></li>
                     </ul>
                 </div>
-                <button class="btn btn-sm btn-outline-primary">
+                <button class="btn btn-sm btn-outline-primary" onclick="exportFees()">
                     <i class="ri-download-line me-1"></i>Export
                 </button>
             </div>
@@ -307,3 +307,64 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+    <script>
+        function printFees() {
+            window.open('{{ route('admin.students.profile.fees.pdf', $student->id) }}', '_blank');
+        }
+
+        function exportFees() {
+            const feeData = {
+                student_name: "{{ $student->full_name ?? '' }}",
+                admission_no: "{{ $student->admission_no ?? '' }}",
+                class: "{{ trim((data_get($student, 'classArm.schoolClass.name') ?: '') . ' ' . (data_get($student, 'classArm.name') ?: '')) }}",
+                academic_year: "{{ data_get($student, 'academicSession.name', '') }}",
+                total_fees: "{{ number_format($totalFees, 0) }}",
+                total_paid: "{{ number_format($totalPaid, 0) }}",
+                outstanding: "{{ number_format($outstanding, 0) }}",
+                payment_rate: "{{ $paymentRate !== null ? $paymentRate.'%' : 'N/A' }}"
+            };
+
+            const invoices = [];
+            @foreach($invoices as $inv)
+                invoices.push({
+                    term: "{{ data_get($inv, 'term.name', 'N/A') }}",
+                    payment_type: "{{ data_get($inv, 'invoice_number', 'Invoice') }}",
+                    amount: "{{ number_format((float)($inv->total_amount ?? 0), 0) }}",
+                    payment_date: "{{ (data_get($inv, 'due_date') ?: data_get($inv, 'created_at')) ? \Carbon\Carbon::parse(data_get($inv, 'due_date') ?: data_get($inv, 'created_at'))->format('jS M Y') : '—' }}",
+                    payment_method: "—",
+                    status: "{{ ucfirst(data_get($inv, 'status', '—')) }}"
+                });
+            @endforeach
+
+            let csvContent = '"FIELD","VALUE"\n';
+            Object.entries(feeData).forEach(([key, value]) => {
+                csvContent += `"${key.replace(/_/g, ' ').toUpperCase()}","${value}"\n`;
+            });
+
+            csvContent += '\n"TERM","PAYMENT TYPE","AMOUNT","PAYMENT DATE","PAYMENT METHOD","STATUS"\n';
+            invoices.forEach(inv => {
+                csvContent += `"${inv.term}","${inv.payment_type}","${inv.amount}","${inv.payment_date}","${inv.payment_method}","${inv.status}"\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `fees_${feeData.admission_no}_statement.csv`;
+            link.click();
+
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Export Successful',
+                    text: 'Fee statement has been exported to CSV file.',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            } else {
+                alert('Fee statement exported successfully!');
+            }
+        }
+    </script>
+@endpush

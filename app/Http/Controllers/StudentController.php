@@ -786,6 +786,18 @@ class StudentController extends Controller
     }
 
     /**
+     * Generate PDF for student fee statement
+     */
+    public function profileFeesPdf(Student $student)
+    {
+        $student->load(['user', 'classArm.schoolClass', 'academicSession', 'invoices']);
+        
+        $pdf = PDF::loadView('admin.students.profile.fees-pdf', compact('student'));
+        
+        return $pdf->download('fees_' . $student->admission_no . '_statement.pdf');
+    }
+
+    /**
      * Show promote/transfer index page
      */
     public function promoteIndex()
