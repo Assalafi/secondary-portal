@@ -127,10 +127,15 @@ class StudentPortalController extends Controller
         $student->load('classArm.schoolClass');
 
         // Get assignments specifically for the student's class or arm
+        // Logic: Show assignment if it matches the student's class_arm_id
+        // OR if it matches the student's class_id AND has no specific arm
         $assignments = Assignment::where('status', 'Active')
             ->where(function($query) use ($student) {
-                $query->where('class_id', $student->classArm->school_class_id)
-                      ->orWhere('class_arm_id', $student->class_arm_id);
+                $query->where('class_arm_id', $student->class_arm_id)
+                      ->orWhere(function($q) use ($student) {
+                          $q->where('class_id', $student->classArm->school_class_id)
+                            ->whereNull('class_arm_id');
+                      });
             })
             ->with(['subject', 'class', 'classArm', 'teacher'])
             ->orderBy('due_date', 'asc')
