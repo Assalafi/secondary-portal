@@ -152,7 +152,7 @@
                         <tr>
                             <td>{{ $termName ?? '—' }}</td>
                             <td>{{ $type }}</td>
-                            <td>₦{{ number_format($amount, 0) }}</td>
+                            <td>NGN {{ number_format($amount, 0) }}</td>
                             <td>{{ $dateText }}</td>
                             <td>—</td>
                             <td>{{ ucfirst($status) }}</td>
@@ -167,11 +167,11 @@
         <h3>Fee Summary</h3>
         <div class="summary-grid">
             <div class="label">Total Fees:</div>
-            <div>₦{{ number_format($totalFees, 0) }}</div>
+            <div>NGN {{ number_format($totalFees, 0) }}</div>
             <div class="label">Total Paid:</div>
-            <div>₦{{ number_format($totalPaid, 0) }}</div>
+            <div>NGN {{ number_format($totalPaid, 0) }}</div>
             <div class="label">Outstanding:</div>
-            <div>₦{{ number_format($outstanding, 0) }}</div>
+            <div>NGN {{ number_format($outstanding, 0) }}</div>
             <div class="label">Payment Rate:</div>
             <div>{{ $paymentRate !== null ? $paymentRate.'%' : 'N/A' }}</div>
         </div>
