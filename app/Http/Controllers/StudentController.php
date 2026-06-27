@@ -814,7 +814,18 @@ class StudentController extends Controller
      */
     public function promoteIndex()
     {
-        return view('admin.students.promote.index');
+        $schoolClasses = SchoolClass::with('classArms.students')
+            ->orderBy('numeric_level')
+            ->get();
+
+        $totalStudents = Student::where('status', 'Active')->count();
+        $graduatingStudents = Student::where('status', 'Active')
+            ->whereHas('classArm.schoolClass', function($query) {
+                $query->where('name', 'like', 'SS3%');
+            })
+            ->count();
+
+        return view('admin.students.promote.index', compact('schoolClasses', 'totalStudents', 'graduatingStudents'));
     }
 
     /**

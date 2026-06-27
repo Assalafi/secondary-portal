@@ -33,10 +33,14 @@
     </div>
 
     <!-- Academic Session Info -->
+    @php
+        $currentSession = \App\Models\AcademicSession::where('is_current', true)->first();
+        $currentTerm = \App\Models\Term::where('is_current', true)->first();
+    @endphp
     <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
         <i class="ri-information-line me-2 fs-5"></i>
         <div>
-            <strong>Current Academic Session:</strong> 2024/2025 | <strong>Term:</strong> 1st Term
+            <strong>Current Academic Session:</strong> {{ $currentSession->name ?? 'Not Set' }} | <strong>Term:</strong> {{ $currentTerm->name ?? 'Not Set' }}
             <br>
             <small>Select a class below to view students eligible for promotion or transfer</small>
         </div>
@@ -44,172 +48,103 @@
 
     <!-- Class Selection Grid -->
     <div class="row g-4">
+        @php
+            $jssClasses = $schoolClasses->filter(function($class) {
+                return str_starts_with($class->name, 'JSS');
+            });
+            $ssClasses = $schoolClasses->filter(function($class) {
+                return str_starts_with($class->name, 'SS');
+            });
+        @endphp
+
         <!-- Junior Secondary Section -->
-        <div class="col-lg-6">
-            <div class="card custom-shadow rounded-3 bg-white border">
-                <div class="card-header bg-transparent border-0">
-                    <h6 class="fw-semibold mb-0">
-                        <i class="ri-graduation-cap-line me-2 text-primary"></i>Junior Secondary School (JSS)
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <!-- JSS 1 -->
-                    <div class="mb-4">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <h6 class="fw-medium mb-0">JSS 1</h6>
-                            <span class="badge bg-primary-subtle text-primary">3 Classes</span>
-                        </div>
-                        <div class="d-flex flex-wrap gap-2">
-                            <a href="{{ route('admin.students.promote.class', 'JSS1A') }}" class="btn btn-outline-primary d-flex align-items-center gap-2">
-                                <i class="ri-group-line"></i>
-                                JSS 1A
-                                <span class="badge bg-primary text-white ms-1">28</span>
-                            </a>
-                            <a href="{{ route('admin.students.promote.class', 'JSS1B') }}" class="btn btn-outline-primary d-flex align-items-center gap-2">
-                                <i class="ri-group-line"></i>
-                                JSS 1B
-                                <span class="badge bg-primary text-white ms-1">25</span>
-                            </a>
-                            <a href="{{ route('admin.students.promote.class', 'JSS1C') }}" class="btn btn-outline-primary d-flex align-items-center gap-2">
-                                <i class="ri-group-line"></i>
-                                JSS 1C
-                                <span class="badge bg-primary text-white ms-1">30</span>
-                            </a>
-                        </div>
+        @if($jssClasses->isNotEmpty())
+            <div class="col-lg-6">
+                <div class="card custom-shadow rounded-3 bg-white border">
+                    <div class="card-header bg-transparent border-0">
+                        <h6 class="fw-semibold mb-0">
+                            <i class="ri-graduation-cap-line me-2 text-primary"></i>Junior Secondary School (JSS)
+                        </h6>
                     </div>
-
-                    <!-- JSS 2 -->
-                    <div class="mb-4">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <h6 class="fw-medium mb-0">JSS 2</h6>
-                            <span class="badge bg-primary-subtle text-primary">2 Classes</span>
-                        </div>
-                        <div class="d-flex flex-wrap gap-2">
-                            <a href="{{ route('admin.students.promote.class', 'JSS2A') }}" class="btn btn-outline-primary d-flex align-items-center gap-2">
-                                <i class="ri-group-line"></i>
-                                JSS 2A
-                                <span class="badge bg-primary text-white ms-1">32</span>
-                            </a>
-                            <a href="{{ route('admin.students.promote.class', 'JSS2B') }}" class="btn btn-outline-primary d-flex align-items-center gap-2">
-                                <i class="ri-group-line"></i>
-                                JSS 2B
-                                <span class="badge bg-primary text-white ms-1">29</span>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- JSS 3 -->
-                    <div class="mb-0">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <h6 class="fw-medium mb-0">JSS 3</h6>
-                            <span class="badge bg-warning-subtle text-warning">Graduation Year</span>
-                        </div>
-                        <div class="d-flex flex-wrap gap-2">
-                            <a href="{{ route('admin.students.promote.class', 'JSS3A') }}" class="btn btn-warning d-flex align-items-center gap-2">
-                                <i class="ri-group-line"></i>
-                                JSS 3A
-                                <span class="badge bg-white text-warning ms-1">27</span>
-                            </a>
-                            <a href="{{ route('admin.students.promote.class', 'JSS3B') }}" class="btn btn-outline-warning d-flex align-items-center gap-2">
-                                <i class="ri-group-line"></i>
-                                JSS 3B
-                                <span class="badge bg-warning text-white ms-1">24</span>
-                            </a>
-                            <a href="{{ route('admin.students.promote.class', 'JSS3C') }}" class="btn btn-outline-warning d-flex align-items-center gap-2">
-                                <i class="ri-group-line"></i>
-                                JSS 3C
-                                <span class="badge bg-warning text-white ms-1">26</span>
-                            </a>
-                        </div>
+                    <div class="card-body">
+                        @foreach($jssClasses as $schoolClass)
+                            @php
+                                $isGraduationYear = str_contains($schoolClass->name, 'JSS3');
+                                $badgeClass = $isGraduationYear ? 'bg-warning-subtle text-warning' : 'bg-primary-subtle text-primary';
+                                $badgeText = $isGraduationYear ? 'Graduation Year' : $schoolClass->classArms->count() . ' Classes';
+                            @endphp
+                            <div class="mb-4 {{ $loop->last ? 'mb-0' : '' }}">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <h6 class="fw-medium mb-0">{{ $schoolClass->name }}</h6>
+                                    <span class="badge {{ $badgeClass }}">{{ $badgeText }}</span>
+                                </div>
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach($schoolClass->classArms as $classArm)
+                                        @php
+                                            $studentCount = $classArm->students->where('status', 'Active')->count();
+                                            $btnClass = $isGraduationYear ? 'btn-outline-warning' : 'btn-outline-primary';
+                                        @endphp
+                                        <a href="{{ route('admin.students.promote.class', $classArm->id) }}" class="btn {{ $btnClass }} d-flex align-items-center gap-2">
+                                            <i class="ri-group-line"></i>
+                                            {{ $classArm->name }}
+                                            <span class="badge {{ $isGraduationYear ? 'bg-warning' : 'bg-primary' }} text-white ms-1">{{ $studentCount }}</span>
+                                        </a>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
             </div>
-        </div>
+        @endif
 
         <!-- Senior Secondary Section -->
-        <div class="col-lg-6">
-            <div class="card custom-shadow rounded-3 bg-white border">
-                <div class="card-header bg-transparent border-0">
-                    <h6 class="fw-semibold mb-0">
-                        <i class="ri-graduation-cap-fill me-2 text-success"></i>Senior Secondary School (SS)
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <!-- SS 1 -->
-                    <div class="mb-4">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <h6 class="fw-medium mb-0">SS 1</h6>
-                            <span class="badge bg-success-subtle text-success">3 Classes</span>
-                        </div>
-                        <div class="d-flex flex-wrap gap-2">
-                            <a href="{{ route('admin.students.promote.class', 'SS1A') }}" class="btn btn-outline-success d-flex align-items-center gap-2">
-                                <i class="ri-group-line"></i>
-                                SS 1A
-                                <span class="badge bg-success text-white ms-1">22</span>
-                            </a>
-                            <a href="{{ route('admin.students.promote.class', 'SS1B') }}" class="btn btn-outline-success d-flex align-items-center gap-2">
-                                <i class="ri-group-line"></i>
-                                SS 1B
-                                <span class="badge bg-success text-white ms-1">20</span>
-                            </a>
-                            <a href="{{ route('admin.students.promote.class', 'SS1C') }}" class="btn btn-outline-success d-flex align-items-center gap-2">
-                                <i class="ri-group-line"></i>
-                                SS 1C
-                                <span class="badge bg-success text-white ms-1">25</span>
-                            </a>
-                        </div>
+        @if($ssClasses->isNotEmpty())
+            <div class="col-lg-6">
+                <div class="card custom-shadow rounded-3 bg-white border">
+                    <div class="card-header bg-transparent border-0">
+                        <h6 class="fw-semibold mb-0">
+                            <i class="ri-graduation-cap-fill me-2 text-success"></i>Senior Secondary School (SS)
+                        </h6>
                     </div>
-
-                    <!-- SS 2 -->
-                    <div class="mb-4">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <h6 class="fw-medium mb-0">SS 2</h6>
-                            <span class="badge bg-success-subtle text-success">2 Classes</span>
-                        </div>
-                        <div class="d-flex flex-wrap gap-2">
-                            <a href="{{ route('admin.students.promote.class', 'SS2A') }}" class="btn btn-outline-success d-flex align-items-center gap-2">
-                                <i class="ri-group-line"></i>
-                                SS 2A
-                                <span class="badge bg-success text-white ms-1">18</span>
-                            </a>
-                            <a href="{{ route('admin.students.promote.class', 'SS2B') }}" class="btn btn-outline-success d-flex align-items-center gap-2">
-                                <i class="ri-group-line"></i>
-                                SS 2B
-                                <span class="badge bg-success text-white ms-1">21</span>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- SS 3 -->
-                    <div class="mb-0">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <h6 class="fw-medium mb-0">SS 3</h6>
-                            <span class="badge bg-danger-subtle text-danger">Final Year</span>
-                        </div>
-                        <div class="d-flex flex-wrap gap-2">
-                            <a href="{{ route('admin.students.promote.class', 'SS3A') }}" class="btn btn-danger d-flex align-items-center gap-2">
-                                <i class="ri-group-line"></i>
-                                SS 3A
-                                <span class="badge bg-white text-danger ms-1">19</span>
-                            </a>
-                            <a href="{{ route('admin.students.promote.class', 'SS3B') }}" class="btn btn-outline-danger d-flex align-items-center gap-2">
-                                <i class="ri-group-line"></i>
-                                SS 3B
-                                <span class="badge bg-danger text-white ms-1">17</span>
-                            </a>
-                            <a href="{{ route('admin.students.promote.class', 'SS3C') }}" class="btn btn-outline-danger d-flex align-items-center gap-2">
-                                <i class="ri-group-line"></i>
-                                SS 3C
-                                <span class="badge bg-danger text-white ms-1">16</span>
-                            </a>
-                        </div>
+                    <div class="card-body">
+                        @foreach($ssClasses as $schoolClass)
+                            @php
+                                $isFinalYear = str_contains($schoolClass->name, 'SS3');
+                                $badgeClass = $isFinalYear ? 'bg-danger-subtle text-danger' : 'bg-success-subtle text-success';
+                                $badgeText = $isFinalYear ? 'Final Year' : $schoolClass->classArms->count() . ' Classes';
+                            @endphp
+                            <div class="mb-4 {{ $loop->last ? 'mb-0' : '' }}">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <h6 class="fw-medium mb-0">{{ $schoolClass->name }}</h6>
+                                    <span class="badge {{ $badgeClass }}">{{ $badgeText }}</span>
+                                </div>
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach($schoolClass->classArms as $classArm)
+                                        @php
+                                            $studentCount = $classArm->students->where('status', 'Active')->count();
+                                            $btnClass = $isFinalYear ? 'btn-outline-danger' : 'btn-outline-success';
+                                        @endphp
+                                        <a href="{{ route('admin.students.promote.class', $classArm->id) }}" class="btn {{ $btnClass }} d-flex align-items-center gap-2">
+                                            <i class="ri-group-line"></i>
+                                            {{ $classArm->name }}
+                                            <span class="badge {{ $isFinalYear ? 'bg-danger' : 'bg-success' }} text-white ms-1">{{ $studentCount }}</span>
+                                        </a>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
             </div>
-        </div>
+        @endif
     </div>
 
     <!-- Quick Stats -->
+    @php
+        $eligibleForPromotion = $totalStudents - $graduatingStudents;
+        $repeatStudents = 0; // This would need to be calculated based on academic performance
+    @endphp
     <div class="row g-4 mt-2">
         <div class="col-lg-3 col-md-6">
             <div class="card custom-shadow rounded-3 bg-white border">
@@ -221,7 +156,7 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h6 class="mb-0 fw-semibold">383</h6>
+                            <h6 class="mb-0 fw-semibold">{{ $totalStudents }}</h6>
                             <p class="text-secondary mb-0 small">Total Students</p>
                         </div>
                     </div>
@@ -238,7 +173,7 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h6 class="mb-0 fw-semibold">356</h6>
+                            <h6 class="mb-0 fw-semibold">{{ $eligibleForPromotion }}</h6>
                             <p class="text-secondary mb-0 small">Eligible for Promotion</p>
                         </div>
                     </div>
@@ -255,7 +190,7 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h6 class="mb-0 fw-semibold">15</h6>
+                            <h6 class="mb-0 fw-semibold">{{ $repeatStudents }}</h6>
                             <p class="text-secondary mb-0 small">Repeat Students</p>
                         </div>
                     </div>
@@ -272,7 +207,7 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h6 class="mb-0 fw-semibold">52</h6>
+                            <h6 class="mb-0 fw-semibold">{{ $graduatingStudents }}</h6>
                             <p class="text-secondary mb-0 small">Graduating Students</p>
                         </div>
                     </div>
