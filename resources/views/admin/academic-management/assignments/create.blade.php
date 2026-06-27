@@ -178,13 +178,22 @@ function loadClassArms() {
     }
 
     // Fetch class arms for the selected class
-    fetch(`/api/class-arms/${classId}`)
+    fetch(`/api/class-arms/${classId}`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
         .then(response => response.json())
         .then(data => {
             armSelect.innerHTML = '<option value="">All Arms</option>';
-            data.arms.forEach(arm => {
-                armSelect.innerHTML += `<option value="${arm.id}">${arm.name}</option>`;
-            });
+            if (data.arms && data.arms.length > 0) {
+                data.arms.forEach(arm => {
+                    armSelect.innerHTML += `<option value="${arm.id}">${arm.name}</option>`;
+                });
+            } else {
+                armSelect.innerHTML = '<option value="">No arms available</option>';
+            }
         })
         .catch(error => {
             console.error('Error loading class arms:', error);
