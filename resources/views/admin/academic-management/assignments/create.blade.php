@@ -177,14 +177,23 @@ function loadClassArms() {
         return;
     }
 
+    // Get CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
     // Fetch class arms for the selected class
     fetch(`/api/class-arms/${classId}`, {
         headers: {
             'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json'
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
         }
     })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             armSelect.innerHTML = '<option value="">All Arms</option>';
             if (data.arms && data.arms.length > 0) {
