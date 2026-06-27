@@ -73,13 +73,12 @@
                     </div>
 
                     <div class="col-md-6 mb-3">
-                        <label for="subject_ids" class="form-label">Subjects <span class="text-danger">*</span></label>
-                        <select class="form-select @error('subject_ids') is-invalid @enderror" id="subject_ids" name="subject_ids[]" multiple required disabled>
-                            <option value="">Select Class Arm First</option>
-                        </select>
-                        <small class="text-muted">Hold Ctrl/Cmd to select multiple subjects</small>
+                        <label class="form-label">Subjects <span class="text-danger">*</span></label>
+                        <div id="subjects_container" class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
+                            <p class="text-muted small mb-0">Select Class Arm First</p>
+                        </div>
                         @error('subject_ids')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
                     </div>
 
@@ -97,15 +96,17 @@
                     </div>
 
                     <div class="col-md-6 mb-3">
-                        <label for="days" class="form-label">Days <span class="text-danger">*</span></label>
-                        <select class="form-select @error('days') is-invalid @enderror" id="days" name="days[]" multiple required>
+                        <label class="form-label">Days <span class="text-danger">*</span></label>
+                        <div class="border rounded p-3">
                             @foreach($days as $day)
-                                <option value="{{ $day }}">{{ $day }}</option>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="days[]" value="{{ $day }}" id="day_{{ $day }}" required>
+                                    <label class="form-check-label" for="day_{{ $day }}">{{ $day }}</label>
+                                </div>
                             @endforeach
-                        </select>
-                        <small class="text-muted">Hold Ctrl/Cmd to select multiple days</small>
+                        </div>
                         @error('days')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
                     </div>
 
@@ -183,22 +184,29 @@ document.getElementById('school_class_id').addEventListener('change', function()
 
 document.getElementById('class_arm_id').addEventListener('change', function() {
     const classArmId = this.value;
-    const subjectSelect = document.getElementById('subject_ids');
+    const subjectsContainer = document.getElementById('subjects_container');
     
-    // Clear and disable subject select
-    subjectSelect.innerHTML = '<option value="">Select Class Arm First</option>';
-    subjectSelect.disabled = true;
+    // Clear and disable subjects container
+    subjectsContainer.innerHTML = '<p class="text-muted small mb-0">Select Class Arm First</p>';
     
     if (classArmId) {
         // Fetch subjects for selected class arm
         fetch(`{{ route('admin.academic-management.timetables.subjects-by-class-arm') }}?class_arm_id=${classArmId}`)
             .then(response => response.json())
             .then(data => {
-                subjectSelect.innerHTML = '';
-                data.subjects.forEach(subject => {
-                    subjectSelect.innerHTML += `<option value="${subject.id}">${subject.name} (${subject.code})</option>`;
-                });
-                subjectSelect.disabled = false;
+                if (data.subjects.length === 0) {
+                    subjectsContainer.innerHTML = '<p class="text-muted small mb-0">No subjects assigned to this class arm</p>';
+                } else {
+                    subjectsContainer.innerHTML = '';
+                    data.subjects.forEach(subject => {
+                        subjectsContainer.innerHTML += `
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="subject_ids[]" value="${subject.id}" id="subject_${subject.id}" required>
+                                <label class="form-check-label" for="subject_${subject.id}">${subject.name} (${subject.code})</label>
+                            </div>
+                        `;
+                    });
+                }
             });
     }
 });
