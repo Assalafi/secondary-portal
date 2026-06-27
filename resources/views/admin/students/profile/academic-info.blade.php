@@ -131,15 +131,15 @@
                     </h6>
                 </div>
                 <div class="card-body">
-                    @if($student->assessmentResults->isEmpty())
+                    @if($student->scores->isEmpty())
                         <div class="text-center py-3">
                             <p class="text-muted mb-0">No data available</p>
                         </div>
                     @else
                         @php
-                            $avgScore = $student->assessmentResults->avg('score');
-                            $totalResults = $student->assessmentResults->count();
-                            $gradeCounts = $student->assessmentResults->groupBy('grade')->map->count();
+                            $avgScore = $student->scores->avg('total');
+                            $totalResults = $student->scores->count();
+                            $gradeCounts = $student->scores->groupBy('grade')->map->count();
                             $bestGrade = $gradeCounts->sortKeysDesc()->keys()->first();
                         @endphp
                         <div class="text-center mb-3">
@@ -147,13 +147,13 @@
                                 <span class="fw-bold fs-5">{{ number_format($avgScore, 1) }}</span>
                             </div>
                             <p class="mb-0 fw-medium">Average Score</p>
-                            <small class="text-secondary">{{ $totalResults }} assessments</small>
+                            <small class="text-secondary">{{ $totalResults }} subjects</small>
                         </div>
                         <hr>
                         <div class="row g-3">
                             <div class="col-12">
                                 <div class="d-flex justify-content-between">
-                                    <span class="fw-medium text-secondary">Total Assessments:</span>
+                                    <span class="fw-medium text-secondary">Total Subjects:</span>
                                     <span>{{ $totalResults }}</span>
                                 </div>
                             </div>
@@ -202,10 +202,10 @@
                     </div>
                 </div>
                 <div class="card-body p-0">
-                    @if($student->assessmentResults->isEmpty())
+                    @if($student->scores->isEmpty())
                         <div class="text-center py-5">
                             <i class="ri-file-list-line text-muted" style="font-size: 48px;"></i>
-                            <p class="text-muted mt-3">No assessment results recorded yet.</p>
+                            <p class="text-muted mt-3">No scores recorded yet.</p>
                         </div>
                     @else
                         <div class="table-responsive">
@@ -213,26 +213,30 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th class="fw-semibold">Subject</th>
-                                        <th class="fw-semibold text-center">Assessment</th>
-                                        <th class="fw-semibold text-center">Score</th>
+                                        <th class="fw-semibold text-center">1st CA</th>
+                                        <th class="fw-semibold text-center">2nd CA</th>
+                                        <th class="fw-semibold text-center">3rd CA</th>
+                                        <th class="fw-semibold text-center">Exam</th>
                                         <th class="fw-semibold text-center">Total</th>
                                         <th class="fw-semibold text-center">Grade</th>
                                         <th class="fw-semibold text-center">Term</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($student->assessmentResults as $result)
+                                    @foreach($student->scores as $score)
                                         <tr>
-                                            <td class="fw-medium">{{ $result->assessment->subject->name ?? 'N/A' }}</td>
-                                            <td class="text-center">{{ $result->assessment->title ?? 'N/A' }}</td>
-                                            <td class="text-center fw-bold">{{ number_format($result->score, 2) }}</td>
-                                            <td class="text-center">{{ number_format($result->assessment->total_marks ?? 0, 2) }}</td>
+                                            <td class="fw-medium">{{ $score->scoreBatch->subject->name ?? 'N/A' }}</td>
+                                            <td class="text-center">{{ number_format($score->first_ca ?? 0, 1) }}</td>
+                                            <td class="text-center">{{ number_format($score->second_ca ?? 0, 1) }}</td>
+                                            <td class="text-center">{{ number_format($score->third_ca ?? 0, 1) }}</td>
+                                            <td class="text-center">{{ number_format($score->exam ?? 0, 1) }}</td>
+                                            <td class="text-center fw-bold">{{ number_format($score->total ?? 0, 1) }}</td>
                                             <td class="text-center">
-                                                <span class="badge @if($result->grade == 'A') bg-success @elseif($result->grade == 'B') bg-primary @elseif($result->grade == 'C') bg-warning @else bg-danger @endif">
-                                                    {{ $result->grade ?? 'N/A' }}
+                                                <span class="badge @if($score->grade == 'A') bg-success @elseif($score->grade == 'B') bg-primary @elseif($score->grade == 'C') bg-warning @else bg-danger @endif">
+                                                    {{ $score->grade ?? 'N/A' }}
                                                 </span>
                                             </td>
-                                            <td class="text-center">{{ $result->assessment->term->name ?? 'N/A' }}</td>
+                                            <td class="text-center">{{ $score->scoreBatch->term->name ?? 'N/A' }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -250,16 +254,16 @@
                     </h6>
                 </div>
                 <div class="card-body">
-                    @if($student->assessmentResults->isEmpty())
+                    @if($student->scores->isEmpty())
                         <div class="text-center py-3">
                             <p class="text-muted mb-0">No data available</p>
                         </div>
                     @else
                         @php
-                            $termAverages = $student->assessmentResults->groupBy(function($result) {
-                                return $result->assessment->term->name ?? 'Unknown';
-                            })->map(function($results) {
-                                return $results->avg('score');
+                            $termAverages = $student->scores->groupBy(function($score) {
+                                return $score->scoreBatch->term->name ?? 'Unknown';
+                            })->map(function($scores) {
+                                return $scores->avg('total');
                             });
                         @endphp
                         <div class="row g-3">

@@ -721,7 +721,7 @@ class StudentController extends Controller
      */
     public function profileAcademic(Student $student)
     {
-        $student->load(['user', 'classArm.schoolClass', 'academicSession', 'assessmentResults.assessment.subject', 'assessmentResults.assessment.term', 'assessmentResults.assessment.academicSession']);
+        $student->load(['user', 'classArm.schoolClass', 'academicSession', 'scores.scoreBatch.subject', 'scores.scoreBatch.term', 'scores.scoreBatch.academicSession']);
         
         // Get available terms and sessions for filtering
         $terms = Term::orderBy('id')->get();
