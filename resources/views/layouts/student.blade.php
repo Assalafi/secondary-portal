@@ -126,6 +126,13 @@
                 </li>
 
                 <li class="menu-item">
+                    <a href="{{ route('student.assignments.index') }}" class="menu-link {{ request()->routeIs('student.assignments.*') ? 'active' : '' }}">
+                        <span class="material-symbols-outlined menu-icon">assignment</span>
+                        <span class="title">Assignments</span>
+                    </a>
+                </li>
+
+                <li class="menu-item">
                     <a href="{{ route('student.timetable') }}" class="menu-link {{ request()->routeIs('student.timetable') ? 'active' : '' }}">
                         <span class="material-symbols-outlined menu-icon">calendar_month</span>
                         <span class="title">Timetable</span>
