@@ -860,7 +860,7 @@ class StudentController extends Controller
 
         try {
             $targetClass = SchoolClass::where('name', $request->target_class)->first();
-            
+
             if (!$targetClass) {
                 return back()->with('error', 'Target class not found.');
             }
@@ -879,12 +879,91 @@ class StudentController extends Controller
                    ->update(['current_class_arm_id' => $targetArm->id]);
 
             DB::commit();
-
-            return back()->with('success', count($request->student_ids) . ' students promoted successfully!');
-
         } catch (\Exception $e) {
-            DB::rollback();
-            return back()->with('error', 'Promotion failed. Please try again.');
+            DB::rollBack();
+            return back()->with('error', 'Promotion failed: ' . $e->getMessage());
+        }
+
+        return back()->with('success', 'Students promoted successfully.');
+    }
+
+    /**
+     * Execute promotion for selected students
+     */
+    public function executePromotion(Request $request)
+    {
+        $request->validate([
+            'student_ids' => 'required',
+            'target_class_arm_id' => 'required|exists:class_arms,id',
+            'academic_session_id' => 'required|exists:academic_sessions,id',
+            'term_id' => 'required|exists:terms,id',
+        ]);
+
+        $studentIds = json_decode($request->student_ids, true);
+
+        if (!is_array($studentIds) || empty($studentIds)) {
+            return back()->with('error', 'No students selected for promotion.');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $targetClassArm = ClassArm::findOrFail($request->target_class_arm_id);
+            $academicSession = AcademicSession::findOrFail($request->academic_session_id);
+            $term = Term::findOrFail($request->term_id);
+
+            foreach ($studentIds as $studentId) {
+                $student = Student::findOrFail($studentId);
+                $student->current_class_arm_id = $targetClassArm->id;
+                $student->academic_session_id = $academicSession->id;
+                $student->save();
+            }
+
+            DB::commit();
+            return redirect()->route('admin.students.promote.index')->with('success', 'Students promoted successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Promotion failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Execute transfer for selected students
+     */
+    public function executeTransfer(Request $request)
+    {
+        $request->validate([
+            'student_ids' => 'required',
+            'target_class_arm_id' => 'required|exists:class_arms,id',
+            'effective_date' => 'required|date',
+            'reason' => 'required',
+        ]);
+
+        $studentIds = json_decode($request->student_ids, true);
+
+        if (!is_array($studentIds) || empty($studentIds)) {
+            return back()->with('error', 'No students selected for transfer.');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $targetClassArm = ClassArm::findOrFail($request->target_class_arm_id);
+
+            foreach ($studentIds as $studentId) {
+                $student = Student::findOrFail($studentId);
+                $student->current_class_arm_id = $targetClassArm->id;
+                $student->save();
+
+                // Log transfer (you might want to create a transfer history table)
+                // For now, we'll just update the class
+            }
+
+            DB::commit();
+            return redirect()->route('admin.students.promote.index')->with('success', 'Students transferred successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Transfer failed: ' . $e->getMessage());
         }
     }
 
