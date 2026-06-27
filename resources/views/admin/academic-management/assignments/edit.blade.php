@@ -209,11 +209,34 @@ function loadClassArms() {
 
 // Run filter on page load to set initial state
 document.addEventListener('DOMContentLoaded', function() {
-    filterClasses();
-    // If a class is already selected, load its arms
+    // First, filter classes by level
+    const level = document.getElementById('levelSelect').value;
+    const classSelect = document.getElementById('classSelect');
+    const classOptions = classSelect.querySelectorAll('option[data-level]');
+
+    if (level) {
+        classOptions.forEach(option => {
+            if (option.dataset.level === level) {
+                option.style.display = '';
+            } else {
+                option.style.display = 'none';
+            }
+        });
+    }
+
+    // Then, load arms for the selected class
     const classId = document.getElementById('classSelect').value;
     if (classId) {
-        loadClassArms();
+        const armSelect = document.getElementById('armSelect');
+        const armOptions = armSelect.querySelectorAll('option[data-class-id]');
+
+        armOptions.forEach(option => {
+            if (option.dataset.classId === classId) {
+                option.style.display = '';
+            } else {
+                option.style.display = 'none';
+            }
+        });
     }
 });
 </script>

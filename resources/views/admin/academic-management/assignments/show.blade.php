@@ -18,7 +18,7 @@
     </div>
 
     @php
-        $assignment = \App\Models\Assignment::with(['subject', 'class', 'teacher', 'createdBy'])->findOrFail($assignmentId);
+        $assignment = \App\Models\Assignment::with(['subject', 'class', 'classArm', 'teacher', 'createdBy'])->findOrFail($assignmentId);
     @endphp
 
     <div class="card shadow-sm border-0 rounded-lg">
@@ -66,6 +66,7 @@
                 <div class="col-12 col-md-6">
                     <p class="mb-1"><strong>Level:</strong> {{ $assignment->level }}</p>
                     <p class="mb-1"><strong>Class:</strong> {{ $assignment->class->name ?? 'All Classes' }}</p>
+                    <p class="mb-1"><strong>Arm:</strong> {{ $assignment->classArm->name ?? 'All Arms' }}</p>
                     <p class="mb-1"><strong>Subject:</strong> {{ $assignment->subject->name ?? '-' }}</p>
                     <p class="mb-1"><strong>Teacher:</strong> {{ $assignment->teacher->name ?? '-' }}</p>
                 </div>
