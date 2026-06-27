@@ -127,11 +127,11 @@ class StudentPortalController extends Controller
         $student->load('classArm.schoolClass');
 
         // Get assignments for the student
-        // Match by class_arm_id using the student's classArm->id
+        // Match by class_arm_id using the student's current_class_arm_id
         // If class_arm_id is null in assignment, also match by class_id
         $assignments = Assignment::where('status', 'Active')
             ->where(function($query) use ($student) {
-                $query->where('class_arm_id', $student->classArm->id)
+                $query->where('class_arm_id', $student->current_class_arm_id)
                       ->orWhere(function($q) use ($student) {
                           $q->where('class_id', $student->classArm->school_class_id)
                             ->whereNull('class_arm_id');
