@@ -76,6 +76,9 @@
                         <label class="form-label">Arm</label>
                         <select name="class_arm_id" id="armSelect" class="form-select">
                             <option value="">All Arms</option>
+                            @foreach(\App\Models\ClassArm::with('schoolClass')->get() as $arm)
+                                <option value="{{ $arm->id }}" data-class-id="{{ $arm->school_class_id }}" style="display: none;">{{ $arm->name }}</option>
+                            @endforeach
                         </select>
                     </div>
                     <div class="col-md-6">
@@ -164,50 +167,40 @@ function filterClasses() {
 
     // Reset class selection
     classSelect.value = '';
-    // Reset arm selection
-    document.getElementById('armSelect').innerHTML = '<option value="">All Arms</option>';
+    // Reset arm selection and hide all arm options
+    const armSelect = document.getElementById('armSelect');
+    const armOptions = armSelect.querySelectorAll('option[data-class-id]');
+    armOptions.forEach(option => {
+        option.style.display = 'none';
+    });
+    armSelect.value = '';
 }
 
 function loadClassArms() {
     const classId = document.getElementById('classSelect').value;
     const armSelect = document.getElementById('armSelect');
+    const armOptions = armSelect.querySelectorAll('option[data-class-id]');
 
     if (!classId) {
-        armSelect.innerHTML = '<option value="">All Arms</option>';
+        // Hide all arm options
+        armOptions.forEach(option => {
+            option.style.display = 'none';
+        });
+        armSelect.value = '';
         return;
     }
 
-    // Get CSRF token
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-    // Fetch class arms for the selected class
-    fetch(`/api/class-arms/${classId}`, {
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': csrfToken
+    // Show only arms for the selected class
+    armOptions.forEach(option => {
+        if (option.dataset.classId === classId) {
+            option.style.display = '';
+        } else {
+            option.style.display = 'none';
         }
-    })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            armSelect.innerHTML = '<option value="">All Arms</option>';
-            if (data.arms && data.arms.length > 0) {
-                data.arms.forEach(arm => {
-                    armSelect.innerHTML += `<option value="${arm.id}">${arm.name}</option>`;
-                });
-            } else {
-                armSelect.innerHTML = '<option value="">No arms available</option>';
-            }
-        })
-        .catch(error => {
-            console.error('Error loading class arms:', error);
-            armSelect.innerHTML = '<option value="">Error loading arms</option>';
-        });
+    });
+
+    // Reset arm selection
+    armSelect.value = '';
 }
 </script>
 @endpush
