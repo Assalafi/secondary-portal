@@ -798,6 +798,18 @@ class StudentController extends Controller
     }
 
     /**
+     * Generate PDF for student attendance report
+     */
+    public function profileAttendancePdf(Student $student)
+    {
+        $student->load(['user', 'classArm.schoolClass', 'academicSession', 'attendances']);
+        
+        $pdf = PDF::loadView('admin.students.profile.attendance-pdf', compact('student'));
+        
+        return $pdf->download('attendance_' . $student->admission_no . '_report.pdf');
+    }
+
+    /**
      * Show promote/transfer index page
      */
     public function promoteIndex()

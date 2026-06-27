@@ -24,7 +24,11 @@
                     <i class="ri-calendar-check-line"></i>
                     Mark Attendance
                 </button>
-                <button class="btn btn-primary d-flex align-items-center gap-2">
+                <button class="btn btn-outline-secondary d-flex align-items-center gap-2" onclick="exportAttendance()">
+                    <i class="ri-download-line"></i>
+                    Export
+                </button>
+                <button class="btn btn-primary d-flex align-items-center gap-2" onclick="printAttendance()">
                     <i class="ri-printer-line"></i>
                     Print Report
                 </button>
@@ -315,3 +319,65 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+    <script>
+        function printAttendance() {
+            window.open('{{ route('admin.students.profile.attendance.pdf', $student->id) }}', '_blank');
+        }
+
+        function exportAttendance() {
+            const attendanceData = {
+                student_name: "{{ $student->full_name ?? '' }}",
+                admission_no: "{{ $student->admission_no ?? '' }}",
+                class: "{{ trim((data_get($student, 'classArm.schoolClass.name') ?: '') . ' ' . (data_get($student, 'classArm.name') ?: '')) }}",
+                academic_year: "{{ data_get($student, 'academicSession.name', '') }}",
+                total_days: "{{ $att->count() }}",
+                present_days: "{{ $att->where('status', 'Present')->count() }}",
+                absent_days: "{{ $att->where('status', 'Absent')->count() }}",
+                late_days: "{{ $att->where('status', 'Late')->count() }}",
+                attendance_rate: "{{ $attendanceRate !== null ? $attendanceRate.'%' : 'N/A' }}"
+            };
+
+            const records = [];
+            @foreach($att as $rec)
+                records.push({
+                    date: "{{ ($rec->date ?? $rec->created_at) ? \Carbon\Carbon::parse($rec->date ?? $rec->created_at)->format('jS M Y') : '—' }}",
+                    day: "{{ ($rec->date ?? $rec->created_at) ? \Carbon\Carbon::parse($rec->date ?? $rec->created_at)->format('l') : '—' }}",
+                    check_in: "{{ $rec->check_in ?? '—' }}",
+                    check_out: "{{ $rec->check_out ?? '—' }}",
+                    status: "{{ ucfirst($rec->status ?? '—') }}",
+                    remarks: "{{ $rec->remarks ?? '—' }}"
+                });
+            @endforeach
+
+            let csvContent = '"FIELD","VALUE"\n';
+            Object.entries(attendanceData).forEach(([key, value]) => {
+                csvContent += `"${key.replace(/_/g, ' ').toUpperCase()}","${value}"\n`;
+            });
+
+            csvContent += '\n"DATE","DAY","CHECK IN","CHECK OUT","STATUS","REMARKS"\n';
+            records.forEach(r => {
+                csvContent += `"${r.date}","${r.day}","${r.check_in}","${r.check_out}","${r.status}","${r.remarks}"\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `attendance_${attendanceData.admission_no}_report.csv`;
+            link.click();
+
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Export Successful',
+                    text: 'Attendance report has been exported to CSV file.',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            } else {
+                alert('Attendance report exported successfully!');
+            }
+        }
+    </script>
+@endpush

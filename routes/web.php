@@ -81,6 +81,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{student}/profile/fees', [StudentController::class, 'profileFees'])->name('profile.fees');
             Route::get('/{student}/profile/fees/pdf', [StudentController::class, 'profileFeesPdf'])->name('profile.fees.pdf');
             Route::get('/{student}/profile/attendance', [StudentController::class, 'profileAttendance'])->name('profile.attendance');
+            Route::get('/{student}/profile/attendance/pdf', [StudentController::class, 'profileAttendancePdf'])->name('profile.attendance.pdf');
             Route::get('/{student}/profile/documents', [StudentController::class, 'profileDocuments'])->name('profile.documents');
             Route::get('/{student}/profile/pdf', [StudentController::class, 'profilePdf'])->name('profile.pdf');
             
