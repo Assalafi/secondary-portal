@@ -20,7 +20,7 @@
         </div>
         <div class="col-md-4 text-md-end">
             <div class="d-flex gap-2 justify-content-md-end">
-                <a href="{{ route('admin.attendance.index') }}" class="btn btn-outline-primary d-flex align-items-center gap-2">
+                <a href="{{ route('admin.academic-management.attendance.index') }}" class="btn btn-outline-primary d-flex align-items-center gap-2">
                     <i class="ri-calendar-check-line"></i>
                     Mark Attendance
                 </a>
