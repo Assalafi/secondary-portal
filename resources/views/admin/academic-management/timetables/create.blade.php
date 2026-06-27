@@ -2,6 +2,29 @@
 
 @section('title', 'Create Timetable Entry')
 
+@push('styles')
+<style>
+    .timetable-row {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        border: 1px solid #e9ecef;
+    }
+    .timetable-row:hover {
+        border-color: #dee2e6;
+    }
+    .remove-row-btn {
+        cursor: pointer;
+        color: #dc3545;
+        transition: color 0.2s;
+    }
+    .remove-row-btn:hover {
+        color: #a71d2a;
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="container-fluid">
     <!-- Page Heading -->
@@ -45,104 +68,111 @@
                 </div>
             @endif
 
-            <form action="{{ route('admin.academic-management.timetables.store') }}" method="POST">
+            <form action="{{ route('admin.academic-management.timetables.store') }}" method="POST" id="timetableForm">
                 @csrf
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="school_class_id" class="form-label">Class <span class="text-danger">*</span></label>
-                        <select class="form-select @error('school_class_id') is-invalid @enderror" id="school_class_id" name="school_class_id" required>
-                            <option value="">Select Class</option>
-                            @foreach($schoolClasses as $schoolClass)
-                                <option value="{{ $schoolClass->id }}">{{ $schoolClass->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('school_class_id')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
+                <!-- Class Selection -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3">Class Selection</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="school_class_id" class="form-label">Class <span class="text-danger">*</span></label>
+                                <select class="form-select @error('school_class_id') is-invalid @enderror" id="school_class_id" name="school_class_id" required>
+                                    <option value="">Select Class</option>
+                                    @foreach($schoolClasses as $schoolClass)
+                                        <option value="{{ $schoolClass->id }}">{{ $schoolClass->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('school_class_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
 
-                    <div class="col-md-6 mb-3">
-                        <label for="class_arm_id" class="form-label">Class Arm <span class="text-danger">*</span></label>
-                        <select class="form-select @error('class_arm_id') is-invalid @enderror" id="class_arm_id" name="class_arm_id" required disabled>
-                            <option value="">Select Class First</option>
-                        </select>
-                        @error('class_arm_id')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Subjects <span class="text-danger">*</span></label>
-                        <div id="subjects_container" class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
-                            <p class="text-muted small mb-0">Select Class Arm First</p>
+                            <div class="col-md-6 mb-3">
+                                <label for="class_arm_id" class="form-label">Class Arm <span class="text-danger">*</span></label>
+                                <select class="form-select @error('class_arm_id') is-invalid @enderror" id="class_arm_id" name="class_arm_id" required disabled>
+                                    <option value="">Select Class First</option>
+                                </select>
+                                @error('class_arm_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
-                        @error('subject_ids')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                        @enderror
                     </div>
+                </div>
 
-                    <div class="col-md-6 mb-3">
-                        <label for="teacher_id" class="form-label">Teacher</label>
-                        <select class="form-select @error('teacher_id') is-invalid @enderror" id="teacher_id" name="teacher_id">
-                            <option value="">Select Teacher (Optional)</option>
-                            @foreach($teachers as $teacher)
-                                <option value="{{ $teacher->id }}">{{ $teacher->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('teacher_id')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
+                <!-- Timetable Entries -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold mb-0">Timetable Entries</h6>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="addRowBtn">
+                                <i class="ri-add-line me-1"></i>Add Entry
+                            </button>
+                        </div>
 
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Days <span class="text-danger">*</span></label>
-                        <div class="border rounded p-3">
-                            @foreach($days as $day)
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="days[]" value="{{ $day }}" id="day_{{ $day }}" required>
-                                    <label class="form-check-label" for="day_{{ $day }}">{{ $day }}</label>
+                        <div id="timetableRows">
+                            <!-- Initial row -->
+                            <div class="timetable-row" data-row="0">
+                                <div class="row">
+                                    <div class="col-md-3 mb-2">
+                                        <label class="form-label small">Subject <span class="text-danger">*</span></label>
+                                        <select class="form-select form-select-sm subject-select" name="entries[0][subject_id]" required disabled>
+                                            <option value="">Select Class Arm First</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2 mb-2">
+                                        <label class="form-label small">Day <span class="text-danger">*</span></label>
+                                        <select class="form-select form-select-sm" name="entries[0][day]" required>
+                                            @foreach($days as $day)
+                                                <option value="{{ $day }}">{{ $day }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2 mb-2">
+                                        <label class="form-label small">Start Time <span class="text-danger">*</span></label>
+                                        <input type="time" class="form-control form-control-sm" name="entries[0][start_time]" required>
+                                    </div>
+                                    <div class="col-md-2 mb-2">
+                                        <label class="form-label small">End Time <span class="text-danger">*</span></label>
+                                        <input type="time" class="form-control form-control-sm" name="entries[0][end_time]" required>
+                                    </div>
+                                    <div class="col-md-2 mb-2">
+                                        <label class="form-label small">Room</label>
+                                        <input type="text" class="form-control form-control-sm" name="entries[0][room]" placeholder="Room">
+                                    </div>
+                                    <div class="col-md-1 mb-2">
+                                        <label class="form-label small">Teacher</label>
+                                        <select class="form-select form-select-sm" name="entries[0][teacher_id]">
+                                            <option value="">None</option>
+                                            @foreach($teachers as $teacher)
+                                                <option value="{{ $teacher->id }}">{{ $teacher->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
                                 </div>
-                            @endforeach
+                            </div>
                         </div>
-                        @error('days')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                        @enderror
                     </div>
+                </div>
 
-                    <div class="col-md-4 mb-3">
-                        <label for="start_time" class="form-label">Start Time <span class="text-danger">*</span></label>
-                        <input type="time" class="form-control @error('start_time') is-invalid @enderror" id="start_time" name="start_time" required>
-                        @error('start_time')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-                        <label for="end_time" class="form-label">End Time <span class="text-danger">*</span></label>
-                        <input type="time" class="form-control @error('end_time') is-invalid @enderror" id="end_time" name="end_time" required>
-                        @error('end_time')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-                        <label for="room" class="form-label">Room</label>
-                        <input type="text" class="form-control @error('room') is-invalid @enderror" id="room" name="room" placeholder="e.g., Room 101">
-                        @error('room')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
-                        <select class="form-select @error('status') is-invalid @enderror" id="status" name="status" required>
-                            <option value="Active">Active</option>
-                            <option value="Inactive">Inactive</option>
-                        </select>
-                        @error('status')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                <!-- Common Settings -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3">Common Settings</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
+                                <select class="form-select @error('status') is-invalid @enderror" id="status" name="status" required>
+                                    <option value="Active">Active</option>
+                                    <option value="Inactive">Inactive</option>
+                                </select>
+                                @error('status')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -156,20 +186,23 @@
 </div>
 
 <script>
+let rowCount = 1;
+let availableSubjects = [];
+
 document.getElementById('school_class_id').addEventListener('change', function() {
     const schoolClassId = this.value;
     const classArmSelect = document.getElementById('class_arm_id');
     
-    // Clear and disable class arm select
     classArmSelect.innerHTML = '<option value="">Select Class First</option>';
     classArmSelect.disabled = true;
     
-    // Disable subject select
-    document.getElementById('subject_ids').disabled = true;
-    document.getElementById('subject_ids').innerHTML = '<option value="">Select Class Arm First</option>';
+    // Disable all subject selects
+    document.querySelectorAll('.subject-select').forEach(select => {
+        select.innerHTML = '<option value="">Select Class Arm First</option>';
+        select.disabled = true;
+    });
     
     if (schoolClassId) {
-        // Fetch class arms for selected school class
         fetch(`{{ route('admin.academic-management.timetables.class-arms-by-class') }}?school_class_id=${schoolClassId}`)
             .then(response => response.json())
             .then(data => {
@@ -184,30 +217,109 @@ document.getElementById('school_class_id').addEventListener('change', function()
 
 document.getElementById('class_arm_id').addEventListener('change', function() {
     const classArmId = this.value;
-    const subjectsContainer = document.getElementById('subjects_container');
-    
-    // Clear and disable subjects container
-    subjectsContainer.innerHTML = '<p class="text-muted small mb-0">Select Class Arm First</p>';
     
     if (classArmId) {
-        // Fetch subjects for selected class arm
         fetch(`{{ route('admin.academic-management.timetables.subjects-by-class-arm') }}?class_arm_id=${classArmId}`)
             .then(response => response.json())
             .then(data => {
-                if (data.subjects.length === 0) {
-                    subjectsContainer.innerHTML = '<p class="text-muted small mb-0">No subjects assigned to this class arm</p>';
-                } else {
-                    subjectsContainer.innerHTML = '';
+                availableSubjects = data.subjects;
+                
+                // Update all subject selects
+                document.querySelectorAll('.subject-select').forEach(select => {
+                    select.innerHTML = '<option value="">Select Subject</option>';
                     data.subjects.forEach(subject => {
-                        subjectsContainer.innerHTML += `
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="subject_ids[]" value="${subject.id}" id="subject_${subject.id}" required>
-                                <label class="form-check-label" for="subject_${subject.id}">${subject.name} (${subject.code})</label>
-                            </div>
-                        `;
+                        select.innerHTML += `<option value="${subject.id}">${subject.name} (${subject.code})</option>`;
                     });
-                }
+                    select.disabled = false;
+                });
             });
+    } else {
+        availableSubjects = [];
+        document.querySelectorAll('.subject-select').forEach(select => {
+            select.innerHTML = '<option value="">Select Class Arm First</option>';
+            select.disabled = true;
+        });
+    }
+});
+
+document.getElementById('addRowBtn').addEventListener('click', function() {
+    const container = document.getElementById('timetableRows');
+    const newRow = document.createElement('div');
+    newRow.className = 'timetable-row';
+    newRow.setAttribute('data-row', rowCount);
+    
+    let subjectOptions = '<option value="">Select Subject</option>';
+    if (availableSubjects.length > 0) {
+        availableSubjects.forEach(subject => {
+            subjectOptions += `<option value="${subject.id}">${subject.name} (${subject.code})</option>`;
+        });
+    } else {
+        subjectOptions = '<option value="">Select Class Arm First</option>';
+    }
+    
+    let dayOptions = '';
+    @foreach($days as $day)
+        dayOptions += `<option value="{{ $day }}">{{ $day }}</option>`;
+    @endforeach
+    
+    let teacherOptions = '<option value="">None</option>';
+    @foreach($teachers as $teacher)
+        teacherOptions += `<option value="{{ $teacher->id }}">{{ $teacher->name }}</option>`;
+    @endforeach
+    
+    newRow.innerHTML = `
+        <div class="row">
+            <div class="col-md-3 mb-2">
+                <label class="form-label small">Subject <span class="text-danger">*</span></label>
+                <select class="form-select form-select-sm subject-select" name="entries[${rowCount}][subject_id]" required ${availableSubjects.length === 0 ? 'disabled' : ''}>
+                    ${subjectOptions}
+                </select>
+            </div>
+            <div class="col-md-2 mb-2">
+                <label class="form-label small">Day <span class="text-danger">*</span></label>
+                <select class="form-select form-select-sm" name="entries[${rowCount}][day]" required>
+                    ${dayOptions}
+                </select>
+            </div>
+            <div class="col-md-2 mb-2">
+                <label class="form-label small">Start Time <span class="text-danger">*</span></label>
+                <input type="time" class="form-control form-control-sm" name="entries[${rowCount}][start_time]" required>
+            </div>
+            <div class="col-md-2 mb-2">
+                <label class="form-label small">End Time <span class="text-danger">*</span></label>
+                <input type="time" class="form-control form-control-sm" name="entries[${rowCount}][end_time]" required>
+            </div>
+            <div class="col-md-2 mb-2">
+                <label class="form-label small">Room</label>
+                <input type="text" class="form-control form-control-sm" name="entries[${rowCount}][room]" placeholder="Room">
+            </div>
+            <div class="col-md-1 mb-2">
+                <label class="form-label small">Teacher</label>
+                <select class="form-select form-select-sm" name="entries[${rowCount}][teacher_id]">
+                    ${teacherOptions}
+                </select>
+            </div>
+            <div class="col-md-1 mb-2">
+                <label class="form-label small">&nbsp;</label>
+                <button type="button" class="btn btn-outline-danger btn-sm w-100 remove-row-btn">
+                    <i class="ri-delete-bin-line"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(newRow);
+    rowCount++;
+});
+
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.remove-row-btn')) {
+        const row = e.target.closest('.timetable-row');
+        if (document.querySelectorAll('.timetable-row').length > 1) {
+            row.remove();
+        } else {
+            alert('At least one entry is required');
+        }
     }
 });
 </script>

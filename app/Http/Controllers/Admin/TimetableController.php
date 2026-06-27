@@ -71,32 +71,29 @@ class TimetableController extends Controller
     {
         $request->validate([
             'class_arm_id' => 'required|exists:class_arms,id',
-            'subject_ids' => 'required|array',
-            'subject_ids.*' => 'exists:subjects,id',
-            'teacher_id' => 'nullable|exists:users,id',
-            'days' => 'required|array',
-            'days.*' => 'in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
-            'room' => 'nullable|string|max:50',
+            'entries' => 'required|array|min:1',
+            'entries.*.subject_id' => 'required|exists:subjects,id',
+            'entries.*.day' => 'required|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
+            'entries.*.start_time' => 'required|date_format:H:i',
+            'entries.*.end_time' => 'required|date_format:H:i|after:entries.*.start_time',
+            'entries.*.room' => 'nullable|string|max:50',
+            'entries.*.teacher_id' => 'nullable|exists:users,id',
             'status' => 'required|in:Active,Inactive',
         ]);
 
         DB::beginTransaction();
         try {
-            foreach ($request->subject_ids as $subjectId) {
-                foreach ($request->days as $day) {
-                    Timetable::create([
-                        'class_arm_id' => $request->class_arm_id,
-                        'subject_id' => $subjectId,
-                        'teacher_id' => $request->teacher_id,
-                        'day' => $day,
-                        'start_time' => $request->start_time,
-                        'end_time' => $request->end_time,
-                        'room' => $request->room,
-                        'status' => $request->status,
-                    ]);
-                }
+            foreach ($request->entries as $entry) {
+                Timetable::create([
+                    'class_arm_id' => $request->class_arm_id,
+                    'subject_id' => $entry['subject_id'],
+                    'teacher_id' => $entry['teacher_id'] ?? null,
+                    'day' => $entry['day'],
+                    'start_time' => $entry['start_time'],
+                    'end_time' => $entry['end_time'],
+                    'room' => $entry['room'] ?? null,
+                    'status' => $request->status,
+                ]);
             }
             DB::commit();
         } catch (\Exception $e) {
