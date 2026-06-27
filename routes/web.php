@@ -426,6 +426,11 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/', [StudentPortalController::class, 'attendance'])->name('index');
         });
 
+        // Assignments
+        Route::prefix('assignments')->name('assignments.')->group(function () {
+            Route::get('/', [StudentPortalController::class, 'assignments'])->name('index');
+        });
+
         // Timetable
         Route::get('/timetable', [StudentPortalController::class, 'timetable'])->name('timetable');
 

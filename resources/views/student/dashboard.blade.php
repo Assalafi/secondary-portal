@@ -115,16 +115,19 @@
                             <a href="{{ route('student.report-cards') }}" class="btn btn-outline-success btn-sm text-start">
                                 <i class="ri-file-text-line me-2"></i>View Report Cards
                             </a>
+                            <a href="{{ route('student.assignments.index') }}" class="btn btn-outline-info btn-sm text-start">
+                                <i class="ri-clipboard-line me-2"></i>My Assignments
+                            </a>
                             <a href="{{ route('student.payments.index') }}" class="btn btn-outline-warning btn-sm text-start">
                                 <i class="ri-bank-card-line me-2"></i>Make Payment
                             </a>
-                            <a href="{{ route('student.attendance.index') }}" class="btn btn-outline-info btn-sm text-start">
+                            <a href="{{ route('student.attendance.index') }}" class="btn btn-outline-secondary btn-sm text-start">
                                 <i class="ri-calendar-check-line me-2"></i>Check Attendance
                             </a>
-                            <a href="{{ route('student.timetable') }}" class="btn btn-outline-secondary btn-sm text-start">
+                            <a href="{{ route('student.timetable') }}" class="btn btn-outline-dark btn-sm text-start">
                                 <i class="ri-calendar-todo-line me-2"></i>My Timetable
                             </a>
-                            <a href="{{ route('student.profile') }}" class="btn btn-outline-dark btn-sm text-start">
+                            <a href="{{ route('student.profile') }}" class="btn btn-outline-primary btn-sm text-start">
                                 <i class="ri-user-settings-line me-2"></i>My Profile
                             </a>
                         </div>

@@ -8,6 +8,7 @@ use App\Models\Score;
 use App\Models\ReportCard;
 use App\Models\AcademicSession;
 use App\Models\Term;
+use App\Models\Assignment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -111,6 +112,33 @@ class StudentPortalController extends Controller
         }
 
         return view('student.timetable', compact('student', 'subjects'));
+    }
+
+    // ─── Assignments ───
+    public function assignments()
+    {
+        $user = Auth::user();
+        $student = $user->student;
+
+        if (!$student) {
+            return view('student.assignments.index', ['assignments' => collect(), 'student' => null]);
+        }
+
+        $student->load('classArm.schoolClass');
+
+        // Get assignments for the student's class and arm, or for all classes if not specific
+        $assignments = Assignment::where('status', 'Active')
+            ->where(function($query) use ($student) {
+                $query->where('class_id', $student->classArm->school_class_id)
+                      ->orWhere('class_arm_id', $student->class_arm_id)
+                      ->orWhereNull('class_id')
+                      ->orWhereNull('class_arm_id');
+            })
+            ->with(['subject', 'class', 'classArm', 'teacher'])
+            ->orderBy('due_date', 'asc')
+            ->get();
+
+        return view('student.assignments.index', compact('assignments', 'student'));
     }
 
     // ─── Profile ───
