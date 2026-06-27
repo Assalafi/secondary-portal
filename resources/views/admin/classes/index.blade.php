@@ -115,22 +115,38 @@
                                 <th>CLASS</th>
                                 <th>ARM</th>
                                 <th>GROUP</th>
-                                <th>ASSIGNED TEACHER</th>
+                                <th>CAPACITY</th>
                                 <th>STUDENTS</th>
+                                <th>ASSIGNED TEACHER</th>
                                 <th class="text-center">ACTION</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($classArms as $arm)
+                                @php
+                                    $studentCount = $arm->students->count();
+                                    $capacity = $arm->capacity ?? 40;
+                                    $capacityPercent = min(100, round(($studentCount / $capacity) * 100));
+                                    $capacityBadge = $capacityPercent >= 90 ? 'bg-danger' : ($capacityPercent >= 70 ? 'bg-warning' : 'bg-success');
+                                @endphp
                                 <tr>
                                     <td>{{ $loop->iteration }}.</td>
                                     <td>{{ $arm->schoolClass->level }}</td>
                                     <td>{{ $arm->schoolClass->name }}</td>
                                     <td>{{ $arm->name }}</td>
                                     <td>{{ $arm->schoolClass->group ?? '-' }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <span class="me-2">{{ $studentCount }}/{{ $capacity }}</span>
+                                            <div class="progress" style="width: 50px; height: 6px;">
+                                                <div class="progress-bar {{ $capacityBadge }}" style="width: {{ $capacityPercent }}%"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ $studentCount }}</td>
                                     <td class="{{ $arm->classTeacher ? '' : 'not-assigned' }}">
-                                        {{ $arm->classTeacher->name ?? 'Not Assigned' }}</td>
-                                    <td>{{ $arm->students->count() }}</td>
+                                        {{ $arm->classTeacher->name ?? 'Not Assigned' }}
+                                    </td>
                                     <td class="text-center">
                                         <div class="dropdown">
                                             <button class="btn btn-link text-secondary p-0" type="button"
@@ -161,7 +177,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center">No classes found.</td>
+                                    <td colspan="9" class="text-center">No classes found.</td>
                                 </tr>
                             @endforelse
                         </tbody>

@@ -53,10 +53,19 @@
                         @enderror
                     </div>
                     <div class="mb-3">
+                        <label for="capacity" class="form-label">Capacity</label>
+                        <input type="number" class="form-control @error('capacity') is-invalid @enderror" id="capacity"
+                            name="capacity" value="{{ old('capacity') ?? 40 }}" min="1" max="100" required>
+                        <div class="form-text">Maximum number of students for this class arm</div>
+                        @error('capacity')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="mb-3">
                         <label for="class_teacher" class="form-label">Class Teacher</label>
                         <select class="form-select @error('teacher_id') is-invalid @enderror" id="class_teacher"
                             name="teacher_id">
-                            <option value="" selected>Select Teacher</option>
+                            <option value="" selected>Select Teacher (Optional)</option>
                             @foreach ($teachers as $teacher)
                                 <option value="{{ $teacher->id }}"
                                     {{ old('teacher_id') == $teacher->id ? 'selected' : '' }}>{{ $teacher->name }}

@@ -78,10 +78,11 @@ class ClassSubjectController extends Controller
     public function classesStore(Request $request)
     {
         $request->validate([
-            'level' => 'required|string',
+            'level' => 'required|string|in:JSS,SS,Primary',
             'class_name' => 'required|string',
-            'group' => 'nullable|string',
-            'arm' => 'required|string|max:255',
+            'group' => 'nullable|string|in:Science,Arts,Commercial',
+            'arm' => 'required|string|max:1|in:A,B,C,D,E,F',
+            'capacity' => 'required|integer|min:1|max:100',
             'teacher_id' => 'nullable|exists:users,id',
         ]);
 
@@ -92,7 +93,10 @@ class ClassSubjectController extends Controller
                 'name' => $request->class_name,
                 'group' => $request->group,
             ],
-            ['status' => 'Active'] // Default values if creating
+            [
+                'status' => 'Active',
+                'numeric_level' => $this->getNumericLevel($request->level, $request->class_name)
+            ]
         );
 
         // Check if the arm already exists for this class
@@ -101,17 +105,35 @@ class ClassSubjectController extends Controller
             ->first();
 
         if ($existingArm) {
-            return back()->with('error', 'The arm "' . $request->arm . '" already exists for this class.');
+            return back()->with('error', 'The arm "' . $request->arm . '" already exists for ' . $schoolClass->name . '.');
         }
 
         // Create the new ClassArm
         $classArm = new ClassArm();
         $classArm->school_class_id = $schoolClass->id;
         $classArm->name = $request->arm;
+        $classArm->capacity = $request->capacity;
         $classArm->class_teacher_id = $request->teacher_id;
         $classArm->save();
 
-        return redirect()->route('admin.classes.index')->with('success', 'Class arm created successfully.');
+        return redirect()->route('admin.classes.index')->with('success', 'Class ' . $schoolClass->name . ' ' . $request->arm . ' created successfully with capacity of ' . $request->capacity . ' students.');
+    }
+
+    private function getNumericLevel($level, $className)
+    {
+        // Convert level and class name to numeric level for sorting
+        $levelMap = [
+            'Primary' => 1,
+            'JSS' => 2,
+            'SS' => 3
+        ];
+
+        $classNum = 1;
+        if (preg_match('/(\d+)/', $className, $matches)) {
+            $classNum = (int) $matches[1];
+        }
+
+        return ($levelMap[$level] ?? 0) * 10 + $classNum;
     }
 
     public function classesShow(SchoolClass $class, $armId = null)
