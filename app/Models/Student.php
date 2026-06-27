@@ -99,7 +99,13 @@ class Student extends Model
         return $this->hasMany(AssessmentResult::class);
     }
 
-    
+    /**
+     * Get the scores for the student.
+     */
+    public function scores(): HasMany
+    {
+        return $this->hasMany(Score::class);
+    }
 
     /**
      * Get the full name attribute.
