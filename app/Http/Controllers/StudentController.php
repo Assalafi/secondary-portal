@@ -831,16 +831,18 @@ class StudentController extends Controller
     /**
      * Show students in a class for promotion/transfer
      */
-    public function promoteClass($class)
+    public function promoteClass($classArmId)
     {
-        $students = Student::with(['user', 'classArm.schoolClass'])
-                          ->whereHas('classArm.schoolClass', function($query) use ($class) {
-                              $query->where('name', $class);
-                          })
-                          ->where('status', 'Active')
-                          ->get();
+        $classArm = ClassArm::with('schoolClass', 'students.user', 'students.scores')
+            ->findOrFail($classArmId);
 
-        return view('admin.students.promote.class', compact('students', 'class'));
+        $students = $classArm->students->where('status', 'Active');
+
+        $schoolClasses = SchoolClass::orderBy('numeric_level')->get();
+        $academicSessions = AcademicSession::orderBy('name', 'desc')->get();
+        $terms = Term::all();
+
+        return view('admin.students.promote.class', compact('classArm', 'students', 'schoolClasses', 'academicSessions', 'terms'));
     }
 
     /**

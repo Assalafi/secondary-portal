@@ -14,7 +14,7 @@
                 </a>
                 <div>
                     <h3 class="fs-20 fw-semibold mb-1">Promote/Transfer Students</h3>
-                    <p class="text-secondary mb-0">JSS 3A - Academic Session 2024/2025</p>
+                    <p class="text-secondary mb-0">{{ $classArm->schoolClass->name ?? 'Class' }} {{ $classArm->name ?? '' }} - Academic Session {{ $classArm->students->first()->academicSession->name ?? 'Not Set' }}</p>
                 </div>
             </div>
         </div>
@@ -33,6 +33,12 @@
     </div>
 
     <!-- Selection Summary -->
+    @php
+        $totalStudents = $students->count();
+        $eligibleStudents = $students->count(); // For now, all are eligible - could be based on scores
+        $pendingReview = 0; // Could be calculated based on academic performance
+        $eligibleRate = $totalStudents > 0 ? round(($eligibleStudents / $totalStudents) * 100, 1) : 0;
+    @endphp
     <div class="row g-4 mb-4">
         <div class="col-lg-3 col-md-6">
             <div class="card custom-shadow rounded-3 bg-white border">
@@ -44,7 +50,7 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h6 class="mb-0 fw-semibold">27</h6>
+                            <h6 class="mb-0 fw-semibold">{{ $totalStudents }}</h6>
                             <p class="text-secondary mb-0 small">Total Students</p>
                         </div>
                     </div>
@@ -61,7 +67,7 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h6 class="mb-0 fw-semibold" id="selectedCount">25</h6>
+                            <h6 class="mb-0 fw-semibold" id="selectedCount">{{ $totalStudents }}</h6>
                             <p class="text-secondary mb-0 small">Selected</p>
                         </div>
                     </div>
@@ -78,7 +84,7 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h6 class="mb-0 fw-semibold">2</h6>
+                            <h6 class="mb-0 fw-semibold">{{ $pendingReview }}</h6>
                             <p class="text-secondary mb-0 small">Pending Review</p>
                         </div>
                     </div>
@@ -95,7 +101,7 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h6 class="mb-0 fw-semibold">92.6%</h6>
+                            <h6 class="mb-0 fw-semibold">{{ $eligibleRate }}%</h6>
                             <p class="text-secondary mb-0 small">Eligible Rate</p>
                         </div>
                     </div>
@@ -109,7 +115,7 @@
         <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-3">
                 <h6 class="fw-semibold mb-0">
-                    <i class="ri-list-check-line me-2 text-primary"></i>JSS 3A Students
+                    <i class="ri-list-check-line me-2 text-primary"></i>{{ $classArm->schoolClass->name ?? 'Class' }} {{ $classArm->name ?? '' }} Students
                 </h6>
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" id="selectAll" checked>
@@ -131,7 +137,7 @@
                         <li><a class="dropdown-item" href="#">Female Students</a></li>
                     </ul>
                 </div>
-                <button class="btn btn-sm btn-outline-primary">
+                <button class="btn btn-sm btn-outline-primary" onclick="exportStudents()">
                     <i class="ri-download-line me-1"></i>Export
                 </button>
             </div>
@@ -156,237 +162,70 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Student Rows -->
-                        <tr>
-                            <td>
-                                <div class="form-check">
-                                    <input class="form-check-input student-checkbox" type="checkbox" checked>
-                                </div>
-                            </td>
-                            <td class="fw-medium">1</td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar-sm me-3">
-                                        <div class="avatar-title bg-primary-subtle text-primary rounded-circle">
-                                            JD
+                        @forelse($students as $index => $student)
+                            @php
+                                $initials = collect(explode(' ', $student->full_name ?? ''))
+                                    ->map(fn($name) => strtoupper(substr($name, 0, 1)))
+                                    ->take(2)
+                                    ->join('');
+                                $genderBadge = strtolower($student->gender) === 'male' ? 'bg-primary-subtle text-primary' : 'bg-danger-subtle text-danger';
+                                $avgScore = $student->scores->isNotEmpty() ? $student->scores->avg('total') : 0;
+                                $statusBadge = $avgScore >= 70 ? 'bg-success-subtle text-success' : ($avgScore >= 50 ? 'bg-warning-subtle text-warning' : 'bg-danger-subtle text-danger');
+                                $statusText = $avgScore >= 70 ? 'Excellent' : ($avgScore >= 50 ? 'Good' : 'Needs Improvement');
+                                $eligibleBadge = $avgScore >= 50 ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning';
+                                $eligibleText = $avgScore >= 50 ? 'Eligible' : 'Review';
+                            @endphp
+                            <tr>
+                                <td>
+                                    <div class="form-check">
+                                        <input class="form-check-input student-checkbox" type="checkbox" checked value="{{ $student->id }}">
+                                    </div>
+                                </td>
+                                <td class="fw-medium">{{ $index + 1 }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm me-3">
+                                            <div class="avatar-title bg-primary-subtle text-primary rounded-circle">
+                                                {{ $initials }}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-medium">{{ $student->full_name ?? '-' }}</h6>
+                                            <small class="text-muted">{{ $classArm->schoolClass->name ?? '' }} {{ $classArm->name ?? '' }}</small>
                                         </div>
                                     </div>
-                                    <div>
-                                        <h6 class="mb-0 fw-medium">John Doe</h6>
-                                        <small class="text-muted">JSS 3A</small>
+                                </td>
+                                <td class="fw-medium">{{ $student->admission_no ?? '-' }}</td>
+                                <td>
+                                    <span class="badge {{ $genderBadge }}">{{ ucfirst($student->gender ?? '-') }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge {{ $statusBadge }}">
+                                        <i class="ri-check-line me-1"></i>{{ $statusText }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge {{ $eligibleBadge }}">
+                                        <i class="{{ $avgScore >= 50 ? 'ri-check-circle-line' : 'ri-time-line' }} me-1"></i>{{ $eligibleText }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                            <i class="ri-more-2-line"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="{{ route('admin.students.profile.overview', $student->id) }}"><i class="ri-eye-line me-2"></i>View Profile</a></li>
+                                            <li><a class="dropdown-item" href="#" onclick="removeFromSelection({{ $student->id }})"><i class="ri-close-line me-2"></i>Remove from Selection</a></li>
+                                        </ul>
                                     </div>
-                                </div>
-                            </td>
-                            <td class="fw-medium">ADM/2023/001</td>
-                            <td>
-                                <span class="badge bg-primary-subtle text-primary">Male</span>
-                            </td>
-                            <td>
-                                <span class="badge bg-success-subtle text-success">
-                                    <i class="ri-check-line me-1"></i>Excellent
-                                </span>
-                            </td>
-                            <td>
-                                <span class="badge bg-success-subtle text-success">
-                                    <i class="ri-check-circle-line me-1"></i>Eligible
-                                </span>
-                            </td>
-                            <td>
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                                        <i class="ri-more-2-line"></i>
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="#"><i class="ri-eye-line me-2"></i>View Profile</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-close-line me-2"></i>Remove from Selection</a></li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="form-check">
-                                    <input class="form-check-input student-checkbox" type="checkbox" checked>
-                                </div>
-                            </td>
-                            <td class="fw-medium">2</td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar-sm me-3">
-                                        <div class="avatar-title bg-info-subtle text-info rounded-circle">
-                                            MD
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-0 fw-medium">Mary Doe</h6>
-                                        <small class="text-muted">JSS 3A</small>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="fw-medium">ADM/2023/002</td>
-                            <td>
-                                <span class="badge bg-danger-subtle text-danger">Female</span>
-                            </td>
-                            <td>
-                                <span class="badge bg-success-subtle text-success">
-                                    <i class="ri-check-line me-1"></i>Very Good
-                                </span>
-                            </td>
-                            <td>
-                                <span class="badge bg-success-subtle text-success">
-                                    <i class="ri-check-circle-line me-1"></i>Eligible
-                                </span>
-                            </td>
-                            <td>
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                                        <i class="ri-more-2-line"></i>
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="#"><i class="ri-eye-line me-2"></i>View Profile</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-close-line me-2"></i>Remove from Selection</a></li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="form-check">
-                                    <input class="form-check-input student-checkbox" type="checkbox" checked>
-                                </div>
-                            </td>
-                            <td class="fw-medium">3</td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar-sm me-3">
-                                        <div class="avatar-title bg-success-subtle text-success rounded-circle">
-                                            AI
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-0 fw-medium">Ahmed Ibrahim</h6>
-                                        <small class="text-muted">JSS 3A</small>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="fw-medium">ADM/2023/003</td>
-                            <td>
-                                <span class="badge bg-primary-subtle text-primary">Male</span>
-                            </td>
-                            <td>
-                                <span class="badge bg-success-subtle text-success">
-                                    <i class="ri-check-line me-1"></i>Good
-                                </span>
-                            </td>
-                            <td>
-                                <span class="badge bg-success-subtle text-success">
-                                    <i class="ri-check-circle-line me-1"></i>Eligible
-                                </span>
-                            </td>
-                            <td>
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                                        <i class="ri-more-2-line"></i>
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="#"><i class="ri-eye-line me-2"></i>View Profile</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-close-line me-2"></i>Remove from Selection</a></li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="form-check">
-                                    <input class="form-check-input student-checkbox" type="checkbox" checked>
-                                </div>
-                            </td>
-                            <td class="fw-medium">4</td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar-sm me-3">
-                                        <div class="avatar-title bg-warning-subtle text-warning rounded-circle">
-                                            FA
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-0 fw-medium">Fatima Aliyu</h6>
-                                        <small class="text-muted">JSS 3A</small>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="fw-medium">ADM/2023/004</td>
-                            <td>
-                                <span class="badge bg-danger-subtle text-danger">Female</span>
-                            </td>
-                            <td>
-                                <span class="badge bg-warning-subtle text-warning">
-                                    <i class="ri-alert-line me-1"></i>Average
-                                </span>
-                            </td>
-                            <td>
-                                <span class="badge bg-warning-subtle text-warning">
-                                    <i class="ri-time-line me-1"></i>Review
-                                </span>
-                            </td>
-                            <td>
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                                        <i class="ri-more-2-line"></i>
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="#"><i class="ri-eye-line me-2"></i>View Profile</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-close-line me-2"></i>Remove from Selection</a></li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="form-check">
-                                    <input class="form-check-input student-checkbox" type="checkbox" checked>
-                                </div>
-                            </td>
-                            <td class="fw-medium">5</td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar-sm me-3">
-                                        <div class="avatar-title bg-secondary-subtle text-secondary rounded-circle">
-                                            SJ
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-0 fw-medium">Samuel Johnson</h6>
-                                        <small class="text-muted">JSS 3A</small>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="fw-medium">ADM/2023/005</td>
-                            <td>
-                                <span class="badge bg-primary-subtle text-primary">Male</span>
-                            </td>
-                            <td>
-                                <span class="badge bg-success-subtle text-success">
-                                    <i class="ri-check-line me-1"></i>Very Good
-                                </span>
-                            </td>
-                            <td>
-                                <span class="badge bg-success-subtle text-success">
-                                    <i class="ri-check-circle-line me-1"></i>Eligible
-                                </span>
-                            </td>
-                            <td>
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                                        <i class="ri-more-2-line"></i>
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="#"><i class="ri-eye-line me-2"></i>View Profile</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-close-line me-2"></i>Remove from Selection</a></li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="8" class="text-center text-secondary py-4">No students found in this class.</td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
@@ -415,22 +254,25 @@
             <div class="modal-body">
                 <div class="alert alert-info d-flex align-items-center mb-4">
                     <i class="ri-information-line me-2"></i>
-                    <span><strong>25 students</strong> selected for promotion from <strong>JSS 3A</strong></span>
+                    <span id="promoteAlert"><strong>{{ $totalStudents }} students</strong> selected for promotion from <strong>{{ $classArm->schoolClass->name ?? 'Class' }} {{ $classArm->name ?? '' }}</strong></span>
                 </div>
-                
-                <form>
+
+                <form id="promoteForm" action="{{ route('admin.students.promote.execute') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="student_ids" id="promoteStudentIds">
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label fw-medium">
                                     <i class="ri-school-line me-2 text-primary"></i>Promote to Class
                                 </label>
-                                <select class="form-select">
+                                <select class="form-select" name="target_class_arm_id" required>
                                     <option value="">Select Class</option>
-                                    <option value="ss1a">SS 1A</option>
-                                    <option value="ss1b">SS 1B</option>
-                                    <option value="ss1c">SS 1C</option>
-                                    <option value="ss1d">SS 1D</option>
+                                    @foreach($schoolClasses as $schoolClass)
+                                        @foreach($schoolClass->classArms as $arm)
+                                            <option value="{{ $arm->id }}">{{ $schoolClass->name }} {{ $arm->name }}</option>
+                                        @endforeach
+                                    @endforeach
                                 </select>
                             </div>
                         </div>
@@ -439,30 +281,33 @@
                                 <label class="form-label fw-medium">
                                     <i class="ri-calendar-line me-2 text-primary"></i>Academic Session
                                 </label>
-                                <select class="form-select">
-                                    <option value="2024/2025">2024/2025</option>
-                                    <option value="2025/2026">2025/2026</option>
+                                <select class="form-select" name="academic_session_id" required>
+                                    <option value="">Select Session</option>
+                                    @foreach($academicSessions as $session)
+                                        <option value="{{ $session->id }}" {{ $session->is_current ? 'selected' : '' }}>{{ $session->name }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label class="form-label fw-medium">
                             <i class="ri-calendar-event-line me-2 text-primary"></i>Term
                         </label>
-                        <select class="form-select">
-                            <option value="first">First Term</option>
-                            <option value="second">Second Term</option>
-                            <option value="third">Third Term</option>
+                        <select class="form-select" name="term_id" required>
+                            <option value="">Select Term</option>
+                            @foreach($terms as $term)
+                                <option value="{{ $term->id }}" {{ $term->is_current ? 'selected' : '' }}>{{ $term->name }}</option>
+                            @endforeach
                         </select>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label class="form-label fw-medium">
                             <i class="ri-file-text-line me-2 text-primary"></i>Promotion Notes
                         </label>
-                        <textarea class="form-control" rows="3" placeholder="Enter any notes about this promotion (optional)"></textarea>
+                        <textarea class="form-control" rows="3" name="notes" placeholder="Enter any notes about this promotion (optional)"></textarea>
                     </div>
                 </form>
             </div>
@@ -470,7 +315,7 @@
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
                     <i class="ri-close-line me-1"></i>Cancel
                 </button>
-                <button type="button" class="btn btn-primary">
+                <button type="button" class="btn btn-primary" onclick="submitPromotion()">
                     <i class="ri-arrow-up-line me-1"></i>Promote Students
                 </button>
             </div>
@@ -499,23 +344,27 @@
             <div class="modal-body">
                 <div class="alert alert-warning d-flex align-items-center mb-4">
                     <i class="ri-alert-line me-2"></i>
-                    <span><strong>25 students</strong> selected for transfer from <strong>JSS 3A</strong></span>
+                    <span id="transferAlert"><strong>{{ $totalStudents }} students</strong> selected for transfer from <strong>{{ $classArm->schoolClass->name ?? 'Class' }} {{ $classArm->name ?? '' }}</strong></span>
                 </div>
-                
-                <form>
+
+                <form id="transferForm" action="{{ route('admin.students.transfer.execute') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="student_ids" id="transferStudentIds">
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label fw-medium">
                                     <i class="ri-school-line me-2 text-info"></i>Transfer to Class
                                 </label>
-                                <select class="form-select">
+                                <select class="form-select" name="target_class_arm_id" required>
                                     <option value="">Select Class</option>
-                                    <option value="jss3b">JSS 3B</option>
-                                    <option value="jss3c">JSS 3C</option>
-                                    <option value="jss3d">JSS 3D</option>
-                                    <option value="jss2a">JSS 2A</option>
-                                    <option value="jss2b">JSS 2B</option>
+                                    @foreach($schoolClasses as $schoolClass)
+                                        @foreach($schoolClass->classArms as $arm)
+                                            @if($arm->id !== $classArm->id)
+                                                <option value="{{ $arm->id }}">{{ $schoolClass->name }} {{ $arm->name }}</option>
+                                            @endif
+                                        @endforeach
+                                    @endforeach
                                 </select>
                             </div>
                         </div>
@@ -524,16 +373,16 @@
                                 <label class="form-label fw-medium">
                                     <i class="ri-calendar-line me-2 text-info"></i>Effective Date
                                 </label>
-                                <input type="date" class="form-control" value="{{ date('Y-m-d') }}">
+                                <input type="date" class="form-control" name="effective_date" value="{{ date('Y-m-d') }}" required>
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label class="form-label fw-medium">
                             <i class="ri-file-text-line me-2 text-info"></i>Reason for Transfer <span class="text-danger">*</span>
                         </label>
-                        <select class="form-select mb-2">
+                        <select class="form-select mb-2" name="reason" required>
                             <option value="">Select Reason</option>
                             <option value="academic">Academic Performance</option>
                             <option value="behavioral">Behavioral Issues</option>
@@ -541,11 +390,11 @@
                             <option value="medical">Medical Reasons</option>
                             <option value="other">Other</option>
                         </select>
-                        <textarea class="form-control" rows="3" placeholder="Provide additional details about the transfer reason"></textarea>
+                        <textarea class="form-control" rows="3" name="reason_details" placeholder="Provide additional details about the transfer reason"></textarea>
                     </div>
-                    
+
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="notifyParents">
+                        <input class="form-check-input" type="checkbox" name="notify_parents" id="notifyParents">
                         <label class="form-check-label" for="notifyParents">
                             Notify parents/guardians about this transfer
                         </label>
@@ -556,7 +405,7 @@
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
                     <i class="ri-close-line me-1"></i>Cancel
                 </button>
-                <button type="button" class="btn btn-outline-primary">
+                <button type="button" class="btn btn-outline-primary" onclick="submitTransfer()">
                     <i class="ri-exchange-line me-1"></i>Transfer Students
                 </button>
             </div>
@@ -565,18 +414,20 @@
 </div>
 
 <script>
+const className = "{{ $classArm->schoolClass->name ?? 'Class' }} {{ $classArm->name ?? '' }}";
+
 document.addEventListener('DOMContentLoaded', function() {
     // Select all functionality
     const selectAllCheckbox = document.getElementById('selectAll');
     const selectAllTableCheckbox = document.getElementById('selectAllTable');
-    
+
     // Sync both select all checkboxes
     if (selectAllCheckbox && selectAllTableCheckbox) {
         selectAllCheckbox.addEventListener('change', function() {
             selectAllTableCheckbox.checked = this.checked;
             toggleAllStudents(this.checked);
         });
-        
+
         selectAllTableCheckbox.addEventListener('change', function() {
             selectAllCheckbox.checked = this.checked;
             toggleAllStudents(this.checked);
@@ -605,15 +456,15 @@ document.addEventListener('DOMContentLoaded', function() {
         if (selectedCountElement) {
             selectedCountElement.textContent = selectedCount;
         }
-        
+
         // Update modal alerts
-        const promoteAlert = document.querySelector('#promoteModal .alert span');
-        const transferAlert = document.querySelector('#transferModal .alert span');
+        const promoteAlert = document.getElementById('promoteAlert');
+        const transferAlert = document.getElementById('transferAlert');
         if (promoteAlert) {
-            promoteAlert.innerHTML = `<strong>${selectedCount} students</strong> selected for promotion from <strong>JSS 3A</strong>`;
+            promoteAlert.innerHTML = `<strong>${selectedCount} students</strong> selected for promotion from <strong>${className}</strong>`;
         }
         if (transferAlert) {
-            transferAlert.innerHTML = `<strong>${selectedCount} students</strong> selected for transfer from <strong>JSS 3A</strong>`;
+            transferAlert.innerHTML = `<strong>${selectedCount} students</strong> selected for transfer from <strong>${className}</strong>`;
         }
     }
 
@@ -622,7 +473,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const checkedCount = document.querySelectorAll('.student-checkbox:checked').length;
         const selectAll = document.getElementById('selectAll');
         const selectAllTable = document.getElementById('selectAllTable');
-        
+
         if (checkedCount === 0) {
             if (selectAll) {
                 selectAll.indeterminate = false;
@@ -655,5 +506,80 @@ document.addEventListener('DOMContentLoaded', function() {
     updateSelectedCount();
     updateSelectAllState();
 });
+
+function submitPromotion() {
+    const selectedStudents = [];
+    document.querySelectorAll('.student-checkbox:checked').forEach(checkbox => {
+        selectedStudents.push(checkbox.value);
+    });
+
+    if (selectedStudents.length === 0) {
+        alert('Please select at least one student to promote.');
+        return;
+    }
+
+    document.getElementById('promoteStudentIds').value = JSON.stringify(selectedStudents);
+    document.getElementById('promoteForm').submit();
+}
+
+function submitTransfer() {
+    const selectedStudents = [];
+    document.querySelectorAll('.student-checkbox:checked').forEach(checkbox => {
+        selectedStudents.push(checkbox.value);
+    });
+
+    if (selectedStudents.length === 0) {
+        alert('Please select at least one student to transfer.');
+        return;
+    }
+
+    document.getElementById('transferStudentIds').value = JSON.stringify(selectedStudents);
+    document.getElementById('transferForm').submit();
+}
+
+function removeFromSelection(studentId) {
+    const checkbox = document.querySelector(`.student-checkbox[value="${studentId}"]`);
+    if (checkbox) {
+        checkbox.checked = false;
+        updateSelectedCount();
+        updateSelectAllState();
+    }
+}
+
+function exportStudents() {
+    const students = [];
+    document.querySelectorAll('.student-checkbox:checked').forEach(checkbox => {
+        const row = checkbox.closest('tr');
+        const name = row.querySelector('td:nth-child(3) h6').textContent;
+        const admissionNo = row.querySelector('td:nth-child(4)').textContent;
+        const gender = row.querySelector('td:nth-child(5) span').textContent;
+        const status = row.querySelector('td:nth-child(6) span').textContent;
+        const eligibility = row.querySelector('td:nth-child(7) span').textContent;
+
+        students.push({
+            name: name,
+            admission_no: admissionNo,
+            gender: gender,
+            academic_status: status,
+            eligibility: eligibility
+        });
+    });
+
+    if (students.length === 0) {
+        alert('Please select at least one student to export.');
+        return;
+    }
+
+    let csvContent = '"NAME","ADMISSION NO","GENDER","ACADEMIC STATUS","ELIGIBILITY"\n';
+    students.forEach(s => {
+        csvContent += `"${s.name}","${s.admission_no}","${s.gender}","${s.academic_status}","${s.eligibility}"\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `promotion_list_${className.replace(/\s+/g, '_')}.csv`;
+    link.click();
+}
 </script>
 @endsection
