@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\AcademicManagementController;
 use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\AssignmentController;
+use App\Http\Controllers\Admin\TimetableController;
 use App\Http\Controllers\Admin\TestExamScheduleController;
 use App\Http\Controllers\Admin\ScoreUploadController;
 use App\Http\Controllers\Admin\ResultController;
