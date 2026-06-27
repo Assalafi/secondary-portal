@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Attendance;
+use App\Models\ClassArm;
+use PDF;
 
 class AttendanceController extends Controller
 {
@@ -51,5 +53,27 @@ class AttendanceController extends Controller
     public function history($classId)
     {
         return view('admin.academic-management.attendance.history', compact('classId'));
+    }
+
+    public function historyPdf($classId, Request $request)
+    {
+        $classArm = ClassArm::with('schoolClass')->findOrFail($classId);
+
+        $query = Attendance::where('class_arm_id', $classId)
+            ->with('student.user', 'markedBy')
+            ->orderBy('date', 'desc');
+
+        if ($request->filled('from_date')) {
+            $query->where('date', '>=', $request->from_date);
+        }
+        if ($request->filled('to_date')) {
+            $query->where('date', '<=', $request->to_date);
+        }
+
+        $attendances = $query->get();
+
+        $pdf = PDF::loadView('admin.academic-management.attendance.history-pdf', compact('classArm', 'attendances', 'request'));
+
+        return $pdf->download('attendance_history_' . $classArm->schoolClass->name . '_' . $classArm->name . '.pdf');
     }
 }

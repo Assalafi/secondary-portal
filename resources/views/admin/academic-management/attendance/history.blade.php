@@ -75,7 +75,7 @@
                     <div>
                         <button type="submit" class="btn btn-primary">Filter</button>
                         <a href="{{ route('admin.academic-management.attendance.history', $classId) }}" class="btn btn-outline-secondary">Reset</a>
-                        <button type="button" class="btn btn-success" onclick="window.print()">Print</button>
+                        <a href="{{ route('admin.academic-management.attendance.history.pdf', $classId) }}{{ request()->only(['from_date', 'to_date']) ? '?' . http_build_query(request()->only(['from_date', 'to_date'])) : '' }}" class="btn btn-success">Download PDF</a>
                     </div>
                 </div>
             </form>

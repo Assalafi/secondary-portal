@@ -276,6 +276,7 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{classId}', [AttendanceController::class, 'take'])->name('take');
                 Route::post('/', [AttendanceController::class, 'store'])->name('store');
                 Route::get('/{classId}/history', [AttendanceController::class, 'history'])->name('history');
+                Route::get('/{classId}/history/pdf', [AttendanceController::class, 'historyPdf'])->name('history.pdf');
             });
             
             // Assignment Routes
