@@ -299,6 +299,8 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/', [TimetableController::class, 'index'])->name('index');
                 Route::get('/create', [TimetableController::class, 'create'])->name('create');
                 Route::post('/', [TimetableController::class, 'store'])->name('store');
+                Route::get('/class-arms-by-class', [TimetableController::class, 'getClassArmsByClass'])->name('class-arms-by-class');
+                Route::get('/subjects-by-class-arm', [TimetableController::class, 'getSubjectsByClassArm'])->name('subjects-by-class-arm');
                 Route::get('/{timetable}', [TimetableController::class, 'show'])->name('show');
                 Route::get('/{timetable}/edit', [TimetableController::class, 'edit'])->name('edit');
                 Route::put('/{timetable}', [TimetableController::class, 'update'])->name('update');

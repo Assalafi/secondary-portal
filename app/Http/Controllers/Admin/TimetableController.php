@@ -8,6 +8,7 @@ use App\Models\ClassArm;
 use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TimetableController extends Controller
 {
@@ -25,34 +26,86 @@ class TimetableController extends Controller
 
     public function create()
     {
+        $schoolClasses = \App\Models\SchoolClass::all();
         $classArms = ClassArm::with('schoolClass')->get();
-        $subjects = Subject::all();
         $teachers = User::whereHas('role', function($q) {
             $q->where('name', 'Teacher');
         })->get();
 
-        $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+        $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-        return view('admin.academic-management.timetables.create', compact('classArms', 'subjects', 'teachers', 'days'));
+        return view('admin.academic-management.timetables.create', compact('schoolClasses', 'classArms', 'teachers', 'days'));
+    }
+
+    public function getClassArmsByClass(Request $request)
+    {
+        $schoolClassId = $request->query('school_class_id');
+        if (!$schoolClassId) {
+            return response()->json(['classArms' => []]);
+        }
+
+        $classArms = ClassArm::where('school_class_id', $schoolClassId)
+            ->select('id', 'name')
+            ->get();
+
+        return response()->json(['classArms' => $classArms]);
+    }
+
+    public function getSubjectsByClassArm(Request $request)
+    {
+        $classArmId = $request->query('class_arm_id');
+        if (!$classArmId) {
+            return response()->json(['subjects' => []]);
+        }
+
+        $subjects = DB::table('class_subject')
+            ->join('subjects', 'class_subject.subject_id', '=', 'subjects.id')
+            ->where('class_subject.class_arm_id', $classArmId)
+            ->select('subjects.id', 'subjects.name', 'subjects.code')
+            ->get();
+
+        return response()->json(['subjects' => $subjects]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'class_arm_id' => 'required|exists:class_arms,id',
-            'subject_id' => 'required|exists:subjects,id',
+            'subject_ids' => 'required|array',
+            'subject_ids.*' => 'exists:subjects,id',
             'teacher_id' => 'nullable|exists:users,id',
-            'day' => 'required|in:Monday,Tuesday,Wednesday,Thursday,Friday',
+            'days' => 'required|array',
+            'days.*' => 'in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
             'room' => 'nullable|string|max:50',
             'status' => 'required|in:Active,Inactive',
         ]);
 
-        Timetable::create($request->all());
+        DB::beginTransaction();
+        try {
+            foreach ($request->subject_ids as $subjectId) {
+                foreach ($request->days as $day) {
+                    Timetable::create([
+                        'class_arm_id' => $request->class_arm_id,
+                        'subject_id' => $subjectId,
+                        'teacher_id' => $request->teacher_id,
+                        'day' => $day,
+                        'start_time' => $request->start_time,
+                        'end_time' => $request->end_time,
+                        'room' => $request->room,
+                        'status' => $request->status,
+                    ]);
+                }
+            }
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withInput()->with('error', 'Failed to create timetable entries: ' . $e->getMessage());
+        }
 
         return redirect()->route('admin.academic-management.timetables.index')
-            ->with('success', 'Timetable entry created successfully.');
+            ->with('success', 'Timetable entries created successfully.');
     }
 
     public function show(Timetable $timetable)

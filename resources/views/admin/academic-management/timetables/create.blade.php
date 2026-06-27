@@ -50,12 +50,22 @@
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="class_arm_id" class="form-label">Class Arm <span class="text-danger">*</span></label>
-                        <select class="form-select @error('class_arm_id') is-invalid @enderror" id="class_arm_id" name="class_arm_id" required>
-                            <option value="">Select Class Arm</option>
-                            @foreach($classArms as $classArm)
-                                <option value="{{ $classArm->id }}">{{ $classArm->schoolClass->name ?? '' }} {{ $classArm->name ?? '' }}</option>
+                        <label for="school_class_id" class="form-label">Class <span class="text-danger">*</span></label>
+                        <select class="form-select @error('school_class_id') is-invalid @enderror" id="school_class_id" name="school_class_id" required>
+                            <option value="">Select Class</option>
+                            @foreach($schoolClasses as $schoolClass)
+                                <option value="{{ $schoolClass->id }}">{{ $schoolClass->name }}</option>
                             @endforeach
+                        </select>
+                        @error('school_class_id')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="class_arm_id" class="form-label">Class Arm <span class="text-danger">*</span></label>
+                        <select class="form-select @error('class_arm_id') is-invalid @enderror" id="class_arm_id" name="class_arm_id" required disabled>
+                            <option value="">Select Class First</option>
                         </select>
                         @error('class_arm_id')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -63,14 +73,12 @@
                     </div>
 
                     <div class="col-md-6 mb-3">
-                        <label for="subject_id" class="form-label">Subject <span class="text-danger">*</span></label>
-                        <select class="form-select @error('subject_id') is-invalid @enderror" id="subject_id" name="subject_id" required>
-                            <option value="">Select Subject</option>
-                            @foreach($subjects as $subject)
-                                <option value="{{ $subject->id }}">{{ $subject->name }}</option>
-                            @endforeach
+                        <label for="subject_ids" class="form-label">Subjects <span class="text-danger">*</span></label>
+                        <select class="form-select @error('subject_ids') is-invalid @enderror" id="subject_ids" name="subject_ids[]" multiple required disabled>
+                            <option value="">Select Class Arm First</option>
                         </select>
-                        @error('subject_id')
+                        <small class="text-muted">Hold Ctrl/Cmd to select multiple subjects</small>
+                        @error('subject_ids')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
@@ -89,14 +97,14 @@
                     </div>
 
                     <div class="col-md-6 mb-3">
-                        <label for="day" class="form-label">Day <span class="text-danger">*</span></label>
-                        <select class="form-select @error('day') is-invalid @enderror" id="day" name="day" required>
-                            <option value="">Select Day</option>
+                        <label for="days" class="form-label">Days <span class="text-danger">*</span></label>
+                        <select class="form-select @error('days') is-invalid @enderror" id="days" name="days[]" multiple required>
                             @foreach($days as $day)
                                 <option value="{{ $day }}">{{ $day }}</option>
                             @endforeach
                         </select>
-                        @error('day')
+                        <small class="text-muted">Hold Ctrl/Cmd to select multiple days</small>
+                        @error('days')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
@@ -139,10 +147,60 @@
 
                 <div class="d-flex justify-content-end gap-2 mt-4">
                     <a href="{{ route('admin.academic-management.timetables.index') }}" class="btn btn-secondary">Cancel</a>
-                    <button type="submit" class="btn btn-primary">Create Timetable Entry</button>
+                    <button type="submit" class="btn btn-primary">Create Timetable Entries</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<script>
+document.getElementById('school_class_id').addEventListener('change', function() {
+    const schoolClassId = this.value;
+    const classArmSelect = document.getElementById('class_arm_id');
+    
+    // Clear and disable class arm select
+    classArmSelect.innerHTML = '<option value="">Select Class First</option>';
+    classArmSelect.disabled = true;
+    
+    // Disable subject select
+    document.getElementById('subject_ids').disabled = true;
+    document.getElementById('subject_ids').innerHTML = '<option value="">Select Class Arm First</option>';
+    
+    if (schoolClassId) {
+        // Fetch class arms for selected school class
+        fetch(`{{ route('admin.academic-management.timetables.class-arms-by-class') }}?school_class_id=${schoolClassId}`)
+            .then(response => response.json())
+            .then(data => {
+                classArmSelect.innerHTML = '<option value="">Select Class Arm</option>';
+                data.classArms.forEach(arm => {
+                    classArmSelect.innerHTML += `<option value="${arm.id}">${arm.name}</option>`;
+                });
+                classArmSelect.disabled = false;
+            });
+    }
+});
+
+document.getElementById('class_arm_id').addEventListener('change', function() {
+    const classArmId = this.value;
+    const subjectSelect = document.getElementById('subject_ids');
+    
+    // Clear and disable subject select
+    subjectSelect.innerHTML = '<option value="">Select Class Arm First</option>';
+    subjectSelect.disabled = true;
+    
+    if (classArmId) {
+        // Fetch subjects for selected class arm
+        fetch(`{{ route('admin.academic-management.timetables.subjects-by-class-arm') }}?class_arm_id=${classArmId}`)
+            .then(response => response.json())
+            .then(data => {
+                subjectSelect.innerHTML = '';
+                data.subjects.forEach(subject => {
+                    subjectSelect.innerHTML += `<option value="${subject.id}">${subject.name} (${subject.code})</option>`;
+                });
+                subjectSelect.disabled = false;
+            });
+    }
+});
+</script>
 @endsection
