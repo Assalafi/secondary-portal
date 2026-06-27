@@ -105,13 +105,21 @@ class StudentPortalController extends Controller
         $user = Auth::user();
         $student = $user->student;
 
-        $subjects = collect();
-        if ($student && $student->classArm) {
-            $student->load('classArm.schoolClass', 'classArm.subjects');
-            $subjects = $student->classArm->subjects ?? collect();
+        if (!$student) {
+            return view('student.timetable', ['student' => null, 'timetables' => collect()]);
         }
 
-        return view('student.timetable', compact('student', 'subjects'));
+        $student->load('classArm.schoolClass');
+
+        // Get timetable entries for the student's class arm
+        $timetables = \App\Models\Timetable::where('class_arm_id', $student->current_class_arm_id)
+            ->where('status', 'Active')
+            ->with(['subject', 'teacher'])
+            ->orderBy('day')
+            ->orderBy('start_time')
+            ->get();
+
+        return view('student.timetable', compact('student', 'timetables'));
     }
 
     // ─── Assignments ───

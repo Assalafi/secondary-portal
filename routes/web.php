@@ -292,7 +292,19 @@ Route::middleware(['auth'])->group(function () {
                 Route::put('/{assignmentId}', [AssignmentController::class, 'update'])->name('update');
                 Route::delete('/{assignmentId}', [AssignmentController::class, 'destroy'])->name('destroy');
             });
-            
+
+            // Timetable Routes
+            Route::prefix('timetables')->name('timetables.')->group(function () {
+                Route::get('/', [TimetableController::class, 'index'])->name('index');
+                Route::get('/create', [TimetableController::class, 'create'])->name('create');
+                Route::post('/', [TimetableController::class, 'store'])->name('store');
+                Route::get('/{timetable}', [TimetableController::class, 'show'])->name('show');
+                Route::get('/{timetable}/edit', [TimetableController::class, 'edit'])->name('edit');
+                Route::put('/{timetable}', [TimetableController::class, 'update'])->name('update');
+                Route::delete('/{timetable}', [TimetableController::class, 'destroy'])->name('destroy');
+                Route::get('/class/{classArmId}', [TimetableController::class, 'classTimetable'])->name('class');
+            });
+
             // Test/Exam Schedule Routes
             Route::prefix('test-exam-schedule')->name('test-exam-schedule.')->group(function () {
                 Route::get('/', [TestExamScheduleController::class, 'index'])->name('index');

@@ -19,7 +19,7 @@
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
                 <div>
                     <h6 class="mb-1 fw-bold">{{ $student->classArm->schoolClass->name ?? '' }} {{ $student->classArm->name ?? '' }}</h6>
-                    <small class="text-muted">{{ $subjects->count() }} subjects registered</small>
+                    <small class="text-muted">{{ $timetables->count() }} timetable entries</small>
                 </div>
                 <div class="d-flex gap-2">
                     <span class="badge bg-primary px-3 py-2">{{ $globalSettings['current_term'] }}</span>
@@ -37,55 +37,52 @@
             </h6>
         </div>
         <div class="card-body p-0">
-            @if($subjects->count() > 0)
+            @if($timetables->count() > 0)
+                @php
+                    $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+                    $timeSlots = [
+                        '08:00', '08:45', '09:30', '10:15', '10:45',
+                        '11:30', '12:15', '01:00', '01:45', '02:30', '03:15'
+                    ];
+                    $colors = ['primary', 'success', 'info', 'warning', 'danger', 'secondary'];
+                @endphp
                 <div class="table-responsive">
                     <table class="table table-bordered mb-0 timetable-table">
                         <thead class="table-light">
                             <tr>
                                 <th class="text-center" style="width: 100px;">Time</th>
-                                <th class="text-center">Monday</th>
-                                <th class="text-center">Tuesday</th>
-                                <th class="text-center">Wednesday</th>
-                                <th class="text-center">Thursday</th>
-                                <th class="text-center">Friday</th>
+                                @foreach($days as $day)
+                                    <th class="text-center">{{ $day }}</th>
+                                @endforeach
                             </tr>
                         </thead>
                         <tbody>
-                            @php
-                                $timeSlots = [
-                                    '08:00 - 08:45',
-                                    '08:45 - 09:30',
-                                    '09:30 - 10:15',
-                                    '10:15 - 10:45',
-                                    '10:45 - 11:30',
-                                    '11:30 - 12:15',
-                                    '12:15 - 01:00',
-                                    '01:00 - 01:45',
-                                    '01:45 - 02:30',
-                                    '02:30 - 03:15',
-                                    '03:15 - 04:00',
-                                ];
-                                $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-                                $colors = ['primary', 'success', 'info', 'warning', 'danger', 'secondary'];
-                            @endphp
-
-                            @foreach($timeSlots as $index => $timeSlot)
+                            @foreach($timeSlots as $timeSlot)
                                 <tr>
                                     <td class="text-center fw-medium small" style="vertical-align: middle; background: #f8f9fa;">
                                         {{ $timeSlot }}
                                     </td>
-                                    @foreach($days as $dayIndex => $day)
+                                    @foreach($days as $day)
                                         <td class="text-center" style="vertical-align: middle; min-width: 120px;">
                                             @php
-                                                $subjectIndex = ($index + $dayIndex) % $subjects->count();
-                                                $subject = $subjects->get($subjectIndex);
-                                                $color = $colors[$subjectIndex % count($colors)];
+                                                $timetable = $timetables->firstWhere('day', $day, function($t) use ($timeSlot) {
+                                                    return $t->start_time->format('H:i') === $timeSlot;
+                                                });
                                             @endphp
-                                            @if($subject)
+                                            @if($timetable)
+                                                @php
+                                                    $subjectIndex = $timetables->search(function($t) use ($timetable) {
+                                                        return $t->id === $timetable->id;
+                                                    });
+                                                    $color = $colors[$subjectIndex % count($colors)];
+                                                @endphp
                                                 <div class="timetable-subject bg-{{ $color }} bg-opacity-10 p-2 rounded">
-                                                    <small class="fw-bold text-{{ $color }} d-block">{{ $subject->name }}</small>
-                                                    @if($subject->code)
-                                                        <small class="text-muted">{{ $subject->code }}</small>
+                                                    <small class="fw-bold text-{{ $color }} d-block">{{ $timetable->subject->name }}</small>
+                                                    @if($timetable->teacher)
+                                                        <small class="text-muted">{{ $timetable->teacher->name }}</small>
+                                                    @endif
+                                                    @if($timetable->room)
+                                                        <small class="text-muted">{{ $timetable->room }}</small>
                                                     @endif
                                                 </div>
                                             @endif
@@ -101,75 +98,24 @@
                 <div class="card-footer bg-white border-0">
                     <h6 class="small fw-bold mb-2">Subject Legend</h6>
                     <div class="d-flex flex-wrap gap-3">
-                        @foreach($subjects as $index => $subject)
-                            @php $color = $colors[$index % count($colors)]; @endphp
+                        @foreach($timetables->unique('subject_id') as $index => $timetable)
+                            @php
+                                $subjectIndex = $timetables->search(function($t) use ($timetable) {
+                                    return $t->subject_id === $timetable->subject_id;
+                                });
+                                $color = $colors[$subjectIndex % count($colors)];
+                            @endphp
                             <div class="d-flex align-items-center">
-                                <span class="badge bg-{{ $color }} me-1">{{ $subject->code ?? substr($subject->name, 0, 3) }}</span>
-                                <small class="text-muted">{{ $subject->name }}</small>
+                                <span class="badge bg-{{ $color }} me-1">{{ $timetable->subject->code ?? substr($timetable->subject->name, 0, 3) }}</span>
+                                <small class="text-muted">{{ $timetable->subject->name }}</small>
                             </div>
                         @endforeach
                     </div>
                 </div>
             @else
                 <div class="text-center py-5">
-                    <i class="ri-book-line text-muted" style="font-size: 48px;"></i>
-                    <p class="mt-2 text-muted mb-0">No subjects assigned to your class yet.</p>
-                </div>
-            @endif
-        </div>
-    </div>
-
-    <!-- Subjects List -->
-    <div class="card border-0 shadow-sm mt-4">
-        <div class="card-header bg-white border-0 py-3">
-            <h6 class="mb-0 fw-bold">
-                <i class="ri-book-open-line me-2 text-primary"></i>Registered Subjects & Teachers
-            </h6>
-        </div>
-        <div class="card-body p-0">
-            @if($subjects->count() > 0)
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th style="width:50px;">#</th>
-                                <th>Subject</th>
-                                <th>Teacher</th>
-                                <th class="text-center">Code</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($subjects as $subject)
-                                <tr>
-                                    <td>
-                                        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:32px;height:32px;background:rgba(102,126,234,0.1);">
-                                            <span class="text-primary fw-bold" style="font-size:12px;">{{ $loop->iteration }}</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="fw-medium">{{ $subject->name ?? 'N/A' }}</span>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width:28px;height:28px;background:rgba(40,167,69,0.1);">
-                                                <i class="ri-user-line text-success" style="font-size:14px;"></i>
-                                            </div>
-                                            @php $teacher = $subject->pivot->teacher_id ? \App\Models\User::find($subject->pivot->teacher_id) : null; @endphp
-                                            <span>{{ $teacher->name ?? 'TBA' }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge bg-light text-dark">{{ $subject->code ?? '-' }}</span>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @else
-                <div class="text-center py-5">
-                    <i class="ri-book-line text-muted" style="font-size: 48px;"></i>
-                    <p class="mt-2 text-muted mb-0">No subjects assigned to your class yet.</p>
+                    <i class="ri-calendar-line text-muted" style="font-size: 48px;"></i>
+                    <p class="mt-2 text-muted mb-0">No timetable entries for your class yet.</p>
                 </div>
             @endif
         </div>
