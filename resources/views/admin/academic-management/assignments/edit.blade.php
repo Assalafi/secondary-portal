@@ -237,6 +237,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 option.style.display = 'none';
             }
         });
+
+        // Set the selected arm value
+        armSelect.value = '{{ $assignment->class_arm_id ?? "" }}';
     }
 });
 </script>
