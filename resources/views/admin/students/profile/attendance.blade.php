@@ -149,17 +149,17 @@
     <div class="card custom-shadow rounded-3 bg-white border mb-4">
         <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
             <h6 class="fw-semibold mb-0">
-                <i class="ri-calendar-line me-2 text-primary"></i>Monthly Attendance - December 2024
+                <i class="ri-calendar-line me-2 text-primary"></i>Monthly Attendance
             </h6>
             <div class="d-flex gap-2">
                 <div class="dropdown">
                     <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        <i class="ri-calendar-line me-1"></i>December 2024
+                        <i class="ri-calendar-line me-1"></i>Select Month
                     </button>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#">November 2024</a></li>
-                        <li><a class="dropdown-item active" href="#">December 2024</a></li>
-                        <li><a class="dropdown-item" href="#">January 2025</a></li>
+                        @foreach($sessions ?? [] as $session)
+                            <li><a class="dropdown-item" href="#">{{ $session->name }}</a></li>
+                        @endforeach
                     </ul>
                 </div>
                 <button class="btn btn-sm btn-outline-primary">
@@ -168,163 +168,59 @@
             </div>
         </div>
         <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered text-center mb-0" style="table-layout: fixed;">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="fw-semibold">Mon</th>
-                            <th class="fw-semibold">Tue</th>
-                            <th class="fw-semibold">Wed</th>
-                            <th class="fw-semibold">Thu</th>
-                            <th class="fw-semibold">Fri</th>
-                            <th class="fw-semibold">Sat</th>
-                            <th class="fw-semibold">Sun</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="text-muted p-2" style="height: 50px;">25</td>
-                            <td class="text-muted p-2">26</td>
-                            <td class="text-muted p-2">27</td>
-                            <td class="text-muted p-2">28</td>
-                            <td class="text-muted p-2">29</td>
-                            <td class="text-muted p-2">30</td>
-                            <td class="bg-success text-white p-2 fw-bold position-relative">
-                                1
-                                <i class="ri-check-line position-absolute top-0 end-0 me-1 mt-1 small"></i>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="bg-success text-white p-2 fw-bold position-relative">
-                                2
-                                <i class="ri-check-line position-absolute top-0 end-0 me-1 mt-1 small"></i>
-                            </td>
-                            <td class="bg-success text-white p-2 fw-bold position-relative">
-                                3
-                                <i class="ri-check-line position-absolute top-0 end-0 me-1 mt-1 small"></i>
-                            </td>
-                            <td class="bg-danger text-white p-2 fw-bold position-relative">
-                                4
-                                <i class="ri-close-line position-absolute top-0 end-0 me-1 mt-1 small"></i>
-                            </td>
-                            <td class="bg-success text-white p-2 fw-bold position-relative">
-                                5
-                                <i class="ri-check-line position-absolute top-0 end-0 me-1 mt-1 small"></i>
-                            </td>
-                            <td class="bg-success text-white p-2 fw-bold position-relative">
-                                6
-                                <i class="ri-check-line position-absolute top-0 end-0 me-1 mt-1 small"></i>
-                            </td>
-                            <td class="bg-light text-secondary p-2">7</td>
-                            <td class="bg-light text-secondary p-2">8</td>
-                        </tr>
-                        <tr>
-                            <td class="bg-success text-white p-2 fw-bold position-relative">
-                                9
-                                <i class="ri-check-line position-absolute top-0 end-0 me-1 mt-1 small"></i>
-                            </td>
-                            <td class="bg-warning text-white p-2 fw-bold position-relative">
-                                10
-                                <i class="ri-time-line position-absolute top-0 end-0 me-1 mt-1 small"></i>
-                            </td>
-                            <td class="bg-success text-white p-2 fw-bold position-relative">
-                                11
-                                <i class="ri-check-line position-absolute top-0 end-0 me-1 mt-1 small"></i>
-                            </td>
-                            <td class="bg-success text-white p-2 fw-bold position-relative">
-                                12
-                                <i class="ri-check-line position-absolute top-0 end-0 me-1 mt-1 small"></i>
-                            </td>
-                            <td class="bg-success text-white p-2 fw-bold position-relative">
-                                13
-                                <i class="ri-check-line position-absolute top-0 end-0 me-1 mt-1 small"></i>
-                            </td>
-                            <td class="bg-light text-secondary p-2">14</td>
-                            <td class="bg-light text-secondary p-2">15</td>
-                        </tr>
-                        <tr>
-                            <td class="bg-success text-white p-2 fw-bold position-relative">
-                                16
-                                <i class="ri-check-line position-absolute top-0 end-0 me-1 mt-1 small"></i>
-                            </td>
-                            <td class="bg-success text-white p-2 fw-bold position-relative">
-                                17
-                                <i class="ri-check-line position-absolute top-0 end-0 me-1 mt-1 small"></i>
-                            </td>
-                            <td class="bg-danger text-white p-2 fw-bold position-relative">
-                                18
-                                <i class="ri-close-line position-absolute top-0 end-0 me-1 mt-1 small"></i>
-                            </td>
-                            <td class="bg-success text-white p-2 fw-bold position-relative">
-                                19
-                                <i class="ri-check-line position-absolute top-0 end-0 me-1 mt-1 small"></i>
-                            </td>
-                            <td class="bg-success text-white p-2 fw-bold position-relative">
-                                20
-                                <i class="ri-check-line position-absolute top-0 end-0 me-1 mt-1 small"></i>
-                            </td>
-                            <td class="bg-light text-secondary p-2">21</td>
-                            <td class="bg-light text-secondary p-2">22</td>
-                        </tr>
-                        <tr>
-                            <td class="bg-secondary text-white p-2 fw-bold position-relative">
-                                23
-                                <small class="position-absolute bottom-0 start-0 ms-1 mb-1" style="font-size: 9px;">Holiday</small>
-                            </td>
-                            <td class="bg-secondary text-white p-2 fw-bold position-relative">
-                                24
-                                <small class="position-absolute bottom-0 start-0 ms-1 mb-1" style="font-size: 9px;">Holiday</small>
-                            </td>
-                            <td class="bg-secondary text-white p-2 fw-bold position-relative">
-                                25
-                                <small class="position-absolute bottom-0 start-0 ms-1 mb-1" style="font-size: 9px;">Holiday</small>
-                            </td>
-                            <td class="bg-secondary text-white p-2 fw-bold position-relative">
-                                26
-                                <small class="position-absolute bottom-0 start-0 ms-1 mb-1" style="font-size: 9px;">Holiday</small>
-                            </td>
-                            <td class="bg-secondary text-white p-2 fw-bold position-relative">
-                                27
-                                <small class="position-absolute bottom-0 start-0 ms-1 mb-1" style="font-size: 9px;">Holiday</small>
-                            </td>
-                            <td class="bg-light text-secondary p-2">28</td>
-                            <td class="bg-light text-secondary p-2">29</td>
-                        </tr>
-                        <tr>
-                            <td class="bg-secondary text-white p-2 fw-bold position-relative">
-                                30
-                                <small class="position-absolute bottom-0 start-0 ms-1 mb-1" style="font-size: 9px;">Holiday</small>
-                            </td>
-                            <td class="bg-secondary text-white p-2 fw-bold position-relative">
-                                31
-                                <small class="position-absolute bottom-0 start-0 ms-1 mb-1" style="font-size: 9px;">Holiday</small>
-                            </td>
-                            <td class="text-muted p-2">1</td>
-                            <td class="text-muted p-2">2</td>
-                            <td class="text-muted p-2">3</td>
-                            <td class="text-muted p-2">4</td>
-                            <td class="text-muted p-2">5</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="mt-3 d-flex flex-wrap gap-2">
-                <span class="badge bg-success d-flex align-items-center gap-1">
-                    <i class="ri-check-line"></i>Present
-                </span>
-                <span class="badge bg-danger d-flex align-items-center gap-1">
-                    <i class="ri-close-line"></i>Absent
-                </span>
-                <span class="badge bg-warning d-flex align-items-center gap-1">
-                    <i class="ri-time-line"></i>Late
-                </span>
-                <span class="badge bg-light text-dark d-flex align-items-center gap-1">
-                    <i class="ri-calendar-line"></i>Weekend
-                </span>
-                <span class="badge bg-secondary d-flex align-items-center gap-1">
-                    <i class="ri-gift-line"></i>Holiday
-                </span>
-            </div>
+            @if($att->isEmpty())
+                <div class="text-center py-5">
+                    <i class="ri-calendar-line text-muted" style="font-size: 48px;"></i>
+                    <p class="text-muted mt-3">No attendance records found for this student.</p>
+                </div>
+            @else
+                <div class="table-responsive">
+                    <table class="table table-bordered text-center mb-0" style="table-layout: fixed;">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="fw-semibold">Mon</th>
+                                <th class="fw-semibold">Tue</th>
+                                <th class="fw-semibold">Wed</th>
+                                <th class="fw-semibold">Thu</th>
+                                <th class="fw-semibold">Fri</th>
+                                <th class="fw-semibold">Sat</th>
+                                <th class="fw-semibold">Sun</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @php
+                                // Group attendance by date and build calendar
+                                $attendanceByDate = $att->keyBy(function($item) {
+                                    return $item->date ? \Carbon\Carbon::parse($item->date)->format('Y-m-d') : null;
+                                });
+                            @endphp
+                            <!-- Calendar rows will be dynamically generated when attendance data exists -->
+                            <tr>
+                                <td colspan="7" class="text-center text-secondary p-4">
+                                    Calendar view requires attendance data with dates
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3 d-flex flex-wrap gap-2">
+                    <span class="badge bg-success d-flex align-items-center gap-1">
+                        <i class="ri-check-line"></i>Present
+                    </span>
+                    <span class="badge bg-danger d-flex align-items-center gap-1">
+                        <i class="ri-close-line"></i>Absent
+                    </span>
+                    <span class="badge bg-warning d-flex align-items-center gap-1">
+                        <i class="ri-time-line"></i>Late
+                    </span>
+                    <span class="badge bg-light text-dark d-flex align-items-center gap-1">
+                        <i class="ri-calendar-line"></i>Weekend
+                    </span>
+                    <span class="badge bg-secondary d-flex align-items-center gap-1">
+                        <i class="ri-gift-line"></i>Holiday
+                    </span>
+                </div>
+            @endif
         </div>
     </div>
 
