@@ -60,7 +60,7 @@
                     </div>
                     <div class="col-12 col-md-6">
                         <label class="form-label">Level *</label>
-                        <select name="level" class="form-select" required>
+                        <select name="level" id="levelSelect" class="form-select" required onchange="filterClasses()">
                             <option value="">Select Level</option>
                             <option value="Nursery" {{ $assignment->level === 'Nursery' ? 'selected' : '' }}>Nursery</option>
                             <option value="Primary" {{ $assignment->level === 'Primary' ? 'selected' : '' }}>Primary</option>
@@ -70,10 +70,19 @@
                     </div>
                     <div class="col-12 col-md-6">
                         <label class="form-label">Class</label>
-                        <select name="class_id" class="form-select">
-                            <option value="">All Classes</option>
+                        <select name="class_id" id="classSelect" class="form-select" onchange="loadClassArms()">
+                            <option value="">Select Class</option>
                             @foreach(\App\Models\SchoolClass::all() as $class)
-                                <option value="{{ $class->id }}" {{ $assignment->class_id == $class->id ? 'selected' : '' }}>{{ $class->name }}</option>
+                                <option value="{{ $class->id }}" data-level="{{ $class->level }}" {{ $assignment->class_id == $class->id ? 'selected' : '' }}>{{ $class->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label">Arm</label>
+                        <select name="class_arm_id" id="armSelect" class="form-select">
+                            <option value="">All Arms</option>
+                            @foreach(\App\Models\ClassArm::with('schoolClass')->get() as $arm)
+                                <option value="{{ $arm->id }}" data-class-id="{{ $arm->school_class_id }}" {{ $assignment->class_arm_id == $arm->id ? 'selected' : '' }} style="display: none;">{{ $arm->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -162,11 +171,50 @@ function filterClasses() {
 
     // Reset class selection
     classSelect.value = '';
+    // Reset arm selection and hide all arm options
+    const armSelect = document.getElementById('armSelect');
+    const armOptions = armSelect.querySelectorAll('option[data-class-id]');
+    armOptions.forEach(option => {
+        option.style.display = 'none';
+    });
+    armSelect.value = '';
+}
+
+function loadClassArms() {
+    const classId = document.getElementById('classSelect').value;
+    const armSelect = document.getElementById('armSelect');
+    const armOptions = armSelect.querySelectorAll('option[data-class-id]');
+
+    if (!classId) {
+        // Hide all arm options
+        armOptions.forEach(option => {
+            option.style.display = 'none';
+        });
+        armSelect.value = '';
+        return;
+    }
+
+    // Show only arms for the selected class
+    armOptions.forEach(option => {
+        if (option.dataset.classId === classId) {
+            option.style.display = '';
+        } else {
+            option.style.display = 'none';
+        }
+    });
+
+    // Reset arm selection
+    armSelect.value = '';
 }
 
 // Run filter on page load to set initial state
 document.addEventListener('DOMContentLoaded', function() {
     filterClasses();
+    // If a class is already selected, load its arms
+    const classId = document.getElementById('classSelect').value;
+    if (classId) {
+        loadClassArms();
+    }
 });
 </script>
 @endpush

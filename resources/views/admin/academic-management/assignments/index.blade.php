@@ -51,7 +51,7 @@
 
             <!-- Filters -->
             <form method="GET" action="{{ route('admin.academic-management.assignments.index') }}" class="row g-3 mb-4">
-                <div class="col-12 col-md-3">
+                <div class="col-12 col-md-2">
                     <label class="form-label">Level</label>
                     <select name="level" class="form-select">
                         <option value="">All Levels</option>
@@ -61,7 +61,7 @@
                         <option value="SS" {{ request('level') === 'SS' ? 'selected' : '' }}>SS</option>
                     </select>
                 </div>
-                <div class="col-12 col-md-3">
+                <div class="col-12 col-md-2">
                     <label class="form-label">Subject</label>
                     <select name="subject_id" class="form-select">
                         <option value="">All Subjects</option>
@@ -70,7 +70,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-12 col-md-3">
+                <div class="col-12 col-md-2">
                     <label class="form-label">Status</label>
                     <select name="status" class="form-select">
                         <option value="">All Status</option>
@@ -79,7 +79,16 @@
                         <option value="Draft" {{ request('status') === 'Draft' ? 'selected' : '' }}>Draft</option>
                     </select>
                 </div>
-                <div class="col-12 col-md-3">
+                <div class="col-12 col-md-2">
+                    <label class="form-label">Arm</label>
+                    <select name="class_arm_id" class="form-select">
+                        <option value="">All Arms</option>
+                        @foreach(\App\Models\ClassArm::all() as $arm)
+                            <option value="{{ $arm->id }}" {{ request('class_arm_id') == $arm->id ? 'selected' : '' }}>{{ $arm->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-12 col-md-4">
                     <label class="form-label">&nbsp;</label>
                     <div>
                         <button type="submit" class="btn btn-primary">Filter</button>
@@ -89,7 +98,7 @@
             </form>
 
             @php
-                $query = \App\Models\Assignment::with(['subject', 'class', 'teacher', 'createdBy']);
+                $query = \App\Models\Assignment::with(['subject', 'class', 'classArm', 'teacher', 'createdBy']);
 
                 if (request('level')) {
                     $query->where('level', request('level'));
@@ -99,6 +108,9 @@
                 }
                 if (request('status')) {
                     $query->where('status', request('status'));
+                }
+                if (request('class_arm_id')) {
+                    $query->where('class_arm_id', request('class_arm_id'));
                 }
 
                 $assignments = $query->latest('created_at')->paginate(20);
