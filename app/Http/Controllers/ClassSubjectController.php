@@ -615,8 +615,24 @@ class ClassSubjectController extends Controller
             return response()->json(['classNames' => [], 'groups' => []]);
         }
 
-        $classNames = SchoolClass::where('level', $level)->distinct()->pluck('name');
-        $groups = SchoolClass::where('level', $level)->whereNotNull('group')->distinct()->pluck('group');
+        // Predefined class names based on level
+        $classNames = [];
+        $groups = [];
+
+        switch ($level) {
+            case 'Primary':
+                $classNames = ['Primary 1', 'Primary 2', 'Primary 3', 'Primary 4', 'Primary 5', 'Primary 6'];
+                $groups = [];
+                break;
+            case 'JSS':
+                $classNames = ['JSS 1', 'JSS 2', 'JSS 3'];
+                $groups = [];
+                break;
+            case 'SS':
+                $classNames = ['SS 1', 'SS 2', 'SS 3'];
+                $groups = ['Science', 'Arts', 'Commercial'];
+                break;
+        }
 
         return response()->json(['classNames' => $classNames, 'groups' => $groups]);
     }
