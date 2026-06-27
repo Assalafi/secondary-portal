@@ -174,32 +174,69 @@
                     <p class="text-muted mt-3">No attendance records found for this student.</p>
                 </div>
             @else
+                @php
+                    // Get the first attendance date to determine the month
+                    $firstDate = $att->first()->date ?? $att->first()->created_at;
+                    $currentMonth = \Carbon\Carbon::parse($firstDate);
+                    $attendanceByDate = $att->keyBy(function($item) {
+                        return $item->date ? \Carbon\Carbon::parse($item->date)->format('Y-m-d') : null;
+                    });
+                    
+                    // Build calendar for the month
+                    $startOfMonth = $currentMonth->copy()->startOfMonth();
+                    $endOfMonth = $currentMonth->copy()->endOfMonth();
+                    $daysInMonth = $endOfMonth->day;
+                    $startDayOfWeek = $startOfMonth->dayOfWeek; // 0 = Sunday, 6 = Saturday
+                @endphp
                 <div class="table-responsive">
                     <table class="table table-bordered text-center mb-0" style="table-layout: fixed;">
                         <thead class="table-light">
                             <tr>
+                                <th class="fw-semibold">Sun</th>
                                 <th class="fw-semibold">Mon</th>
                                 <th class="fw-semibold">Tue</th>
                                 <th class="fw-semibold">Wed</th>
                                 <th class="fw-semibold">Thu</th>
                                 <th class="fw-semibold">Fri</th>
                                 <th class="fw-semibold">Sat</th>
-                                <th class="fw-semibold">Sun</th>
                             </tr>
                         </thead>
                         <tbody>
                             @php
-                                // Group attendance by date and build calendar
-                                $attendanceByDate = $att->keyBy(function($item) {
-                                    return $item->date ? \Carbon\Carbon::parse($item->date)->format('Y-m-d') : null;
-                                });
+                                $day = 1;
+                                $blankDays = $startDayOfWeek;
                             @endphp
-                            <!-- Calendar rows will be dynamically generated when attendance data exists -->
-                            <tr>
-                                <td colspan="7" class="text-center text-secondary p-4">
-                                    Calendar view requires attendance data with dates
-                                </td>
-                            </tr>
+                            @while($day <= $daysInMonth)
+                                <tr>
+                                    @for($i = 0; $i < 7; $i++)
+                                        @if($blankDays > 0 || $day > $daysInMonth)
+                                            <td class="bg-light text-secondary p-2">
+                                                @if($blankDays > 0)
+                                                    @php $blankDays--; @endphp
+                                                @endif
+                                            </td>
+                                        @else
+                                            @php
+                                                $dateStr = $currentMonth->format('Y-m-') . str_pad($day, 2, '0', STR_PAD_LEFT);
+                                                $attendance = $attendanceByDate->get($dateStr);
+                                                $status = $attendance->status ?? null;
+                                                $isWeekend = in_array($i, [0, 6]);
+                                            @endphp
+                                            <td class="p-2 fw-bold position-relative @if($isWeekend) bg-light text-secondary @elseif($status == 'Present') bg-success text-white @elseif($status == 'Absent') bg-danger text-white @elseif($status == 'Late') bg-warning text-white @else text-dark @endif" style="height: 50px;">
+                                                {{ $day }}
+                                                @if($status == 'Present')
+                                                    <i class="ri-check-line position-absolute top-0 end-0 me-1 mt-1 small"></i>
+                                                @elseif($status == 'Absent')
+                                                    <i class="ri-close-line position-absolute top-0 end-0 me-1 mt-1 small"></i>
+                                                @elseif($status == 'Late')
+                                                    <i class="ri-time-line position-absolute top-0 end-0 me-1 mt-1 small"></i>
+                                                @endif
+                                            </td>
+                                            @php $day++; @endphp
+                                        @endif
+                                    @endfor
+                                </tr>
+                            @endwhile
                         </tbody>
                     </table>
                 </div>
@@ -215,9 +252,6 @@
                     </span>
                     <span class="badge bg-light text-dark d-flex align-items-center gap-1">
                         <i class="ri-calendar-line"></i>Weekend
-                    </span>
-                    <span class="badge bg-secondary d-flex align-items-center gap-1">
-                        <i class="ri-gift-line"></i>Holiday
                     </span>
                 </div>
             @endif
