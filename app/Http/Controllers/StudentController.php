@@ -774,6 +774,18 @@ class StudentController extends Controller
     }
 
     /**
+     * Generate PDF for student academic report
+     */
+    public function profileAcademicPdf(Student $student)
+    {
+        $student->load(['user', 'classArm.schoolClass', 'academicSession', 'scores.scoreBatch.subject', 'scores.scoreBatch.term']);
+        
+        $pdf = PDF::loadView('admin.students.profile.academic-pdf', compact('student'));
+        
+        return $pdf->download('academic_' . $student->admission_no . '_report.pdf');
+    }
+
+    /**
      * Show promote/transfer index page
      */
     public function promoteIndex()

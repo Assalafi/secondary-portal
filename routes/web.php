@@ -77,6 +77,7 @@ Route::middleware(['auth'])->group(function () {
             // Student profile tabs
             Route::get('/{student}/profile/overview', [StudentController::class, 'profileOverview'])->name('profile.overview');
             Route::get('/{student}/profile/academic', [StudentController::class, 'profileAcademic'])->name('profile.academic');
+            Route::get('/{student}/profile/academic/pdf', [StudentController::class, 'profileAcademicPdf'])->name('profile.academic.pdf');
             Route::get('/{student}/profile/fees', [StudentController::class, 'profileFees'])->name('profile.fees');
             Route::get('/{student}/profile/attendance', [StudentController::class, 'profileAttendance'])->name('profile.attendance');
             Route::get('/{student}/profile/documents', [StudentController::class, 'profileDocuments'])->name('profile.documents');

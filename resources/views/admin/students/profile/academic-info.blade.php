@@ -20,11 +20,11 @@
         </div>
         <div class="col-md-4 text-md-end">
             <div class="d-flex gap-2 justify-content-md-end">
-                <button class="btn btn-outline-primary d-flex align-items-center gap-2">
+                <button class="btn btn-outline-primary d-flex align-items-center gap-2" onclick="exportAcademic()">
                     <i class="ri-download-line"></i>
                     Export Report
                 </button>
-                <button class="btn btn-primary d-flex align-items-center gap-2">
+                <button class="btn btn-primary d-flex align-items-center gap-2" onclick="printAcademic()">
                     <i class="ri-printer-line"></i>
                     Print Report
                 </button>
@@ -312,3 +312,64 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+    <script>
+        function printAcademic() {
+            window.open('{{ route('admin.students.profile.academic.pdf', $student->id) }}', '_blank');
+        }
+
+        function exportAcademic() {
+            const academicData = {
+                student_name: "{{ $student->full_name ?? '' }}",
+                admission_no: "{{ $student->admission_no ?? '' }}",
+                class: "{{ trim((data_get($student, 'classArm.schoolClass.name') ?: '') . ' ' . (data_get($student, 'classArm.name') ?: '')) }}",
+                academic_year: "{{ data_get($student, 'academicSession.name', '') }}",
+                total_subjects: "{{ $student->scores->count() }}",
+                average_score: "{{ $student->scores->isNotEmpty() ? number_format($student->scores->avg('total'), 1) : 'N/A' }}"
+            };
+
+            const scores = [];
+            @foreach($student->scores as $score)
+                scores.push({
+                    subject: "{{ $score->scoreBatch->subject->name ?? 'N/A' }}",
+                    first_ca: "{{ number_format($score->first_ca ?? 0, 1) }}",
+                    second_ca: "{{ number_format($score->second_ca ?? 0, 1) }}",
+                    third_ca: "{{ number_format($score->third_ca ?? 0, 1) }}",
+                    exam: "{{ number_format($score->exam ?? 0, 1) }}",
+                    total: "{{ number_format($score->total ?? 0, 1) }}",
+                    grade: "{{ $score->grade ?? 'N/A' }}",
+                    term: "{{ $score->scoreBatch->term->name ?? 'N/A' }}"
+                });
+            @endforeach
+
+            let csvContent = '"FIELD","VALUE"\n';
+            Object.entries(academicData).forEach(([key, value]) => {
+                csvContent += `"${key.replace(/_/g, ' ').toUpperCase()}","${value}"\n`;
+            });
+
+            csvContent += '\n"SUBJECT","1ST CA","2ND CA","3RD CA","EXAM","TOTAL","GRADE","TERM"\n';
+            scores.forEach(s => {
+                csvContent += `"${s.subject}","${s.first_ca}","${s.second_ca}","${s.third_ca}","${s.exam}","${s.total}","${s.grade}","${s.term}"\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `academic_${academicData.admission_no}_report.csv`;
+            link.click();
+
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Export Successful',
+                    text: 'Academic report has been exported to CSV file.',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            } else {
+                alert('Academic report exported successfully!');
+            }
+        }
+    </script>
+@endpush
