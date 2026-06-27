@@ -17,6 +17,7 @@ class Assignment extends Model
         'submission_info',
         'level',
         'class_id',
+        'class_arm_id',
         'subject_id',
         'teacher_id',
         'due_date',
@@ -38,6 +39,11 @@ class Assignment extends Model
     public function class(): BelongsTo
     {
         return $this->belongsTo(SchoolClass::class, 'class_id');
+    }
+
+    public function classArm(): BelongsTo
+    {
+        return $this->belongsTo(ClassArm::class, 'class_arm_id');
     }
 
     public function subject(): BelongsTo
