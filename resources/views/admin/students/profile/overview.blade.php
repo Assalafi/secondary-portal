@@ -411,31 +411,8 @@
     <script>
         // Print Profile Function
         function printProfile() {
-            // Hide unnecessary elements for printing
-            const elementsToHide = [
-                '.btn',
-                '.dropdown',
-                'nav',
-                '.breadcrumb'
-            ];
-
-            elementsToHide.forEach(selector => {
-                document.querySelectorAll(selector).forEach(el => {
-                    el.style.display = 'none';
-                });
-            });
-
-            // Print
-            window.print();
-
-            // Restore elements after printing
-            setTimeout(() => {
-                elementsToHide.forEach(selector => {
-                    document.querySelectorAll(selector).forEach(el => {
-                        el.style.display = '';
-                    });
-                });
-            }, 1000);
+            // Open PDF in new tab
+            window.open('{{ route('admin.students.profile.pdf', $student->id) }}', '_blank');
         }
 
         // Export Data Function

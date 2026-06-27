@@ -80,6 +80,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{student}/profile/fees', [StudentController::class, 'profileFees'])->name('profile.fees');
             Route::get('/{student}/profile/attendance', [StudentController::class, 'profileAttendance'])->name('profile.attendance');
             Route::get('/{student}/profile/documents', [StudentController::class, 'profileDocuments'])->name('profile.documents');
+            Route::get('/{student}/profile/pdf', [StudentController::class, 'profilePdf'])->name('profile.pdf');
             
             // Promote/Transfer
             Route::get('/promote', [StudentController::class, 'promoteIndex'])->name('promote.index');
