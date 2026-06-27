@@ -78,7 +78,7 @@ class ClassSubjectController extends Controller
     public function classesStore(Request $request)
     {
         $request->validate([
-            'level' => 'required|string|in:JSS,SS,Primary',
+            'level' => 'required|string|in:Nursery,Primary,JSS,SS',
             'class_name' => 'required|string',
             'group' => 'nullable|string|in:Science,Arts,Commercial',
             'arm' => 'required|string|max:1|in:A,B,C,D,E,F',
@@ -123,6 +123,7 @@ class ClassSubjectController extends Controller
     {
         // Convert level and class name to numeric level for sorting
         $levelMap = [
+            'Nursery' => 0,
             'Primary' => 1,
             'JSS' => 2,
             'SS' => 3
@@ -620,6 +621,10 @@ class ClassSubjectController extends Controller
         $groups = [];
 
         switch ($level) {
+            case 'Nursery':
+                $classNames = ['Nursery 1', 'Nursery 2', 'Nursery 3'];
+                $groups = [];
+                break;
             case 'Primary':
                 $classNames = ['Primary 1', 'Primary 2', 'Primary 3', 'Primary 4', 'Primary 5', 'Primary 6'];
                 $groups = [];
