@@ -721,9 +721,13 @@ class StudentController extends Controller
      */
     public function profileAcademic(Student $student)
     {
-        $student->load(['user', 'classArm.schoolClass', 'academicSession', 'assessmentResults']);
+        $student->load(['user', 'classArm.schoolClass', 'academicSession', 'assessmentResults.assessment.subject', 'assessmentResults.assessment.term', 'assessmentResults.assessment.academicSession']);
         
-        return view('admin.students.profile.academic-info', compact('student'));
+        // Get available terms and sessions for filtering
+        $terms = Term::orderBy('id')->get();
+        $sessions = AcademicSession::orderBy('name', 'desc')->get();
+        
+        return view('admin.students.profile.academic-info', compact('student', 'terms', 'sessions'));
     }
 
     /**

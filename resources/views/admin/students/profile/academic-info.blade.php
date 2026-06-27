@@ -110,7 +110,7 @@
                         <div class="col-12">
                             <div class="d-flex justify-content-between">
                                 <span class="fw-medium text-secondary">Current Term:</span>
-                                <span class="badge bg-info-subtle text-info">{{ $currentTerm->name ?? '—' }}</span>
+                                <span class="badge bg-info-subtle text-info">{{ $student->academicSession->name ?? '—' }}</span>
                             </div>
                         </div>
                         <div class="col-12">
@@ -131,40 +131,54 @@
                     </h6>
                 </div>
                 <div class="card-body">
-                    <div class="text-center mb-3">
-                        <div class="d-inline-flex align-items-center justify-content-center bg-success-subtle text-success rounded-circle mb-2" style="width: 60px; height: 60px;">
-                            <span class="fw-bold fs-5">3.8</span>
+                    @if($student->assessmentResults->isEmpty())
+                        <div class="text-center py-3">
+                            <p class="text-muted mb-0">No data available</p>
                         </div>
-                        <p class="mb-0 fw-medium">Current GPA</p>
-                        <small class="text-secondary">Out of 4.0</small>
-                    </div>
-                    <hr>
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <div class="d-flex justify-content-between">
-                                <span class="fw-medium text-secondary">Class Position:</span>
-                                <span class="badge bg-warning-subtle text-warning">5th of 45</span>
+                    @else
+                        @php
+                            $avgScore = $student->assessmentResults->avg('score');
+                            $totalResults = $student->assessmentResults->count();
+                            $gradeCounts = $student->assessmentResults->groupBy('grade')->map->count();
+                            $bestGrade = $gradeCounts->sortKeysDesc()->keys()->first();
+                        @endphp
+                        <div class="text-center mb-3">
+                            <div class="d-inline-flex align-items-center justify-content-center bg-success-subtle text-success rounded-circle mb-2" style="width: 60px; height: 60px;">
+                                <span class="fw-bold fs-5">{{ number_format($avgScore, 1) }}</span>
+                            </div>
+                            <p class="mb-0 fw-medium">Average Score</p>
+                            <small class="text-secondary">{{ $totalResults }} assessments</small>
+                        </div>
+                        <hr>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <span class="fw-medium text-secondary">Total Assessments:</span>
+                                    <span>{{ $totalResults }}</span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <span class="fw-medium text-secondary">Average Grade:</span>
+                                    <span class="badge @if($bestGrade == 'A') bg-success @elseif($bestGrade == 'B') bg-primary @elseif($bestGrade == 'C') bg-warning @else bg-danger @endif">
+                                        {{ $bestGrade ?? 'N/A' }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <span class="fw-medium text-secondary">A Grades:</span>
+                                    <span>{{ $gradeCounts->get('A', 0) }}</span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <span class="fw-medium text-secondary">B Grades:</span>
+                                    <span>{{ $gradeCounts->get('B', 0) }}</span>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-12">
-                            <div class="d-flex justify-content-between">
-                                <span class="fw-medium text-secondary">Overall Grade:</span>
-                                <span class="badge bg-success">A</span>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="d-flex justify-content-between">
-                                <span class="fw-medium text-secondary">Best Subject:</span>
-                                <span>Mathematics</span>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="d-flex justify-content-between">
-                                <span class="fw-medium text-secondary">Needs Improvement:</span>
-                                <span>English Language</span>
-                            </div>
-                        </div>
-                    </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -174,120 +188,57 @@
             <div class="card custom-shadow rounded-3 bg-white border">
                 <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
                     <h6 class="fw-semibold mb-0">
-                        <i class="ri-file-list-3-line me-2 text-primary"></i>Subject Performance - 2nd Term 2024/2025
+                        <i class="ri-file-list-3-line me-2 text-primary"></i>Subject Performance
                     </h6>
                     <div class="dropdown">
                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
                             <i class="ri-filter-line me-1"></i>Filter Term
                         </button>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#">1st Term</a></li>
-                            <li><a class="dropdown-item active" href="#">2nd Term</a></li>
-                            <li><a class="dropdown-item" href="#">3rd Term</a></li>
+                            @foreach($terms as $term)
+                                <li><a class="dropdown-item" href="#">{{ $term->name }}</a></li>
+                            @endforeach
                         </ul>
                     </div>
                 </div>
                 <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="fw-semibold">Subject</th>
-                                    <th class="fw-semibold text-center">1st CA<br><small class="text-secondary">(20)</small></th>
-                                    <th class="fw-semibold text-center">2nd CA<br><small class="text-secondary">(20)</small></th>
-                                    <th class="fw-semibold text-center">Exam<br><small class="text-secondary">(60)</small></th>
-                                    <th class="fw-semibold text-center">Total<br><small class="text-secondary">(100)</small></th>
-                                    <th class="fw-semibold text-center">Grade</th>
-                                    <th class="fw-semibold text-center">Position</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="fw-medium">Mathematics</td>
-                                    <td class="text-center">18</td>
-                                    <td class="text-center">17</td>
-                                    <td class="text-center">55</td>
-                                    <td class="text-center fw-bold text-success">90</td>
-                                    <td class="text-center"><span class="badge bg-success">A</span></td>
-                                    <td class="text-center"><span class="badge bg-warning-subtle text-warning">2nd</span></td>
-                                </tr>
-                                <tr>
-                                    <td class="fw-medium">Basic Science</td>
-                                    <td class="text-center">17</td>
-                                    <td class="text-center">18</td>
-                                    <td class="text-center">50</td>
-                                    <td class="text-center fw-bold text-success">85</td>
-                                    <td class="text-center"><span class="badge bg-success">A</span></td>
-                                    <td class="text-center"><span class="badge bg-warning-subtle text-warning">4th</span></td>
-                                </tr>
-                                <tr>
-                                    <td class="fw-medium">Social Studies</td>
-                                    <td class="text-center">16</td>
-                                    <td class="text-center">15</td>
-                                    <td class="text-center">48</td>
-                                    <td class="text-center fw-bold text-primary">79</td>
-                                    <td class="text-center"><span class="badge bg-primary">B</span></td>
-                                    <td class="text-center"><span class="badge bg-secondary-subtle text-secondary">6th</span></td>
-                                </tr>
-                                <tr>
-                                    <td class="fw-medium">English Language</td>
-                                    <td class="text-center">15</td>
-                                    <td class="text-center">16</td>
-                                    <td class="text-center">45</td>
-                                    <td class="text-center fw-bold text-primary">76</td>
-                                    <td class="text-center"><span class="badge bg-primary">B</span></td>
-                                    <td class="text-center"><span class="badge bg-secondary-subtle text-secondary">8th</span></td>
-                                </tr>
-                                <tr>
-                                    <td class="fw-medium">French</td>
-                                    <td class="text-center">14</td>
-                                    <td class="text-center">16</td>
-                                    <td class="text-center">42</td>
-                                    <td class="text-center fw-bold text-warning">72</td>
-                                    <td class="text-center"><span class="badge bg-warning">C</span></td>
-                                    <td class="text-center"><span class="badge bg-secondary-subtle text-secondary">12th</span></td>
-                                </tr>
-                                <tr>
-                                    <td class="fw-medium">Civic Education</td>
-                                    <td class="text-center">16</td>
-                                    <td class="text-center">17</td>
-                                    <td class="text-center">49</td>
-                                    <td class="text-center fw-bold text-primary">82</td>
-                                    <td class="text-center"><span class="badge bg-success">A</span></td>
-                                    <td class="text-center"><span class="badge bg-warning-subtle text-warning">3rd</span></td>
-                                </tr>
-                                <tr>
-                                    <td class="fw-medium">Computer Studies</td>
-                                    <td class="text-center">19</td>
-                                    <td class="text-center">18</td>
-                                    <td class="text-center">52</td>
-                                    <td class="text-center fw-bold text-success">89</td>
-                                    <td class="text-center"><span class="badge bg-success">A</span></td>
-                                    <td class="text-center"><span class="badge bg-warning-subtle text-warning">1st</span></td>
-                                </tr>
-                                <tr>
-                                    <td class="fw-medium">Physical & Health Education</td>
-                                    <td class="text-center">17</td>
-                                    <td class="text-center">16</td>
-                                    <td class="text-center">46</td>
-                                    <td class="text-center fw-bold text-primary">79</td>
-                                    <td class="text-center"><span class="badge bg-primary">B</span></td>
-                                    <td class="text-center"><span class="badge bg-secondary-subtle text-secondary">7th</span></td>
-                                </tr>
-                            </tbody>
-                            <tfoot class="table-light">
-                                <tr>
-                                    <th class="fw-bold">TOTAL/AVERAGE</th>
-                                    <th class="text-center fw-bold">132/160</th>
-                                    <th class="text-center fw-bold">133/160</th>
-                                    <th class="text-center fw-bold">387/480</th>
-                                    <th class="text-center fw-bold text-success">652/800</th>
-                                    <th class="text-center"><span class="badge bg-success fs-6">A</span></th>
-                                    <th class="text-center"><span class="badge bg-warning-subtle text-warning fs-6">5th</span></th>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
+                    @if($student->assessmentResults->isEmpty())
+                        <div class="text-center py-5">
+                            <i class="ri-file-list-line text-muted" style="font-size: 48px;"></i>
+                            <p class="text-muted mt-3">No assessment results recorded yet.</p>
+                        </div>
+                    @else
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="fw-semibold">Subject</th>
+                                        <th class="fw-semibold text-center">Assessment</th>
+                                        <th class="fw-semibold text-center">Score</th>
+                                        <th class="fw-semibold text-center">Total</th>
+                                        <th class="fw-semibold text-center">Grade</th>
+                                        <th class="fw-semibold text-center">Term</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($student->assessmentResults as $result)
+                                        <tr>
+                                            <td class="fw-medium">{{ $result->assessment->subject->name ?? 'N/A' }}</td>
+                                            <td class="text-center">{{ $result->assessment->title ?? 'N/A' }}</td>
+                                            <td class="text-center fw-bold">{{ number_format($result->score, 2) }}</td>
+                                            <td class="text-center">{{ number_format($result->assessment->total_marks ?? 0, 2) }}</td>
+                                            <td class="text-center">
+                                                <span class="badge @if($result->grade == 'A') bg-success @elseif($result->grade == 'B') bg-primary @elseif($result->grade == 'C') bg-warning @else bg-danger @endif">
+                                                    {{ $result->grade ?? 'N/A' }}
+                                                </span>
+                                            </td>
+                                            <td class="text-center">{{ $result->assessment->term->name ?? 'N/A' }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
                 </div>
             </div>
 
@@ -295,36 +246,62 @@
             <div class="card custom-shadow rounded-3 bg-white border mt-4">
                 <div class="card-header bg-transparent border-0">
                     <h6 class="fw-semibold mb-0">
-                        <i class="ri-bar-chart-line me-2 text-primary"></i>Performance Trend
+                        <i class="ri-bar-chart-line me-2 text-primary"></i>Performance Trend by Term
                     </h6>
                 </div>
                 <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-4 text-center">
-                            <div class="border rounded p-3">
-                                <h5 class="text-primary mb-1">81.5%</h5>
-                                <p class="mb-0 text-secondary">1st Term Average</p>
+                    @if($student->assessmentResults->isEmpty())
+                        <div class="text-center py-3">
+                            <p class="text-muted mb-0">No data available</p>
+                        </div>
+                    @else
+                        @php
+                            $termAverages = $student->assessmentResults->groupBy(function($result) {
+                                return $result->assessment->term->name ?? 'Unknown';
+                            })->map(function($results) {
+                                return $results->avg('score');
+                            });
+                        @endphp
+                        <div class="row g-3">
+                            @foreach($terms as $term)
+                                @php
+                                    $avg = $termAverages->get($term->name, 0);
+                                    $isHighest = $termAverages->max() == $avg && $avg > 0;
+                                @endphp
+                                <div class="col-md-4 text-center">
+                                    <div class="border rounded p-3 @if($isHighest) bg-success-subtle @endif">
+                                        <h5 class="@if($isHighest) text-success @else text-primary @endif mb-1">{{ number_format($avg, 1) }}%</h5>
+                                        <p class="mb-0 text-secondary">{{ $term->name }} Average</p>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                        @if($termAverages->count() > 1)
+                            @php
+                                $firstTerm = $termAverages->first();
+                                $lastTerm = $termAverages->last();
+                                $trend = $lastTerm - $firstTerm;
+                            @endphp
+                            <div class="mt-3">
+                                @if($trend > 0)
+                                    <div class="d-flex align-items-center">
+                                        <i class="ri-arrow-up-line text-success me-2"></i>
+                                        <span class="text-success fw-medium">Improved by {{ number_format($trend, 1) }} points</span>
+                                    </div>
+                                @elseif($trend < 0)
+                                    <div class="d-flex align-items-center">
+                                        <i class="ri-arrow-down-line text-danger me-2"></i>
+                                        <span class="text-danger fw-medium">Declined by {{ number_format(abs($trend), 1) }} points</span>
+                                    </div>
+                                @else
+                                    <div class="d-flex align-items-center">
+                                        <i class="ri-subtract-line text-secondary me-2"></i>
+                                        <span class="text-secondary fw-medium">Consistent performance</span>
+                                    </div>
+                                @endif
                             </div>
-                        </div>
-                        <div class="col-md-4 text-center">
-                            <div class="border rounded p-3 bg-success-subtle">
-                                <h5 class="text-success mb-1">81.5%</h5>
-                                <p class="mb-0 text-secondary">2nd Term Average</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4 text-center">
-                            <div class="border rounded p-3">
-                                <h5 class="text-secondary mb-1">--</h5>
-                                <p class="mb-0 text-secondary">3rd Term Average</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <div class="d-flex align-items-center">
-                            <i class="ri-arrow-up-line text-success me-2"></i>
-                            <span class="text-success fw-medium">Consistent performance maintained</span>
-                        </div>
-                    </div>
+                        @endif
+                    @endif
                 </div>
             </div>
         </div>
