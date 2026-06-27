@@ -20,10 +20,17 @@
         </div>
         <div class="col-md-4 text-md-end">
             <div class="d-flex gap-2 justify-content-md-end">
-                <button class="btn btn-outline-primary d-flex align-items-center gap-2">
-                    <i class="ri-calendar-check-line"></i>
-                    Mark Attendance
-                </button>
+                @if($student->current_class_arm_id)
+                    <a href="{{ route('admin.attendance.take', $student->current_class_arm_id) }}" class="btn btn-outline-primary d-flex align-items-center gap-2">
+                        <i class="ri-calendar-check-line"></i>
+                        Mark Attendance
+                    </a>
+                @else
+                    <button class="btn btn-outline-primary d-flex align-items-center gap-2" disabled>
+                        <i class="ri-calendar-check-line"></i>
+                        Mark Attendance
+                    </button>
+                @endif
                 <button class="btn btn-outline-secondary d-flex align-items-center gap-2" onclick="exportAttendance()">
                     <i class="ri-download-line"></i>
                     Export
