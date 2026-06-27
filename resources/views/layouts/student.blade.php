@@ -75,22 +75,7 @@
     <!-- Start Preloader Area -->
     <div class="preloader" id="preloader">
         <div class="preloader">
-            <div class="waviy position-relative">
-                @php
-                    $abbreviation = '';
-                    $words = explode(' ', $globalSettings['school_name']);
-                    foreach (array_slice($words, 0, 3) as $word) {
-                        $abbreviation .= strtoupper(substr($word, 0, 1));
-                    }
-                    if (strlen($abbreviation) < 3) {
-                        $abbreviation = 'SSP';
-                    }
-                    $chars = str_split(substr($abbreviation, 0, 3));
-                @endphp
-                @foreach ($chars as $char)
-                    <span class="d-inline-block">{{ $char }}</span>
-                @endforeach
-            </div>
+            <div class="loading-text">Loading...</div>
         </div>
     </div>
     <!-- End Preloader Area -->
