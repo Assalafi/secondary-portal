@@ -42,14 +42,12 @@
                                         $statusBadge = $isOverdue ? 'bg-danger' : ($daysLeft <= 2 ? 'bg-warning' : 'bg-success');
                                         $statusText = $isOverdue ? 'Overdue' : ($daysLeft <= 2 ? 'Due Soon' : 'Active');
                                     @endphp
-                                    <tr>
+                                    <tr onclick="window.location='{{ route('student.assignments.show', $assignment) }}'" style="cursor: pointer;">
                                         <td>{{ $loop->iteration }}</td>
                                         <td>
-                                            <a href="{{ route('student.assignments.show', $assignment) }}" class="text-decoration-none fw-medium">
-                                                {{ $assignment->title }}
-                                            </a>
+                                            <p class="mb-0 fw-medium">{{ $assignment->title }}</p>
                                             @if($assignment->instructions)
-                                                <br><small class="text-muted">{{ Str::limit($assignment->instructions, 50) }}</small>
+                                                <small class="text-muted">{{ Str::limit($assignment->instructions, 50) }}</small>
                                             @endif
                                         </td>
                                         <td>{{ $assignment->subject->name ?? '-' }}</td>
