@@ -66,6 +66,11 @@
     </div>
 
     <!-- Document Summary Cards -->
+    @php
+        $hasPhoto = !empty($student->photo_path);
+        $totalDocs = $hasPhoto ? 1 : 0;
+        $verifiedDocs = $hasPhoto ? 1 : 0;
+    @endphp
     <div class="row g-4 mb-4">
         <div class="col-lg-3 col-md-6">
             <div class="card custom-shadow rounded-3 bg-white border">
@@ -77,7 +82,7 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h6 class="mb-0 fw-semibold">8</h6>
+                            <h6 class="mb-0 fw-semibold">{{ $totalDocs }}</h6>
                             <p class="text-secondary mb-0 small">Total Documents</p>
                         </div>
                     </div>
@@ -94,7 +99,7 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h6 class="mb-0 fw-semibold">6</h6>
+                            <h6 class="mb-0 fw-semibold">{{ $verifiedDocs }}</h6>
                             <p class="text-secondary mb-0 small">Verified</p>
                         </div>
                     </div>
@@ -111,7 +116,7 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h6 class="mb-0 fw-semibold">2</h6>
+                            <h6 class="mb-0 fw-semibold">0</h6>
                             <p class="text-secondary mb-0 small">Pending Review</p>
                         </div>
                     </div>
@@ -128,7 +133,7 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h6 class="mb-0 fw-semibold">4.2 MB</h6>
+                            <h6 class="mb-0 fw-semibold">—</h6>
                             <p class="text-secondary mb-0 small">Total Size</p>
                         </div>
                     </div>
@@ -146,123 +151,37 @@
                     <h6 class="fw-semibold mb-0">
                         <i class="ri-user-line me-2 text-primary"></i>Personal Documents
                     </h6>
-                    <span class="badge bg-primary-subtle text-primary">4 Files</span>
+                    <span class="badge bg-primary-subtle text-primary">{{ $hasPhoto ? '1 File' : '0 Files' }}</span>
                 </div>
                 <div class="card-body p-0">
                     <div class="list-group list-group-flush">
-                        <div class="list-group-item d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center">
-                                <div class="flex-shrink-0 me-3">
-                                    <div class="d-flex align-items-center justify-content-center bg-danger-subtle text-danger rounded" style="width: 40px; height: 40px;">
-                                        <i class="ri-file-pdf-line"></i>
+                        @if($hasPhoto)
+                            <div class="list-group-item d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="d-flex align-items-center justify-content-center bg-success-subtle text-success rounded" style="width: 40px; height: 40px;">
+                                            <i class="ri-image-line"></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1 fw-medium">Passport Photograph</h6>
+                                        <p class="mb-0 small text-secondary">Profile photo</p>
                                     </div>
                                 </div>
-                                <div>
-                                    <h6 class="mb-1 fw-medium">Birth Certificate</h6>
-                                    <p class="mb-0 small text-secondary">Uploaded: 15th Jul 2024 • 1.2 MB</p>
+                                <div class="d-flex align-items-center gap-1">
+                                    <span class="badge bg-success-subtle text-success">Verified</span>
+                                    <a href="{{ asset('storage/' . $student->photo_path) }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                        <i class="ri-eye-line"></i>
+                                    </a>
                                 </div>
                             </div>
-                            <div class="d-flex align-items-center gap-1">
-                                <span class="badge bg-success-subtle text-success">Verified</span>
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                        <i class="ri-more-2-line"></i>
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="#"><i class="ri-eye-line me-2"></i>View</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-download-line me-2"></i>Download</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-edit-line me-2"></i>Replace</a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item text-danger" href="#"><i class="ri-delete-bin-line me-2"></i>Delete</a></li>
-                                    </ul>
-                                </div>
+                        @endif
+                        @if(!$hasPhoto)
+                            <div class="list-group-item text-center py-4">
+                                <i class="ri-file-text-line text-muted" style="font-size: 32px;"></i>
+                                <p class="text-muted mb-0 mt-2">No personal documents uploaded</p>
                             </div>
-                        </div>
-                        <div class="list-group-item d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center">
-                                <div class="flex-shrink-0 me-3">
-                                    <div class="d-flex align-items-center justify-content-center bg-danger-subtle text-danger rounded" style="width: 40px; height: 40px;">
-                                        <i class="ri-file-pdf-line"></i>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h6 class="mb-1 fw-medium">State of Origin Certificate</h6>
-                                    <p class="mb-0 small text-secondary">Uploaded: 15th Jul 2024 • 0.8 MB</p>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center gap-1">
-                                <span class="badge bg-success-subtle text-success">Verified</span>
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                        <i class="ri-more-2-line"></i>
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="#"><i class="ri-eye-line me-2"></i>View</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-download-line me-2"></i>Download</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-edit-line me-2"></i>Replace</a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item text-danger" href="#"><i class="ri-delete-bin-line me-2"></i>Delete</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="list-group-item d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center">
-                                <div class="flex-shrink-0 me-3">
-                                    <div class="d-flex align-items-center justify-content-center bg-success-subtle text-success rounded" style="width: 40px; height: 40px;">
-                                        <i class="ri-image-line"></i>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h6 class="mb-1 fw-medium">Passport Photograph</h6>
-                                    <p class="mb-0 small text-secondary">Uploaded: 15th Jul 2024 • 0.3 MB</p>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center gap-1">
-                                <span class="badge bg-success-subtle text-success">Verified</span>
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                        <i class="ri-more-2-line"></i>
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="#"><i class="ri-eye-line me-2"></i>View</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-download-line me-2"></i>Download</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-edit-line me-2"></i>Replace</a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item text-danger" href="#"><i class="ri-delete-bin-line me-2"></i>Delete</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="list-group-item d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center">
-                                <div class="flex-shrink-0 me-3">
-                                    <div class="d-flex align-items-center justify-content-center bg-danger-subtle text-danger rounded" style="width: 40px; height: 40px;">
-                                        <i class="ri-file-pdf-line"></i>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h6 class="mb-1 fw-medium">Medical Report</h6>
-                                    <p class="mb-0 small text-secondary">Uploaded: 20th Jul 2024 • 0.5 MB</p>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center gap-1">
-                                <span class="badge bg-warning-subtle text-warning">Pending Review</span>
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                        <i class="ri-more-2-line"></i>
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="#"><i class="ri-eye-line me-2"></i>View</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-download-line me-2"></i>Download</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-check-line me-2"></i>Verify</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-edit-line me-2"></i>Replace</a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item text-danger" href="#"><i class="ri-delete-bin-line me-2"></i>Delete</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -275,122 +194,13 @@
                     <h6 class="fw-semibold mb-0">
                         <i class="ri-graduation-cap-line me-2 text-primary"></i>Academic Documents
                     </h6>
-                    <span class="badge bg-primary-subtle text-primary">4 Files</span>
+                    <span class="badge bg-primary-subtle text-primary">0 Files</span>
                 </div>
                 <div class="card-body p-0">
                     <div class="list-group list-group-flush">
-                        <div class="list-group-item d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center">
-                                <div class="flex-shrink-0 me-3">
-                                    <div class="d-flex align-items-center justify-content-center bg-danger-subtle text-danger rounded" style="width: 40px; height: 40px;">
-                                        <i class="ri-file-pdf-line"></i>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h6 class="mb-1 fw-medium">Primary School Certificate</h6>
-                                    <p class="mb-0 small text-secondary">Uploaded: 15th Jul 2024 • 0.9 MB</p>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center gap-1">
-                                <span class="badge bg-success-subtle text-success">Verified</span>
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                        <i class="ri-more-2-line"></i>
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="#"><i class="ri-eye-line me-2"></i>View</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-download-line me-2"></i>Download</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-edit-line me-2"></i>Replace</a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item text-danger" href="#"><i class="ri-delete-bin-line me-2"></i>Delete</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="list-group-item d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center">
-                                <div class="flex-shrink-0 me-3">
-                                    <div class="d-flex align-items-center justify-content-center bg-danger-subtle text-danger rounded" style="width: 40px; height: 40px;">
-                                        <i class="ri-file-pdf-line"></i>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h6 class="mb-1 fw-medium">Transfer Certificate</h6>
-                                    <p class="mb-0 small text-secondary">Uploaded: 15th Jul 2024 • 0.4 MB</p>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center gap-1">
-                                <span class="badge bg-success-subtle text-success">Verified</span>
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                        <i class="ri-more-2-line"></i>
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="#"><i class="ri-eye-line me-2"></i>View</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-download-line me-2"></i>Download</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-edit-line me-2"></i>Replace</a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item text-danger" href="#"><i class="ri-delete-bin-line me-2"></i>Delete</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="list-group-item d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center">
-                                <div class="flex-shrink-0 me-3">
-                                    <div class="d-flex align-items-center justify-content-center bg-danger-subtle text-danger rounded" style="width: 40px; height: 40px;">
-                                        <i class="ri-file-pdf-line"></i>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h6 class="mb-1 fw-medium">Previous School Report</h6>
-                                    <p class="mb-0 small text-secondary">Uploaded: 18th Jul 2024 • 0.6 MB</p>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center gap-1">
-                                <span class="badge bg-warning-subtle text-warning">Pending Review</span>
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                        <i class="ri-more-2-line"></i>
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="#"><i class="ri-eye-line me-2"></i>View</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-download-line me-2"></i>Download</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-check-line me-2"></i>Verify</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-edit-line me-2"></i>Replace</a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item text-danger" href="#"><i class="ri-delete-bin-line me-2"></i>Delete</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="list-group-item d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center">
-                                <div class="flex-shrink-0 me-3">
-                                    <div class="d-flex align-items-center justify-content-center bg-danger-subtle text-danger rounded" style="width: 40px; height: 40px;">
-                                        <i class="ri-file-pdf-line"></i>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h6 class="mb-1 fw-medium">Entrance Exam Result</h6>
-                                    <p class="mb-0 small text-secondary">Uploaded: 15th Jul 2024 • 0.3 MB</p>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center gap-1">
-                                <span class="badge bg-success-subtle text-success">Verified</span>
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                        <i class="ri-more-2-line"></i>
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="#"><i class="ri-eye-line me-2"></i>View</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-download-line me-2"></i>Download</a></li>
-                                        <li><a class="dropdown-item" href="#"><i class="ri-edit-line me-2"></i>Replace</a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item text-danger" href="#"><i class="ri-delete-bin-line me-2"></i>Delete</a></li>
-                                    </ul>
-                                </div>
-                            </div>
+                        <div class="list-group-item text-center py-4">
+                            <i class="ri-file-text-line text-muted" style="font-size: 32px;"></i>
+                            <p class="text-muted mb-0 mt-2">No academic documents uploaded</p>
                         </div>
                     </div>
                 </div>
