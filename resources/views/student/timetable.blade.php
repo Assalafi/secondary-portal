@@ -40,10 +40,15 @@
             @if($timetables->count() > 0)
                 @php
                     $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-                    $timeSlots = [
-                        '08:00', '08:45', '09:30', '10:15', '10:45',
-                        '11:30', '12:15', '01:00', '01:45', '02:30', '03:15'
-                    ];
+                    // Get unique start times from timetables and sort them
+                    $timeSlots = $timetables->pluck('start_time')
+                        ->map(function($time) {
+                            return $time->format('H:i');
+                        })
+                        ->unique()
+                        ->sort()
+                        ->values()
+                        ->toArray();
                     $colors = ['primary', 'success', 'info', 'warning', 'danger', 'secondary'];
                 @endphp
                 <div class="table-responsive">
