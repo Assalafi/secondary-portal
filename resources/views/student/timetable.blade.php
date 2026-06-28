@@ -55,7 +55,7 @@
                     <table class="table table-bordered mb-0 timetable-table">
                         <thead class="table-light">
                             <tr>
-                                <th class="text-center" style="width: 100px;">Time</th>
+                                <th class="text-center" style="width: 120px;">Time</th>
                                 @foreach($days as $day)
                                     <th class="text-center">{{ $day }}</th>
                                 @endforeach
@@ -65,10 +65,19 @@
                             @foreach($timeSlots as $timeSlot)
                                 <tr>
                                     <td class="text-center fw-medium small" style="vertical-align: middle; background: #f8f9fa;">
-                                        {{ $timeSlot }}
+                                        @php
+                                            $timetableForTime = $timetables->firstWhere('start_time', function($time) use ($timeSlot) {
+                                                return $time->format('H:i') === $timeSlot;
+                                            });
+                                        @endphp
+                                        @if($timetableForTime)
+                                            {{ $timetableForTime->start_time->format('H:i') }} - {{ $timetableForTime->end_time->format('H:i') }}
+                                        @else
+                                            {{ $timeSlot }}
+                                        @endif
                                     </td>
                                     @foreach($days as $day)
-                                        <td class="text-center" style="vertical-align: middle; min-width: 120px;">
+                                        <td class="text-center" style="vertical-align: middle; min-width: 130px;">
                                             @php
                                                 $timetable = null;
                                                 foreach($timetables as $t) {
@@ -86,12 +95,9 @@
                                                     $color = $colors[$subjectIndex % count($colors)];
                                                 @endphp
                                                 <div class="timetable-subject bg-{{ $color }} bg-opacity-10 p-2 rounded">
-                                                    <small class="fw-bold text-{{ $color }} d-block">{{ $timetable->subject->name }}</small>
-                                                    @if($timetable->teacher)
-                                                        <small class="text-muted">{{ $timetable->teacher->name }}</small>
-                                                    @endif
+                                                    <div class="fw-bold text-{{ $color }} mb-1">{{ $timetable->subject->name }}</div>
                                                     @if($timetable->room)
-                                                        <small class="text-muted">{{ $timetable->room }}</small>
+                                                        <div class="text-muted small">{{ $timetable->room }}</div>
                                                     @endif
                                                 </div>
                                             @endif
