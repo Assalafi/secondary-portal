@@ -40,76 +40,50 @@
             @if($timetables->count() > 0)
                 @php
                     $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-                    // Get unique start times from timetables and sort them
-                    $timeSlots = $timetables->pluck('start_time')
-                        ->map(function($time) {
-                            return $time->format('H:i');
-                        })
-                        ->unique()
-                        ->sort()
-                        ->values()
-                        ->toArray();
                     $colors = ['primary', 'success', 'info', 'warning', 'danger', 'secondary'];
                 @endphp
                 <div class="table-responsive">
                     <table class="table table-bordered mb-0 timetable-table">
                         <thead class="table-light">
                             <tr>
-                                <th class="text-center" style="width: 120px;">Time</th>
                                 @foreach($days as $day)
                                     <th class="text-center">{{ $day }}</th>
                                 @endforeach
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($timeSlots as $timeSlot)
-                                @php
-                                    $timetableForTime = null;
-                                    foreach($timetables as $t) {
-                                        if($t->start_time->format('H:i') === $timeSlot) {
-                                            $timetableForTime = $t;
-                                            break;
-                                        }
-                                    }
-                                @endphp
+                            @foreach($days as $day)
                                 <tr>
-                                    <td class="text-center fw-medium small" style="vertical-align: middle; background: #f8f9fa; width: 130px;">
-                                        @if($timetableForTime)
-                                            <div class="fw-bold">{{ $timetableForTime->start_time->format('H:i') }}</div>
-                                            <div class="text-muted small">{{ $timetableForTime->end_time->format('H:i') }}</div>
-                                        @else
-                                            {{ $timeSlot }}
-                                        @endif
-                                    </td>
-                                    @foreach($days as $day)
-                                        <td class="text-center" style="vertical-align: middle; min-width: 140px;">
-                                            @php
-                                                $timetable = null;
-                                                foreach($timetables as $t) {
-                                                    if($t->day === $day && $t->start_time->format('H:i') === $timeSlot) {
-                                                        $timetable = $t;
-                                                        break;
-                                                    }
-                                                }
-                                            @endphp
-                                            @if($timetable)
+                                    <td style="vertical-align: top; min-width: 160px;">
+                                        @php
+                                            $dayTimetables = $timetables->where('day', $day)->sortBy('start_time');
+                                        @endphp
+                                        @if($dayTimetables->count() > 0)
+                                            @foreach($dayTimetables as $timetable)
                                                 @php
                                                     $subjectIndex = $timetables->search(function($t) use ($timetable) {
                                                         return $t->id === $timetable->id;
                                                     });
                                                     $color = $colors[$subjectIndex % count($colors)];
                                                 @endphp
-                                                <div class="timetable-subject bg-{{ $color }} bg-opacity-10 p-3 rounded">
-                                                    <div class="fw-bold text-{{ $color }} mb-2">{{ $timetable->subject->name }}</div>
+                                                <div class="timetable-subject bg-{{ $color }} bg-opacity-10 p-3 rounded mb-2">
+                                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                                        <div class="fw-bold text-{{ $color }}">{{ $timetable->subject->name }}</div>
+                                                        <div class="text-muted small">
+                                                            {{ $timetable->start_time->format('H:i') }} - {{ $timetable->end_time->format('H:i') }}
+                                                        </div>
+                                                    </div>
                                                     @if($timetable->room)
                                                         <div class="text-muted small">
                                                             <i class="ri-map-pin-line me-1"></i>{{ $timetable->room }}
                                                         </div>
                                                     @endif
                                                 </div>
-                                            @endif
-                                        </td>
-                                    @endforeach
+                                            @endforeach
+                                        @else
+                                            <div class="text-center text-muted small py-3">No classes</div>
+                                        @endif
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
