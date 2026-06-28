@@ -67,17 +67,19 @@
                                                     $color = $colors[$subjectIndex % count($colors)];
                                                 @endphp
                                                 <div class="timetable-subject bg-{{ $color }} bg-opacity-10 p-3 rounded mb-2">
-                                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                                        <div class="fw-bold text-{{ $color }}">{{ $timetable->subject->name }}</div>
-                                                        <div class="text-muted small">
+                                                    <div class="fw-bold text-{{ $color }} mb-2">{{ $timetable->subject->name }}</div>
+                                                    <div class="d-flex align-items-center gap-3 text-muted small mb-1">
+                                                        <span class="d-flex align-items-center">
+                                                            <i class="ri-time-line me-1"></i>
                                                             {{ $timetable->start_time->format('H:i') }} - {{ $timetable->end_time->format('H:i') }}
-                                                        </div>
+                                                        </span>
+                                                        @if($timetable->room)
+                                                            <span class="d-flex align-items-center">
+                                                                <i class="ri-map-pin-line me-1"></i>
+                                                                {{ $timetable->room }}
+                                                            </span>
+                                                        @endif
                                                     </div>
-                                                    @if($timetable->room)
-                                                        <div class="text-muted small">
-                                                            <i class="ri-map-pin-line me-1"></i>{{ $timetable->room }}
-                                                        </div>
-                                                    @endif
                                                 </div>
                                             @endforeach
                                         @else
@@ -124,27 +126,23 @@
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        padding: 12px 8px;
+        padding: 15px 12px;
     }
     .timetable-table td {
         font-size: 13px;
-        padding: 8px;
+        padding: 12px;
+        vertical-align: top;
     }
     .timetable-subject {
-        min-height: 70px;
         display: flex;
         flex-direction: column;
-        justify-content: center;
-        align-items: center;
         transition: all 0.2s;
-        border: 1px solid transparent;
+        border: 1px solid rgba(0,0,0,0.05);
     }
     .timetable-subject:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    .timetable-table tbody tr:hover td {
-        background-color: #f8f9fa;
+        border-color: rgba(0,0,0,0.1);
     }
 </style>
 @endsection
