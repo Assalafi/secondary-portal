@@ -63,21 +63,26 @@
                         </thead>
                         <tbody>
                             @foreach($timeSlots as $timeSlot)
+                                @php
+                                    $timetableForTime = null;
+                                    foreach($timetables as $t) {
+                                        if($t->start_time->format('H:i') === $timeSlot) {
+                                            $timetableForTime = $t;
+                                            break;
+                                        }
+                                    }
+                                @endphp
                                 <tr>
-                                    <td class="text-center fw-medium small" style="vertical-align: middle; background: #f8f9fa;">
-                                        @php
-                                            $timetableForTime = $timetables->firstWhere('start_time', function($time) use ($timeSlot) {
-                                                return $time->format('H:i') === $timeSlot;
-                                            });
-                                        @endphp
+                                    <td class="text-center fw-medium small" style="vertical-align: middle; background: #f8f9fa; width: 130px;">
                                         @if($timetableForTime)
-                                            {{ $timetableForTime->start_time->format('H:i') }} - {{ $timetableForTime->end_time->format('H:i') }}
+                                            <div class="fw-bold">{{ $timetableForTime->start_time->format('H:i') }}</div>
+                                            <div class="text-muted small">{{ $timetableForTime->end_time->format('H:i') }}</div>
                                         @else
                                             {{ $timeSlot }}
                                         @endif
                                     </td>
                                     @foreach($days as $day)
-                                        <td class="text-center" style="vertical-align: middle; min-width: 130px;">
+                                        <td class="text-center" style="vertical-align: middle; min-width: 140px;">
                                             @php
                                                 $timetable = null;
                                                 foreach($timetables as $t) {
@@ -94,10 +99,12 @@
                                                     });
                                                     $color = $colors[$subjectIndex % count($colors)];
                                                 @endphp
-                                                <div class="timetable-subject bg-{{ $color }} bg-opacity-10 p-2 rounded">
-                                                    <div class="fw-bold text-{{ $color }} mb-1">{{ $timetable->subject->name }}</div>
+                                                <div class="timetable-subject bg-{{ $color }} bg-opacity-10 p-3 rounded">
+                                                    <div class="fw-bold text-{{ $color }} mb-2">{{ $timetable->subject->name }}</div>
                                                     @if($timetable->room)
-                                                        <div class="text-muted small">{{ $timetable->room }}</div>
+                                                        <div class="text-muted small">
+                                                            <i class="ri-map-pin-line me-1"></i>{{ $timetable->room }}
+                                                        </div>
                                                     @endif
                                                 </div>
                                             @endif
@@ -139,24 +146,31 @@
 
 <style>
     .timetable-table th {
-        font-size: 13px;
+        font-size: 14px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        padding: 12px 8px;
     }
     .timetable-table td {
-        font-size: 12px;
+        font-size: 13px;
+        padding: 8px;
     }
     .timetable-subject {
-        min-height: 60px;
+        min-height: 70px;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        transition: transform 0.2s;
+        transition: all 0.2s;
+        border: 1px solid transparent;
     }
     .timetable-subject:hover {
-        transform: scale(1.05);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .timetable-table tbody tr:hover td {
+        background-color: #f8f9fa;
     }
 </style>
 @endsection
