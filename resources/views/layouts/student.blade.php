@@ -140,6 +140,13 @@
                 </li>
 
                 <li class="menu-item">
+                    <a href="{{ route('student.assessment-schedule') }}" class="menu-link {{ request()->routeIs('student.assessment-schedule') ? 'active' : '' }}">
+                        <span class="material-symbols-outlined menu-icon">event_note</span>
+                        <span class="title">Assessment Schedule</span>
+                    </a>
+                </li>
+
+                <li class="menu-item">
                     <a href="{{ route('student.payments.index') }}" class="menu-link {{ request()->routeIs('student.payments.*') ? 'active' : '' }}">
                         <span class="material-symbols-outlined menu-icon">payments</span>
                         <span class="title">Payments</span>

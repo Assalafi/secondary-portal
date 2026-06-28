@@ -450,6 +450,9 @@ Route::middleware(['auth'])->group(function () {
         // Timetable
         Route::get('/timetable', [StudentPortalController::class, 'timetable'])->name('timetable');
 
+        // Assessment Schedule
+        Route::get('/assessment-schedule', [StudentPortalController::class, 'assessmentSchedule'])->name('assessment-schedule');
+
         // Profile
         Route::get('/profile', [StudentPortalController::class, 'profile'])->name('profile');
         Route::post('/profile', [StudentPortalController::class, 'updateProfile'])->name('profile.update');

@@ -122,6 +122,28 @@ class StudentPortalController extends Controller
         return view('student.timetable', compact('student', 'timetables'));
     }
 
+    // ─── Assessment Schedule ───
+    public function assessmentSchedule()
+    {
+        $user = Auth::user();
+        $student = $user->student;
+
+        if (!$student) {
+            return view('student.assessment-schedule', ['student' => null, 'schedules' => collect()]);
+        }
+
+        $student->load('classArm.schoolClass');
+
+        // Get assessment schedules for the student's class
+        $schedules = \App\Models\AssessmentSchedule::where('class_id', $student->classArm->school_class_id)
+            ->with(['subject', 'academicSession', 'term'])
+            ->orderBy('scheduled_date')
+            ->orderBy('scheduled_time')
+            ->get();
+
+        return view('student.assessment-schedule', compact('student', 'schedules'));
+    }
+
     // ─── Assignments ───
     public function assignments()
     {
