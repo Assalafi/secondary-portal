@@ -105,12 +105,7 @@
                 <!-- Timetable Entries -->
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="fw-bold mb-0">Timetable Entries</h6>
-                            <button type="button" class="btn btn-outline-primary btn-sm" id="addRowBtn">
-                                <i class="ri-add-line me-1"></i>Add Entry
-                            </button>
-                        </div>
+                        <h6 class="fw-bold mb-3">Timetable Entries</h6>
 
                         <div id="timetableRows">
                             <!-- Initial row -->
@@ -168,7 +163,12 @@
                 <!-- Common Settings -->
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body">
-                        <h6 class="fw-bold mb-3">Common Settings</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold mb-0">Common Settings</h6>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="addRowBtn">
+                                <i class="ri-add-line me-1"></i>Add Entry
+                            </button>
+                        </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
