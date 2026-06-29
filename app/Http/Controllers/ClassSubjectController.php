@@ -6,8 +6,11 @@ use App\Models\ClassArm;
 use App\Models\SchoolClass;
 use App\Models\Subject;
 use App\Models\User;
+use App\Imports\SubjectsImport;
+use App\Exports\SubjectTemplateExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ClassSubjectController extends Controller
 {
@@ -505,6 +508,48 @@ class ClassSubjectController extends Controller
         $subject->delete();
 
         return redirect()->route('admin.subjects.index')->with('success', 'Subject deleted successfully.');
+    }
+
+    /**
+     * Show the import form for subjects
+     */
+    public function subjectsImportForm()
+    {
+        return view('admin.subjects.import');
+    }
+
+    /**
+     * Process the Excel import for subjects
+     */
+    public function subjectsImport(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:10240',
+        ]);
+
+        try {
+            $import = new SubjectsImport();
+            Excel::import($import, $request->file('file'));
+
+            $message = "{$import->imported} subjects imported successfully.";
+            if ($import->skipped > 0) {
+                $message .= " {$import->skipped} rows were skipped.";
+            }
+
+            return redirect()->route('admin.subjects.import')
+                ->with('success', $message)
+                ->with('import_errors', $import->errors);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Import failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Download the subject import template
+     */
+    public function downloadSubjectTemplate()
+    {
+        return Excel::download(new SubjectTemplateExport, 'subjects_import_template.xlsx');
     }
 
     public function classArmsCreate()

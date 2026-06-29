@@ -41,6 +41,9 @@
                 <button class="btn btn-pill-dark" data-bs-toggle="modal" data-bs-target="#addSubjectModal">
                     <i class="ri-add-line me-1"></i> Add New Subject
                 </button>
+                <a href="{{ route('admin.subjects.import') }}" class="btn btn-success">
+                    <i class="ri-file-excel-2-line me-1"></i> Import Excel
+                </a>
                 <button class="btn btn-soft">
                     <i class="ri-download-2-line me-1"></i> Export List
                 </button>
