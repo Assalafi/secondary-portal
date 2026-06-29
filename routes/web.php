@@ -248,14 +248,14 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/', [ClassSubjectController::class, 'subjectsIndex'])->name('index');
             Route::get('/create', [ClassSubjectController::class, 'subjectsCreate'])->name('create');
             Route::post('/', [ClassSubjectController::class, 'subjectsStore'])->name('store');
+            // Import routes must come before parameterized routes
+            Route::get('/import', [ClassSubjectController::class, 'subjectsImportForm'])->name('import');
+            Route::post('/import', [ClassSubjectController::class, 'subjectsImport'])->name('import.process');
+            Route::get('/import/template', [ClassSubjectController::class, 'downloadSubjectTemplate'])->name('import.template');
             Route::get('/{subject}', [ClassSubjectController::class, 'subjectsShow'])->name('show');
             Route::get('/{subject}/edit', [ClassSubjectController::class, 'subjectsEdit'])->name('edit');
             Route::put('/{subject}', [ClassSubjectController::class, 'subjectsUpdate'])->name('update');
             Route::delete('/{subject}', [ClassSubjectController::class, 'subjectsDestroy'])->name('destroy');
-            // Import
-            Route::get('/import', [ClassSubjectController::class, 'subjectsImportForm'])->name('import');
-            Route::post('/import', [ClassSubjectController::class, 'subjectsImport'])->name('import.process');
-            Route::get('/import/template', [ClassSubjectController::class, 'downloadSubjectTemplate'])->name('import.template');
         });
 
         // Utility endpoint for dynamic dropdowns on Subjects modal
