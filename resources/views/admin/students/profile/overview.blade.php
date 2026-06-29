@@ -373,7 +373,7 @@
                                                 style="min-width: 100px;">Password:</span>
                                             <div class="d-flex align-items-center gap-2">
                                                 <span
-                                                    class="badge bg-info-subtle text-info">{{ ($student->admission_no ?? 'STUDENT' . $student->id) . '2024' }}</span>
+                                                    class="badge bg-info-subtle text-info">{{ $student->admission_no ?? 'STUDENT' . $student->id }}</span>
                                                 <button class="btn btn-sm btn-outline-warning"
                                                     onclick="resetToDefault({{ $student->id }})">
                                                     <i class="ri-refresh-line me-1"></i>Reset to Default
