@@ -25,17 +25,17 @@
                     <!-- Class Selection -->
                     <div class="row mb-4">
                         <div class="col-md-4">
-                            <label class="form-label fw-medium">Class <span class="text-muted">(Optional)</span></label>
-                            <select class="form-select" id="school_class_id">
-                                <option value="">Select Class (Optional)</option>
+                            <label class="form-label fw-medium">Class <span class="text-danger">*</span></label>
+                            <select class="form-select" id="school_class_id" required>
+                                <option value="">Select Class</option>
                                 @foreach($classes as $class)
                                     <option value="{{ $class->id }}">{{ $class->name }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label fw-medium">Class Arm <span class="text-muted">(Optional)</span></label>
-                            <select class="form-select" name="class_arm_id" id="class_arm_id" disabled>
+                            <label class="form-label fw-medium">Class Arm <span class="text-danger">*</span></label>
+                            <select class="form-select" name="class_arm_id" id="class_arm_id" disabled required>
                                 <option value="">Select Class First</option>
                             </select>
                         </div>
