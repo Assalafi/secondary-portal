@@ -10,6 +10,7 @@ use App\Models\Score;
 use App\Models\Student;
 use App\Models\AcademicSession;
 use App\Models\Term;
+use App\Models\SessionTerm;
 use Illuminate\Http\Request;
 
 class ScoreUploadController extends Controller
@@ -35,9 +36,14 @@ class ScoreUploadController extends Controller
             ->orderBy('min_score')
             ->get();
         
-        // Get current session and term
-        $currentSession = AcademicSession::where('is_current', true)->first();
-        $currentTerm = Term::first();
+        // Get current session and term from SessionTerm (source of truth)
+        $currentSessionTerm = SessionTerm::where('is_current', true)->first();
+        $currentSession = $currentSessionTerm 
+            ? AcademicSession::where('name', $currentSessionTerm->academic_year)->first()
+            : AcademicSession::where('is_current', true)->first();
+        $currentTerm = $currentSessionTerm 
+            ? Term::where('name', $currentSessionTerm->term_name)->first()
+            : Term::first();
         
         // Get existing score batch for this class, subject, session, and term
         $scoreBatch = ScoreBatch::where('class_id', $classArm->school_class_id)

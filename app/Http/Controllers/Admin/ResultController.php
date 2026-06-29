@@ -8,6 +8,7 @@ use App\Models\ScoreBatch;
 use App\Models\Score;
 use App\Models\AcademicSession;
 use App\Models\Term;
+use App\Models\SessionTerm;
 use App\Models\ReportCard;
 use App\Models\Student;
 use App\Models\SchoolClass;
@@ -24,8 +25,15 @@ class ResultController extends Controller
     public function classResults($classId)
     {
         $classArm = ClassArm::with(['schoolClass', 'students.user'])->findOrFail($classId);
-        $currentSession = AcademicSession::where('is_current', true)->first();
-        $currentTerm = Term::first();
+        
+        // Get current session/term from SessionTerm (source of truth)
+        $currentSessionTerm = SessionTerm::where('is_current', true)->first();
+        $currentSession = $currentSessionTerm 
+            ? AcademicSession::where('name', $currentSessionTerm->academic_year)->first()
+            : AcademicSession::where('is_current', true)->first();
+        $currentTerm = $currentSessionTerm 
+            ? Term::where('name', $currentSessionTerm->term_name)->first()
+            : Term::first();
         
         $sessionId = request('session') ?? ($currentSession->id ?? null);
         $termId = request('term') ?? ($currentTerm->id ?? null);
@@ -95,8 +103,15 @@ class ResultController extends Controller
     public function studentResult($classId, $studentId)
     {
         $classArm = ClassArm::with(['schoolClass', 'students.user'])->findOrFail($classId);
-        $currentSession = AcademicSession::where('is_current', true)->first();
-        $currentTerm = Term::first();
+        
+        // Get current session/term from SessionTerm (source of truth)
+        $currentSessionTerm = SessionTerm::where('is_current', true)->first();
+        $currentSession = $currentSessionTerm 
+            ? AcademicSession::where('name', $currentSessionTerm->academic_year)->first()
+            : AcademicSession::where('is_current', true)->first();
+        $currentTerm = $currentSessionTerm 
+            ? Term::where('name', $currentSessionTerm->term_name)->first()
+            : Term::first();
         
         $sessionId = request('session') ?? ($currentSession->id ?? null);
         $termId = request('term') ?? ($currentTerm->id ?? null);

@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use App\Models\SchoolSettings;
+use App\Models\SessionTerm;
 
 class ViewServiceProvider extends ServiceProvider
 {
@@ -25,6 +26,11 @@ class ViewServiceProvider extends ServiceProvider
         View::composer('*', function ($view) {
             $schoolSettings = SchoolSettings::first();
             
+            // Get current session/term from SessionTerm (source of truth)
+            $currentSessionTerm = SessionTerm::where('is_current', true)->first();
+            $academicSession = $currentSessionTerm->academic_year ?? ($schoolSettings->academic_session ?? '2024/2025');
+            $currentTerm = $currentSessionTerm->term_name ?? ($schoolSettings->current_term ?? 'First Term');
+            
             // Default settings if none exist
             $settings = $schoolSettings ? [
                 'school_name' => $schoolSettings->school_name ?? 'Secondary School Portal',
@@ -35,8 +41,8 @@ class ViewServiceProvider extends ServiceProvider
                 'website' => $schoolSettings->website ?? 'www.school.edu',
                 'school_address' => $schoolSettings->school_address ?? 'School Address',
                 'established_year' => $schoolSettings->established_year ?? date('Y'),
-                'academic_session' => $schoolSettings->academic_session ?? '2024/2025',
-                'current_term' => $schoolSettings->current_term ?? 'First Term',
+                'academic_session' => $academicSession,
+                'current_term' => $currentTerm,
             ] : [
                 'school_name' => 'Secondary School Portal',
                 'school_logo' => null,
@@ -46,8 +52,8 @@ class ViewServiceProvider extends ServiceProvider
                 'website' => 'www.school.edu',
                 'school_address' => 'School Address',
                 'established_year' => date('Y'),
-                'academic_session' => '2024/2025',
-                'current_term' => 'First Term',
+                'academic_session' => $academicSession,
+                'current_term' => $currentTerm,
             ];
             
             $view->with('globalSettings', $settings);

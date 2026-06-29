@@ -38,7 +38,7 @@
     <div class="mb-4">
         <h1 class="h3 mb-0 text-gray-800 fw-bold">Admin Dashboard</h1>
         <p class="text-muted">
-            {{ $currentSession->name ?? '2024/2025' }} Academic Session – {{ $currentTerm->name ?? '3rd term' }}
+            {{ $currentSession ?? '2024/2025' }} Academic Session – {{ $currentTerm ?? '1st Term' }}
         </p>
     </div>
 

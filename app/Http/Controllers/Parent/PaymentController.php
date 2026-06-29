@@ -9,6 +9,7 @@ use App\Models\InvoiceItem;
 use App\Models\Payment;
 use App\Models\AcademicSession;
 use App\Models\Term;
+use App\Models\SessionTerm;
 use App\Models\PaymentSetup;
 use App\Models\Student;
 use App\Models\SchoolSettings;
@@ -607,9 +608,14 @@ class PaymentController extends Controller
                 // For other services, create separate invoices for EACH student
                 $createdInvoices = [];
                 
-                // Get current academic session and term
-                $currentSession = AcademicSession::where('is_current', true)->first();
-                $currentTerm = Term::where('is_current', true)->first();
+                // Get current academic session and term from SessionTerm (source of truth)
+                $currentSessionTerm = SessionTerm::where('is_current', true)->first();
+                $currentSession = $currentSessionTerm 
+                    ? AcademicSession::where('name', $currentSessionTerm->academic_year)->first()
+                    : AcademicSession::where('is_current', true)->first();
+                $currentTerm = $currentSessionTerm 
+                    ? Term::where('name', $currentSessionTerm->term_name)->first()
+                    : Term::where('is_current', true)->first();
                 
                 // Fallback to first session/term if no current ones
                 if (!$currentSession) {

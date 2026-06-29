@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\SchoolSettings;
 use App\Models\GradeSettings;
 use App\Models\SessionTerm;
+use App\Models\AcademicSession;
+use App\Models\Term;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Staff;
@@ -257,10 +259,39 @@ class SettingsController extends Controller
                 SessionTerm::where('is_current', true)->update(['is_current' => false]);
             }
 
-            SessionTerm::create(array_merge($request->all(), [
+            $sessionTerm = SessionTerm::create(array_merge($request->all(), [
                 'status' => 'Active',
                 'is_current' => $request->boolean('is_current')
             ]));
+
+            // Sync other tables if this is set as current
+            if ($request->boolean('is_current')) {
+                // Sync AcademicSession table
+                AcademicSession::where('is_current', true)->update(['is_current' => false]);
+                $academicSession = AcademicSession::firstOrCreate(
+                    ['name' => $sessionTerm->academic_year],
+                    [
+                        'start_date' => $sessionTerm->start_date,
+                        'end_date' => $sessionTerm->end_date,
+                    ]
+                );
+                $academicSession->update(['is_current' => true]);
+
+                // Sync Term table
+                Term::firstOrCreate(
+                    ['name' => $sessionTerm->term_name],
+                    ['number' => $this->getTermNumber($sessionTerm->term_name)]
+                );
+
+                // Update SchoolSettings table
+                $schoolSettings = SchoolSettings::first();
+                if ($schoolSettings) {
+                    $schoolSettings->update([
+                        'academic_session' => $sessionTerm->academic_year,
+                        'current_term' => $sessionTerm->term_name,
+                    ]);
+                }
+            }
 
             return response()->json([
                 'success' => true,
@@ -490,11 +521,38 @@ class SettingsController extends Controller
     public function setCurrentSession(SessionTerm $session)
     {
         try {
-            // Remove current flag from all sessions
+            // Remove current flag from all session_terms
             SessionTerm::where('is_current', true)->update(['is_current' => false]);
             
             // Set this session as current
             $session->update(['is_current' => true]);
+
+            // Sync AcademicSession table
+            AcademicSession::where('is_current', true)->update(['is_current' => false]);
+            $academicSession = AcademicSession::firstOrCreate(
+                ['name' => $session->academic_year],
+                [
+                    'start_date' => $session->start_date,
+                    'end_date' => $session->end_date,
+                ]
+            );
+            $academicSession->update(['is_current' => true]);
+
+            // Sync Term table
+            $termName = $session->term_name;
+            $term = Term::firstOrCreate(
+                ['name' => $termName],
+                ['number' => $this->getTermNumber($termName)]
+            );
+
+            // Update SchoolSettings table
+            $schoolSettings = SchoolSettings::first();
+            if ($schoolSettings) {
+                $schoolSettings->update([
+                    'academic_session' => $session->academic_year,
+                    'current_term' => $session->term_name,
+                ]);
+            }
 
             return response()->json([
                 'success' => true,
@@ -506,6 +564,18 @@ class SettingsController extends Controller
                 'message' => 'Failed to set current session: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Get term number from term name
+     */
+    private function getTermNumber(string $termName): int
+    {
+        $termName = strtolower($termName);
+        if (str_contains($termName, 'first') || str_contains($termName, '1st')) return 1;
+        if (str_contains($termName, 'second') || str_contains($termName, '2nd')) return 2;
+        if (str_contains($termName, 'third') || str_contains($termName, '3rd')) return 3;
+        return 1;
     }
 
     /**
