@@ -515,7 +515,11 @@ class ClassSubjectController extends Controller
      */
     public function subjectsImportForm()
     {
-        return view('admin.subjects.import');
+        $classes = SchoolClass::orderBy('name')->get();
+        $classArms = ClassArm::with('schoolClass')->orderBy('name')->get();
+        $teachers = User::where('role_id', 5)->get(); // Assuming role_id 5 is for teachers
+        
+        return view('admin.subjects.import', compact('classes', 'classArms', 'teachers'));
     }
 
     /**
@@ -528,7 +532,10 @@ class ClassSubjectController extends Controller
         ]);
 
         try {
-            $import = new SubjectsImport();
+            $classArmId = $request->filled('class_arm_id') ? $request->class_arm_id : null;
+            $teacherId = $request->filled('teacher_id') ? $request->teacher_id : null;
+            
+            $import = new SubjectsImport($classArmId, $teacherId);
             Excel::import($import, $request->file('file'));
 
             $message = "{$import->imported} subjects imported successfully.";

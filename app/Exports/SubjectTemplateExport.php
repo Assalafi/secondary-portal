@@ -14,10 +14,16 @@ class SubjectTemplateExport implements FromArray, WithHeadings, WithStyles, With
     {
         // Sample data rows
         return [
-            ['Mathematics', 'MAT', 'Core mathematical concepts', 'Core', 'JSS', 'JSS 1', '', 'A', ''],
-            ['English Language', 'ENG', 'English language and literature', 'Core', 'JSS', 'JSS 1', '', 'A', ''],
-            ['Physics', '', 'Study of matter and energy', 'Core', 'SSS', 'SSS 1', 'Science', 'A', ''],
-            ['Chemistry', '', 'Study of chemicals and reactions', 'Core', 'SSS', 'SSS 1', 'Science', 'A', ''],
+            ['Mathematics'],
+            ['English Language'],
+            ['Physics'],
+            ['Chemistry'],
+            ['Biology'],
+            ['Geography'],
+            ['Economics'],
+            ['Civic Education'],
+            ['Computer Science'],
+            ['French'],
         ];
     }
 
@@ -25,14 +31,6 @@ class SubjectTemplateExport implements FromArray, WithHeadings, WithStyles, With
     {
         return [
             'name',
-            'code',
-            'description',
-            'type',
-            'level',
-            'class_name',
-            'group',
-            'arm',
-            'teacher_id',
         ];
     }
 
@@ -52,15 +50,7 @@ class SubjectTemplateExport implements FromArray, WithHeadings, WithStyles, With
     public function columnWidths(): array
     {
         return [
-            'A' => 30,
-            'B' => 15,
-            'C' => 40,
-            'D' => 15,
-            'E' => 15,
-            'F' => 15,
-            'G' => 15,
-            'H' => 15,
-            'I' => 15,
+            'A' => 40,
         ];
     }
 }

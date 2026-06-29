@@ -22,6 +22,34 @@
                 <form action="{{ route('admin.subjects.import.process') }}" method="POST" enctype="multipart/form-data" id="importForm">
                     @csrf
 
+                    <!-- Class Selection -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Class <span class="text-muted">(Optional)</span></label>
+                            <select class="form-select" id="school_class_id">
+                                <option value="">Select Class (Optional)</option>
+                                @foreach($classes as $class)
+                                    <option value="{{ $class->id }}">{{ $class->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Class Arm <span class="text-muted">(Optional)</span></label>
+                            <select class="form-select" name="class_arm_id" id="class_arm_id" disabled>
+                                <option value="">Select Class First</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Teacher <span class="text-muted">(Optional)</span></label>
+                            <select class="form-select" name="teacher_id">
+                                <option value="">Select Teacher (Optional)</option>
+                                @foreach($teachers as $teacher)
+                                    <option value="{{ $teacher->id }}">{{ $teacher->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
                     <!-- File Upload -->
                     <div class="mb-4">
                         <label class="form-label fw-medium">Excel File <span class="text-danger">*</span></label>
@@ -124,38 +152,6 @@
                         <small class="fw-medium">name</small>
                         <span class="badge bg-danger">Required</span>
                     </div>
-                    <div class="list-group-item d-flex justify-content-between py-2">
-                        <small class="fw-medium">code</small>
-                        <span class="badge bg-secondary">Optional</span>
-                    </div>
-                    <div class="list-group-item d-flex justify-content-between py-2">
-                        <small class="fw-medium">description</small>
-                        <span class="badge bg-secondary">Optional</span>
-                    </div>
-                    <div class="list-group-item d-flex justify-content-between py-2">
-                        <small class="fw-medium">type</small>
-                        <span class="badge bg-secondary">Optional</span>
-                    </div>
-                    <div class="list-group-item d-flex justify-content-between py-2">
-                        <small class="fw-medium">level</small>
-                        <span class="badge bg-secondary">Optional</span>
-                    </div>
-                    <div class="list-group-item d-flex justify-content-between py-2">
-                        <small class="fw-medium">class_name</small>
-                        <span class="badge bg-secondary">Optional</span>
-                    </div>
-                    <div class="list-group-item d-flex justify-content-between py-2">
-                        <small class="fw-medium">group</small>
-                        <span class="badge bg-secondary">Optional</span>
-                    </div>
-                    <div class="list-group-item d-flex justify-content-between py-2">
-                        <small class="fw-medium">arm</small>
-                        <span class="badge bg-secondary">Optional</span>
-                    </div>
-                    <div class="list-group-item d-flex justify-content-between py-2">
-                        <small class="fw-medium">teacher_id</small>
-                        <span class="badge bg-secondary">Optional</span>
-                    </div>
                 </div>
             </div>
         </div>
@@ -165,12 +161,10 @@
             <div class="card-body">
                 <h6 class="fw-bold mb-2"><i class="ri-lightbulb-line me-1 text-warning"></i>Notes</h6>
                 <ul class="ps-3 mb-0 small text-muted">
-                    <li class="mb-1">Subject code is optional - will be auto-generated if empty</li>
-                    <li class="mb-1">Code will be converted to uppercase automatically</li>
-                    <li class="mb-1">Type accepts: Core, Compulsory, Elective, Optional</li>
-                    <li class="mb-1">To assign to a class, provide: level, class_name, and arm</li>
-                    <li class="mb-1">Teacher_id must be a valid user ID from the database</li>
-                    <li class="mb-1">Duplicate codes will be skipped</li>
+                    <li class="mb-1">Excel file should only contain subject names</li>
+                    <li class="mb-1">Subject codes are auto-generated automatically</li>
+                    <li class="mb-1">Class arm and teacher assignment is optional, selected above</li>
+                    <li class="mb-1">If class arm is selected, all subjects will be assigned to that class</li>
                 </ul>
             </div>
         </div>
@@ -191,6 +185,34 @@
 
 @push('scripts')
 <script>
+// Class arm cascade
+document.getElementById('school_class_id').addEventListener('change', function() {
+    const classId = this.value;
+    const classArmSelect = document.getElementById('class_arm_id');
+    
+    classArmSelect.innerHTML = '<option value="">Select Arm</option>';
+    classArmSelect.disabled = true;
+
+    if (!classId) {
+        classArmSelect.innerHTML = '<option value="">Select Class First</option>';
+        return;
+    }
+
+    fetch(`/api/class-arms/${classId}`)
+        .then(response => response.json())
+        .then(data => {
+            classArmSelect.innerHTML = '<option value="">Select Arm (Optional)</option>';
+            const arms = data.arms || data;
+            arms.forEach(arm => {
+                classArmSelect.innerHTML += `<option value="${arm.id}">${arm.name}</option>`;
+            });
+            classArmSelect.disabled = false;
+        })
+        .catch(() => {
+            classArmSelect.innerHTML = '<option value="">Error loading arms</option>';
+        });
+});
+
 // File upload handling
 const uploadArea = document.getElementById('uploadArea');
 const fileInput = document.getElementById('fileInput');
