@@ -10,8 +10,7 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Assessment;
 use App\Models\Attendance;
-use App\Models\AcademicSession;
-use App\Models\Term;
+use App\Models\SessionTerm;
 use App\Models\PayrollRecord;
 use App\Models\SchoolClass;
 use Illuminate\Http\Request;
@@ -25,11 +24,11 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        // Get current session and term
-        $currentSession = AcademicSession::where('is_current', true)->first() 
-            ?? AcademicSession::latest()->first();
-        $currentTerm = Term::where('is_current', true)->first() 
-            ?? Term::latest()->first();
+        // Get current session and term from SessionTerm table
+        $currentSessionTerm = SessionTerm::where('is_current', true)->first()
+            ?? SessionTerm::latest()->first();
+        $currentSession = $currentSessionTerm ? $currentSessionTerm->academic_year : null;
+        $currentTerm = $currentSessionTerm ? $currentSessionTerm->term_name : null;
 
         // Get dashboard statistics
         $totalStudents = Student::where('status', 'Active')->count();
