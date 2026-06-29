@@ -51,8 +51,12 @@ class SubjectsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
 
             DB::beginTransaction();
             try {
+                // Generate unique subject code from name
+                $code = $this->generateCode(trim($row['name']));
+
                 $subject = Subject::create([
                     'name' => trim($row['name']),
+                    'code' => $code,
                     'type' => 'Core',
                 ]);
 
@@ -73,5 +77,25 @@ class SubjectsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                 $this->skipped++;
             }
         }
+    }
+
+    private function generateCode(string $name): string
+    {
+        // Generate code from first 3 letters of each word (max 3 words)
+        $words = explode(' ', $name);
+        $code = '';
+        foreach (array_slice($words, 0, 3) as $word) {
+            $code .= strtoupper(substr($word, 0, 3));
+        }
+
+        // Ensure uniqueness
+        $baseCode = $code;
+        $counter = 1;
+        while (Subject::where('code', $code)->exists()) {
+            $code = $baseCode . $counter;
+            $counter++;
+        }
+
+        return $code;
     }
 }
