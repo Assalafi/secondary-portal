@@ -3,6 +3,9 @@
 namespace App\Imports;
 
 use App\Models\Subject;
+use App\Models\SchoolClass;
+use App\Models\ClassArm;
+use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -29,7 +32,7 @@ class SubjectsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
             // Validate required fields
             $validator = Validator::make($row->toArray(), [
                 'name' => 'required|string|max:255',
-                'code' => 'required|string|max:50|unique:subjects,code',
+                'code' => 'nullable|string|max:20',
             ]);
 
             if ($validator->fails()) {
@@ -41,21 +44,67 @@ class SubjectsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
             // Normalize type
             $type = $this->normalizeType($row['type'] ?? 'Core');
 
+            // Generate code if not provided
+            $code = $row['code'];
+            if (empty($code)) {
+                $prefix = isset($row['level']) && !empty($row['level'])
+                    ? strtoupper(substr($row['level'], 0, 1))
+                    : 'S';
+                $last = Subject::where('code', 'like', $prefix . '-%')->orderBy('code', 'desc')->value('code');
+                $nextNum = 1;
+                if ($last && preg_match('/^' . preg_quote($prefix, '/') . '-(\d{2,})$/', $last, $m)) {
+                    $nextNum = intval($m[1]) + 1;
+                }
+                $code = $prefix . '-' . str_pad((string) $nextNum, 2, '0', STR_PAD_LEFT);
+            } else {
+                $code = strtoupper(trim($code));
+            }
+
             // Check for duplicate by code
-            if (Subject::where('code', $row['code'])->exists()) {
-                $this->errors[] = "Row {$rowNumber}: Subject with code '{$row['code']}' already exists. Skipped.";
+            if (Subject::where('code', $code)->exists()) {
+                $this->errors[] = "Row {$rowNumber}: Subject with code '{$code}' already exists. Skipped.";
                 $this->skipped++;
                 continue;
             }
 
             DB::beginTransaction();
             try {
-                Subject::create([
+                $subject = Subject::create([
                     'name' => trim($row['name']),
-                    'code' => strtoupper(trim($row['code'])),
+                    'code' => $code,
                     'description' => $row['description'] ?? null,
                     'type' => $type,
                 ]);
+
+                // Optional: attach to class arm with teacher
+                if (!empty($row['level']) && !empty($row['class_name']) && !empty($row['arm'])) {
+                    $schoolClass = SchoolClass::firstOrCreate([
+                        'level' => $row['level'],
+                        'name' => $row['class_name'],
+                        'group' => $row['group'] ?? null,
+                    ], [
+                        'status' => 'Active',
+                    ]);
+
+                    $classArm = ClassArm::firstOrCreate([
+                        'school_class_id' => $schoolClass->id,
+                        'name' => $row['arm'],
+                    ]);
+
+                    if (!$subject->classArms()->where('class_arm_id', $classArm->id)->exists()) {
+                        $teacherId = null;
+                        if (!empty($row['teacher_id'])) {
+                            $teacher = User::find($row['teacher_id']);
+                            if ($teacher) {
+                                $teacherId = $teacher->id;
+                            }
+                        }
+
+                        $subject->classArms()->attach($classArm->id, [
+                            'teacher_id' => $teacherId,
+                        ]);
+                    }
+                }
 
                 DB::commit();
                 $this->imported++;
@@ -76,7 +125,6 @@ class SubjectsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
             'compulsory' => 'Core',
             'elective' => 'Elective',
             'optional' => 'Elective',
-            'optional' => 'Optional',
         ];
 
         return $typeMap[$type] ?? 'Core';

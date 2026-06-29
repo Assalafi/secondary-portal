@@ -126,7 +126,7 @@
                     </div>
                     <div class="list-group-item d-flex justify-content-between py-2">
                         <small class="fw-medium">code</small>
-                        <span class="badge bg-danger">Required</span>
+                        <span class="badge bg-secondary">Optional</span>
                     </div>
                     <div class="list-group-item d-flex justify-content-between py-2">
                         <small class="fw-medium">description</small>
@@ -134,6 +134,26 @@
                     </div>
                     <div class="list-group-item d-flex justify-content-between py-2">
                         <small class="fw-medium">type</small>
+                        <span class="badge bg-secondary">Optional</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between py-2">
+                        <small class="fw-medium">level</small>
+                        <span class="badge bg-secondary">Optional</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between py-2">
+                        <small class="fw-medium">class_name</small>
+                        <span class="badge bg-secondary">Optional</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between py-2">
+                        <small class="fw-medium">group</small>
+                        <span class="badge bg-secondary">Optional</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between py-2">
+                        <small class="fw-medium">arm</small>
+                        <span class="badge bg-secondary">Optional</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between py-2">
+                        <small class="fw-medium">teacher_id</small>
                         <span class="badge bg-secondary">Optional</span>
                     </div>
                 </div>
@@ -145,9 +165,11 @@
             <div class="card-body">
                 <h6 class="fw-bold mb-2"><i class="ri-lightbulb-line me-1 text-warning"></i>Notes</h6>
                 <ul class="ps-3 mb-0 small text-muted">
-                    <li class="mb-1">Subject code must be unique</li>
+                    <li class="mb-1">Subject code is optional - will be auto-generated if empty</li>
                     <li class="mb-1">Code will be converted to uppercase automatically</li>
                     <li class="mb-1">Type accepts: Core, Compulsory, Elective, Optional</li>
+                    <li class="mb-1">To assign to a class, provide: level, class_name, and arm</li>
+                    <li class="mb-1">Teacher_id must be a valid user ID from the database</li>
                     <li class="mb-1">Duplicate codes will be skipped</li>
                 </ul>
             </div>
