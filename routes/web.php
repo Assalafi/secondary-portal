@@ -92,6 +92,11 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/promote/execute', [StudentController::class, 'executePromotion'])->name('promote.execute');
             Route::post('/transfer/execute', [StudentController::class, 'executeTransfer'])->name('transfer.execute');
             
+            // Import
+            Route::get('/import', [StudentController::class, 'importForm'])->name('import');
+            Route::post('/import', [StudentController::class, 'import'])->name('import.process');
+            Route::get('/import/template', [StudentController::class, 'downloadTemplate'])->name('import.template');
+
             // CRUD operations
             Route::get('/create', [StudentController::class, 'create'])->name('create');
             Route::post('/', [StudentController::class, 'store'])->name('store');

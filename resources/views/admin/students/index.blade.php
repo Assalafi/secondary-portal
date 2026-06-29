@@ -31,6 +31,7 @@
             <!-- Actions Row -->
             <div class="d-flex flex-wrap gap-2 mb-3">
                 <a href="{{ route('admin.students.enroll.step1') }}" class="btn btn-pill-dark d-flex align-items-center gap-1"><i class="ri-add-line"></i> Enroll New Students</a>
+                <a href="{{ route('admin.students.import') }}" class="btn btn-success d-flex align-items-center gap-1"><i class="ri-file-excel-2-line"></i> Import Excel</a>
                 <button class="btn btn-soft d-flex align-items-center gap-1"><i class="ri-download-2-line"></i> Export</button>
                 <button class="btn btn-soft d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#filterModal"><i class="ri-filter-3-line"></i> Filter</button>
             </div>

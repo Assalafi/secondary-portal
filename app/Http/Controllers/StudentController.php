@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Models\Role;
+use App\Imports\StudentsImport;
+use App\Exports\StudentTemplateExport;
+use Maatwebsite\Excel\Facades\Excel;
 use PDF;
 
 class StudentController extends Controller
@@ -1074,5 +1077,53 @@ class StudentController extends Controller
                 'is_primary_contact' => true
             ]);
         }
+    }
+
+    /**
+     * Show the import form
+     */
+    public function importForm()
+    {
+        $classes = SchoolClass::orderBy('name')->get();
+        $classArms = ClassArm::with('schoolClass')->orderBy('name')->get();
+        $academicSessions = AcademicSession::orderBy('name', 'desc')->get();
+
+        return view('admin.students.import', compact('classes', 'classArms', 'academicSessions'));
+    }
+
+    /**
+     * Process the Excel import
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:10240',
+            'class_arm_id' => 'required|exists:class_arms,id',
+            'academic_session_id' => 'required|exists:academic_sessions,id',
+        ]);
+
+        try {
+            $import = new StudentsImport($request->class_arm_id, $request->academic_session_id);
+            Excel::import($import, $request->file('file'));
+
+            $message = "{$import->imported} students imported successfully.";
+            if ($import->skipped > 0) {
+                $message .= " {$import->skipped} rows were skipped.";
+            }
+
+            return redirect()->route('admin.students.import')
+                ->with('success', $message)
+                ->with('import_errors', $import->errors);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Import failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Download the import template
+     */
+    public function downloadTemplate()
+    {
+        return Excel::download(new StudentTemplateExport, 'students_import_template.xlsx');
     }
 }
