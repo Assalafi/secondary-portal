@@ -247,7 +247,8 @@ document.getElementById('school_class_id').addEventListener('change', function()
         .then(response => response.json())
         .then(data => {
             classArmSelect.innerHTML = '<option value="">Select Arm</option>';
-            data.forEach(arm => {
+            const arms = data.arms || data;
+            arms.forEach(arm => {
                 classArmSelect.innerHTML += `<option value="${arm.id}">${arm.name}</option>`;
             });
             classArmSelect.disabled = false;
