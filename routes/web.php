@@ -417,9 +417,31 @@ Route::middleware(['auth'])->group(function () {
     
     // Teacher Routes
     Route::prefix('teacher')->name('teacher.')->middleware(['auth'])->group(function () {
-        Route::get('/dashboard', function () {
-            return view('teacher.dashboard');
-        })->name('dashboard');
+        Route::get('/dashboard', [\App\Http\Controllers\Teacher\TeacherController::class, 'dashboard'])->name('dashboard');
+        Route::get('/my-classes', [\App\Http\Controllers\Teacher\TeacherController::class, 'myClasses'])->name('my-classes');
+        Route::get('/my-subjects', [\App\Http\Controllers\Teacher\TeacherController::class, 'mySubjects'])->name('my-subjects');
+
+        // Scores
+        Route::get('/scores', [\App\Http\Controllers\Teacher\TeacherController::class, 'scoresIndex'])->name('scores.index');
+        Route::get('/scores/{classArm}/{subject}/upload', [\App\Http\Controllers\Teacher\TeacherController::class, 'scoresUpload'])->name('scores.upload');
+        Route::post('/scores/store', [\App\Http\Controllers\Teacher\TeacherController::class, 'scoresStore'])->name('scores.store');
+
+        // Assignments
+        Route::get('/assignments', [\App\Http\Controllers\Teacher\TeacherController::class, 'assignmentsIndex'])->name('assignments.index');
+        Route::get('/assignments/create', [\App\Http\Controllers\Teacher\TeacherController::class, 'assignmentsCreate'])->name('assignments.create');
+        Route::post('/assignments', [\App\Http\Controllers\Teacher\TeacherController::class, 'assignmentsStore'])->name('assignments.store');
+
+        // Timetable
+        Route::get('/timetable', [\App\Http\Controllers\Teacher\TeacherController::class, 'timetable'])->name('timetable');
+
+        // Attendance
+        Route::get('/attendance', [\App\Http\Controllers\Teacher\TeacherController::class, 'attendanceIndex'])->name('attendance.index');
+        Route::get('/attendance/{classArm}/mark', [\App\Http\Controllers\Teacher\TeacherController::class, 'attendanceMark'])->name('attendance.mark');
+        Route::post('/attendance', [\App\Http\Controllers\Teacher\TeacherController::class, 'attendanceStore'])->name('attendance.store');
+
+        // Profile
+        Route::get('/profile', [\App\Http\Controllers\Teacher\TeacherController::class, 'profile'])->name('profile');
+        Route::put('/profile/password', [\App\Http\Controllers\Teacher\TeacherController::class, 'updatePassword'])->name('profile.password');
     });
     
     // Accountant Routes
