@@ -205,6 +205,11 @@
                         </select>
                     </div>
                     <div class="col-md-6">
+                        <label class="form-label">New Password <span class="text-muted">(Optional)</span></label>
+                        <input type="password" class="form-control" name="password" placeholder="Leave blank to keep current">
+                        <div class="form-text">Minimum 6 characters. Leave blank to keep current password.</div>
+                    </div>
+                    <div class="col-md-6">
                         <label class="form-label">Profile Photo</label>
                         <input type="file" class="form-control" name="photo" accept="image/*">
                         <div class="form-text">Max size: 2MB. Formats: JPG, PNG, JPEG</div>

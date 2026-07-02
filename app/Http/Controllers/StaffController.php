@@ -460,6 +460,7 @@ class StaffController extends Controller
             'qualifications' => 'nullable|string',
             'role_id' => 'required|exists:roles,id',
             'status' => 'required|in:Active,Inactive,Suspended,Terminated',
+            'password' => 'nullable|string|min:6',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
@@ -477,7 +478,7 @@ class StaffController extends Controller
             }
 
             // Update user information
-            $staff->user->update([
+            $userData = [
                 'name' => $request->first_name . ' ' . $request->last_name,
                 'email' => $request->email,
                 'phone' => $request->phone,
@@ -490,7 +491,14 @@ class StaffController extends Controller
                 'role_id' => $request->role_id,
                 'status' => $request->status,
                 'photo_path' => $photoPath,
-            ]);
+            ];
+
+            // Update password if provided
+            if ($request->filled('password')) {
+                $userData['password'] = Hash::make($request->password);
+            }
+
+            $staff->user->update($userData);
 
             // Update staff information
             $staff->update([
