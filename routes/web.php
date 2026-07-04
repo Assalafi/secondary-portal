@@ -114,6 +114,16 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/get-class-arms', [StudentController::class, 'getClassArms'])->name('get-class-arms');
     });
 
+    // Admin Routes - Support Tickets
+    Route::prefix('admin/support')->name('admin.support.')->middleware(['auth'])->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\SupportController::class, 'index'])->name('index');
+        Route::get('/{id}', [\App\Http\Controllers\Admin\SupportController::class, 'show'])->name('show');
+        Route::post('/{id}/assign', [\App\Http\Controllers\Admin\SupportController::class, 'assign'])->name('assign');
+        Route::post('/{id}/reply', [\App\Http\Controllers\Admin\SupportController::class, 'reply'])->name('reply');
+        Route::post('/{id}/status', [\App\Http\Controllers\Admin\SupportController::class, 'updateStatus'])->name('updateStatus');
+        Route::delete('/{id}', [\App\Http\Controllers\Admin\SupportController::class, 'destroy'])->name('destroy');
+    });
+
     // Admin Routes - Payment & Finance
     Route::prefix('admin/payments')->name('admin.payments.')->middleware(['auth'])->group(function () {
         Route::get('/', [PaymentController::class, 'overview'])->name('overview');
