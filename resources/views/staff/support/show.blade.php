@@ -1,4 +1,4 @@
-@extends('layouts.staff')
+@extends('layouts.teacher')
 
 @section('title', 'Ticket Details')
 @section('page-title', 'Support Ticket Details')
