@@ -36,7 +36,7 @@
                 <div class="card border-0 shadow-sm">
                     <div class="card-body text-center py-3">
                         <h6 class="text-muted small mb-1">In Progress</h6>
-                        <h4 class="mb-0 fw-bold text-info">{{ SupportTicket::where('status', 'In Progress')->count() }}</h4>
+                        <h4 class="mb-0 fw-bold text-info">{{ $stats['in_progress'] }}</h4>
                     </div>
                 </div>
             </div>

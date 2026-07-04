@@ -51,6 +51,7 @@ class SupportController extends Controller
             'total' => SupportTicket::count(),
             'open' => SupportTicket::where('status', 'Open')->count(),
             'awaiting' => SupportTicket::where('status', 'Awaiting Response')->count(),
+            'in_progress' => SupportTicket::where('status', 'In Progress')->count(),
             'resolved' => SupportTicket::where('status', 'Resolved')->count(),
             'closed' => SupportTicket::where('status', 'Closed')->count(),
         ];
