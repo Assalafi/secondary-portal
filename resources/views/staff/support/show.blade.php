@@ -7,7 +7,7 @@
 <div class="row">
     <div class="col-12">
         <!-- Back Button -->
-        <a href="{{ route('staff.support.index') }}" class="btn btn-outline-secondary mb-3">
+        <a href="{{ route('teacher.support.index') }}" class="btn btn-outline-secondary mb-3">
             <i class="ri-arrow-left-line me-1"></i>Back to Tickets
         </a>
 
@@ -126,7 +126,7 @@
                     <!-- Reply Form -->
                     <div class="mt-4 pt-4 border-top">
                         <h6 class="mb-3 fw-bold"><i class="ri-reply-line me-2 text-primary"></i>Add Reply</h6>
-                        <form action="{{ route('staff.support.reply', $ticket->id) }}" method="POST">
+                        <form action="{{ route('teacher.support.reply', $ticket->id) }}" method="POST">
                             @csrf
                             <div class="mb-3">
                                 <textarea class="form-control" name="message" rows="4" placeholder="Type your response here..." required></textarea>
@@ -156,7 +156,7 @@
                 <h5 class="modal-title">Update Status</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ route('staff.support.updateStatus', $ticket->id) }}" method="POST">
+            <form action="{{ route('teacher.support.updateStatus', $ticket->id) }}" method="POST">
                 @csrf
                 <div class="modal-body">
                     <div class="mb-3">

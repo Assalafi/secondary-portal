@@ -88,7 +88,7 @@
                     <div class="col-md-4">
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary flex-grow-1">Filter</button>
-                            <a href="{{ route('staff.support.index') }}" class="btn btn-outline-secondary">Reset</a>
+                            <a href="{{ route('teacher.support.index') }}" class="btn btn-outline-secondary">Reset</a>
                         </div>
                     </div>
                 </form>
@@ -145,7 +145,7 @@
                                         </td>
                                         <td><small class="text-muted">{{ $ticket->created_at->format('M d, Y') }}</small></td>
                                         <td>
-                                            <a href="{{ route('staff.support.show', $ticket->id) }}" class="btn btn-sm btn-outline-primary">
+                                            <a href="{{ route('teacher.support.show', $ticket->id) }}" class="btn btn-sm btn-outline-primary">
                                                 View <i class="ri-arrow-right-line"></i>
                                             </a>
                                         </td>
