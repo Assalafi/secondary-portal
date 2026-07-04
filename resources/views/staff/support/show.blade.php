@@ -147,8 +147,14 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label fw-medium">Add Attachment <span class="text-muted">(Optional - Max 5 files, 10MB each)</span></label>
-                                <input type="file" class="form-control" name="attachments[]" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.rar">
-                                <div class="form-text">Supported formats: Images, PDF, Word, Excel, ZIP, RAR</div>
+                                <div class="border rounded p-3 bg-light">
+                                    <input type="file" class="d-none" id="attachmentInput" name="attachments[]" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.rar">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('attachmentInput').click()">
+                                        <i class="ri-add-line me-1"></i>Add File
+                                    </button>
+                                    <div class="form-text mt-2">Supported formats: Images, PDF, Word, Excel, ZIP, RAR</div>
+                                    <div id="filePreview" class="mt-2"></div>
+                                </div>
                             </div>
                             <div class="d-flex justify-content-end">
                                 <button type="submit" class="btn btn-primary">
@@ -208,5 +214,50 @@
         to { opacity: 1; transform: translateY(0); }
     }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+// File preview for attachments
+document.getElementById('attachmentInput').addEventListener('change', function(e) {
+    const files = e.target.files;
+    const preview = document.getElementById('filePreview');
+    preview.innerHTML = '';
+    
+    if (files.length > 0) {
+        const fileList = document.createElement('div');
+        fileList.className = 'd-flex flex-wrap gap-2';
+        
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const fileBadge = document.createElement('span');
+            fileBadge.className = 'badge bg-secondary d-flex align-items-center';
+            fileBadge.innerHTML = `
+                <i class="ri-file-line me-1"></i>
+                ${file.name}
+                <button type="button" class="btn-close btn-close-white ms-2" style="font-size: 10px;" onclick="removeFile(${i})"></button>
+            `;
+            fileList.appendChild(fileBadge);
+        }
+        
+        preview.appendChild(fileList);
+    }
+});
+
+function removeFile(index) {
+    const input = document.getElementById('attachmentInput');
+    const dt = new DataTransfer();
+    const files = input.files;
+    
+    for (let i = 0; i < files.length; i++) {
+        if (i !== index) {
+            dt.items.add(files[i]);
+        }
+    }
+    
+    input.files = dt.files;
+    input.dispatchEvent(new Event('change'));
+}
+</script>
 @endpush
 @endsection
