@@ -146,6 +146,14 @@
                         <span class="title">My Profile</span>
                     </a>
                 </li>
+
+                {{-- Support Tickets --}}
+                <li class="menu-item">
+                    <a href="{{ route('teacher.support.index') }}" class="menu-link {{ request()->routeIs('teacher.support*') ? 'active' : '' }}">
+                        <span class="material-symbols-outlined menu-icon">support_agent</span>
+                        <span class="title">Support Tickets</span>
+                    </a>
+                </li>
             </ul>
         </aside>
     </div>

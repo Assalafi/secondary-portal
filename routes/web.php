@@ -452,6 +452,14 @@ Route::middleware(['auth'])->group(function () {
         // Profile
         Route::get('/profile', [\App\Http\Controllers\Teacher\TeacherController::class, 'profile'])->name('profile');
         Route::put('/profile/password', [\App\Http\Controllers\Teacher\TeacherController::class, 'updatePassword'])->name('profile.password');
+
+        // Support Tickets
+        Route::prefix('support')->name('support.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Staff\SupportController::class, 'index'])->name('index');
+            Route::get('/{id}', [\App\Http\Controllers\Staff\SupportController::class, 'show'])->name('show');
+            Route::post('/{id}/reply', [\App\Http\Controllers\Staff\SupportController::class, 'reply'])->name('reply');
+            Route::post('/{id}/status', [\App\Http\Controllers\Staff\SupportController::class, 'updateStatus'])->name('updateStatus');
+        });
     });
     
     // Accountant Routes
