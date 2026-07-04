@@ -116,6 +116,22 @@
                 </a>
             </div>
 
+            <!-- Timetable Card -->
+            <div class="col-12 col-md-6">
+                <a href="{{ route('parent.dependents.timetable', $student->id) }}" class="text-decoration-none">
+                    <div class="card border-0 shadow-sm hover-card">
+                        <div class="card-body p-4 d-flex align-items-center">
+                            <div class="rounded-circle bg-dark d-flex align-items-center justify-content-center me-3"
+                                 style="width: 50px; height: 50px;">
+                                <i class="ri-calendar-line text-white" style="font-size: 24px;"></i>
+                            </div>
+                            <h6 class="mb-0 flex-grow-1">Weekly Timetable</h6>
+                            <i class="ri-arrow-right-line" style="font-size: 20px;"></i>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
             <!-- Result Card -->
             <div class="col-12 col-md-6">
                 <a href="{{ route('parent.dependents.results', $student->id) }}" class="text-decoration-none">

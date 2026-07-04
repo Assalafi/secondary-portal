@@ -514,6 +514,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}/attendance', [App\Http\Controllers\Parent\DependentController::class, 'attendance'])->name('attendance');
             Route::get('/{id}/assignments', [App\Http\Controllers\Parent\DependentController::class, 'assignments'])->name('assignments');
             Route::get('/{id}/schedule', [App\Http\Controllers\Parent\DependentController::class, 'schedule'])->name('schedule');
+            Route::get('/{id}/timetable', [App\Http\Controllers\Parent\DependentController::class, 'timetable'])->name('timetable');
             Route::get('/{id}/results', [App\Http\Controllers\Parent\DependentController::class, 'results'])->name('results');
             Route::get('/{id}/payments', [App\Http\Controllers\Parent\DependentController::class, 'payments'])->name('payments');
             Route::post('/{id}/remove', [App\Http\Controllers\Parent\DependentController::class, 'remove'])->name('remove');

@@ -9,6 +9,7 @@ use App\Models\Attendance;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Student;
+use App\Models\Timetable;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -216,10 +217,10 @@ class DependentController extends Controller
     {
         $user = Auth::user();
         $student = $user->dependents()->with(['user', 'classArm.schoolClass'])->findOrFail($id);
-        
+
         // Get upcoming tests and exams
         $schedule = collect(); // Empty collection by default
-        
+
         if ($student->class_arm_id) {
             $schedule = Assessment::where('class_arm_id', $student->class_arm_id)
                 ->whereIn('type', ['Test', 'Exam'])
@@ -228,8 +229,31 @@ class DependentController extends Controller
                 ->orderBy('assessment_date')
                 ->get();
         }
-        
+
         return view('parent.dependents.schedule', compact('student', 'schedule'));
+    }
+
+    /**
+     * Display weekly timetable for a specific dependent.
+     */
+    public function timetable($id)
+    {
+        $user = Auth::user();
+        $student = $user->dependents()->with(['user', 'classArm.schoolClass'])->findOrFail($id);
+
+        // Get timetable for the student's class
+        $timetable = collect(); // Empty collection by default
+
+        if ($student->current_class_arm_id) {
+            $timetable = Timetable::where('class_arm_id', $student->current_class_arm_id)
+                ->with(['subject', 'classArm.schoolClass'])
+                ->orderBy('day')
+                ->orderBy('start_time')
+                ->get()
+                ->groupBy('day');
+        }
+
+        return view('parent.dependents.timetable', compact('student', 'timetable'));
     }
     
     /**
