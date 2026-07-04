@@ -219,46 +219,33 @@
 @push('scripts')
 <script>
 // File preview for attachments
+let selectedFiles = [];
+
 document.getElementById('attachmentInput').addEventListener('change', function(e) {
-    const newFiles = e.target.files;
-    const preview = document.getElementById('filePreview');
+    const newFiles = Array.from(e.target.files);
     
     if (newFiles.length > 0) {
-        // Get existing files
-        const input = document.getElementById('attachmentInput');
-        const dt = new DataTransfer();
-        
-        // Add existing files
-        const existingFiles = input.files;
-        for (let i = 0; i < existingFiles.length; i++) {
-            dt.items.add(existingFiles[i]);
-        }
-        
-        // Add new files
-        for (let i = 0; i < newFiles.length; i++) {
-            dt.items.add(newFiles[i]);
-        }
-        
-        // Update input
-        input.files = dt.files;
+        // Add new files to the array
+        selectedFiles = selectedFiles.concat(newFiles);
         
         // Update preview
         updateFilePreview();
     }
+    
+    // Clear the input so it can be used again
+    e.target.value = '';
 });
 
 function updateFilePreview() {
-    const input = document.getElementById('attachmentInput');
-    const files = input.files;
     const preview = document.getElementById('filePreview');
     preview.innerHTML = '';
     
-    if (files.length > 0) {
+    if (selectedFiles.length > 0) {
         const fileList = document.createElement('div');
         fileList.className = 'd-flex flex-wrap gap-2';
         
-        for (let i = 0; i < files.length; i++) {
-            const file = files[i];
+        for (let i = 0; i < selectedFiles.length; i++) {
+            const file = selectedFiles[i];
             const fileBadge = document.createElement('span');
             fileBadge.className = 'badge bg-secondary d-flex align-items-center';
             fileBadge.innerHTML = `
@@ -274,19 +261,21 @@ function updateFilePreview() {
 }
 
 function removeFile(index) {
+    selectedFiles.splice(index, 1);
+    updateFilePreview();
+}
+
+// Before form submission, add selected files to the input
+document.querySelector('form[action*="reply"]').addEventListener('submit', function(e) {
     const input = document.getElementById('attachmentInput');
     const dt = new DataTransfer();
-    const files = input.files;
     
-    for (let i = 0; i < files.length; i++) {
-        if (i !== index) {
-            dt.items.add(files[i]);
-        }
+    for (let i = 0; i < selectedFiles.length; i++) {
+        dt.items.add(selectedFiles[i]);
     }
     
     input.files = dt.files;
-    updateFilePreview();
-}
+});
 </script>
 @endpush
 @endsection
