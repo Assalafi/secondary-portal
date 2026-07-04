@@ -96,7 +96,7 @@
                             <textarea class="form-control" name="message" rows="4" placeholder="Type your message here..." required></textarea>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Attachments <span class="text-muted">(Optional - Max 5 files, 10MB each)</span></label>
+                            <label class="form-label">Add Attachment <span class="text-muted">(Optional - Max 5 files, 10MB each)</span></label>
                             <input type="file" class="form-control" name="attachments[]" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.rar">
                             <div class="form-text">Supported formats: Images, PDF, Word, Excel, ZIP, RAR</div>
                         </div>
