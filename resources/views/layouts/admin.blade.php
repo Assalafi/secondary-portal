@@ -178,29 +178,6 @@
                     </a>
                 </li>
 
-                {{-- Support Tickets --}}
-                <li class="menu-item">
-                    <a href="{{ route('admin.support.index') }}"
-                        class="menu-link {{ request()->routeIs('admin.support.*') ? 'active' : '' }}">
-                        <span class="material-symbols-outlined menu-icon">support_agent</span>
-                        <span class="title">Support Tickets</span>
-                    </a>
-                </li>
-
-                <li class="menu-item">
-                    <a href="#" class="menu-link">
-                        <span class="material-symbols-outlined menu-icon">analytics</span>
-                        <span class="title">Reports</span>
-                    </a>
-                </li>
-
-                <li class="menu-item">
-                    <a href="#" class="menu-link">
-                        <span class="material-symbols-outlined menu-icon">chat</span>
-                        <span class="title">Communication</span>
-                    </a>
-                </li>
-
                 <li class="menu-item">
                     <a href="{{ route('admin.settings.index') }}"
                         class="menu-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
@@ -209,10 +186,12 @@
                     </a>
                 </li>
 
+                {{-- Support Tickets --}}
                 <li class="menu-item">
-                    <a href="#" class="menu-link">
-                        <span class="material-symbols-outlined menu-icon">help</span>
-                        <span class="title">Support</span>
+                    <a href="{{ route('admin.support.index') }}"
+                        class="menu-link {{ request()->routeIs('admin.support.*') ? 'active' : '' }}">
+                        <span class="material-symbols-outlined menu-icon">support_agent</span>
+                        <span class="title">Support Tickets</span>
                     </a>
                 </li>
             </ul>
