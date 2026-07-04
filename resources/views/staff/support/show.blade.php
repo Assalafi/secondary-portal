@@ -115,6 +115,20 @@
                                     </div>
                                     <div class="message-content p-3 rounded" style="background-color: {{ $message->is_staff_reply ? '#e3f2fd' : '#f5f5f5' }}; border-left: 3px solid {{ $message->is_staff_reply ? '#2196f3' : '#9e9e9e' }};">
                                         <p class="mb-0">{{ $message->message }}</p>
+                                        @if($message->attachments && $message->attachments->count() > 0)
+                                            <div class="mt-3">
+                                                <small class="text-muted fw-bold">Attachments:</small>
+                                                <div class="d-flex flex-wrap gap-2 mt-2">
+                                                    @foreach($message->attachments as $attachment)
+                                                        <a href="{{ asset('storage/' . $attachment->file_path) }}" target="_blank" class="btn btn-sm btn-outline-secondary d-flex align-items-center">
+                                                            <i class="{{ $attachment->file_icon }} me-1"></i>
+                                                            <span class="text-truncate" style="max-width: 150px;">{{ $attachment->file_name }}</span>
+                                                            <small class="text-muted ms-1">({{ $attachment->formatted_size }})</small>
+                                                        </a>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -126,10 +140,15 @@
                     <!-- Reply Form -->
                     <div class="mt-4 pt-4 border-top">
                         <h6 class="mb-3 fw-bold"><i class="ri-reply-line me-2 text-primary"></i>Add Reply</h6>
-                        <form action="{{ route('teacher.support.reply', $ticket->id) }}" method="POST">
+                        <form action="{{ route('teacher.support.reply', $ticket->id) }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             <div class="mb-3">
                                 <textarea class="form-control" name="message" rows="4" placeholder="Type your response here..." required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-medium">Attachments <span class="text-muted">(Optional - Max 5 files, 10MB each)</span></label>
+                                <input type="file" class="form-control" name="attachments[]" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.rar">
+                                <div class="form-text">Supported formats: Images, PDF, Word, Excel, ZIP, RAR</div>
                             </div>
                             <div class="d-flex justify-content-end">
                                 <button type="submit" class="btn btn-primary">

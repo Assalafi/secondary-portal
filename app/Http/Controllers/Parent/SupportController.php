@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Parent;
 use App\Http\Controllers\Controller;
 use App\Models\SupportTicket;
 use App\Models\TicketMessage;
+use App\Models\TicketAttachment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class SupportController extends Controller
 {
@@ -42,8 +44,10 @@ class SupportController extends Controller
             'title' => 'required|string|max:255',
             'category' => 'required|in:Academic,Payment,Technical,Account,Other',
             'message' => 'required|string',
+            'attachments' => 'nullable|array|max:5',
+            'attachments.*' => 'file|max:10240|mimes:jpeg,png,jpg,pdf,doc,docx,xls,xlsx,zip,rar',
         ]);
-        
+
         DB::beginTransaction();
         try {
             // Create ticket
@@ -55,17 +59,31 @@ class SupportController extends Controller
                 'status' => 'Open',
                 'priority' => 'Medium',
             ]);
-            
+
             // Create first message
-            TicketMessage::create([
+            $message = TicketMessage::create([
                 'support_ticket_id' => $ticket->id,
                 'user_id' => Auth::id(),
                 'message' => $validated['message'],
                 'is_staff_reply' => false,
             ]);
-            
+
+            // Handle file attachments
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $file) {
+                    $path = $file->store('ticket-attachments', 'public');
+                    TicketAttachment::create([
+                        'ticket_message_id' => $message->id,
+                        'file_name' => $file->getClientOriginalName(),
+                        'file_path' => $path,
+                        'file_type' => $file->getClientMimeType(),
+                        'file_size' => $file->getSize(),
+                    ]);
+                }
+            }
+
             DB::commit();
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Ticket created successfully',
@@ -87,7 +105,7 @@ class SupportController extends Controller
     {
         $user = Auth::user();
         $ticket = $user->supportTickets()
-            ->with(['messages.user', 'assignedStaff'])
+            ->with(['messages.user', 'messages.attachments', 'assignedStaff'])
             ->findOrFail($id);
         
         return view('parent.support.show', compact('ticket'));
@@ -100,27 +118,54 @@ class SupportController extends Controller
     {
         $validated = $request->validate([
             'message' => 'required|string',
+            'attachments' => 'nullable|array|max:5',
+            'attachments.*' => 'file|max:10240|mimes:jpeg,png,jpg,pdf,doc,docx,xls,xlsx,zip,rar',
         ]);
-        
+
         $user = Auth::user();
         $ticket = $user->supportTickets()->findOrFail($id);
-        
-        // Create message
-        TicketMessage::create([
-            'support_ticket_id' => $ticket->id,
-            'user_id' => Auth::id(),
-            'message' => $validated['message'],
-            'is_staff_reply' => false,
-        ]);
-        
-        // Update ticket status if it was resolved
-        if ($ticket->status === 'Resolved' || $ticket->status === 'Closed') {
-            $ticket->update(['status' => 'Awaiting Response']);
+
+        DB::beginTransaction();
+        try {
+            // Create message
+            $message = TicketMessage::create([
+                'support_ticket_id' => $ticket->id,
+                'user_id' => Auth::id(),
+                'message' => $validated['message'],
+                'is_staff_reply' => false,
+            ]);
+
+            // Handle file attachments
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $file) {
+                    $path = $file->store('ticket-attachments', 'public');
+                    TicketAttachment::create([
+                        'ticket_message_id' => $message->id,
+                        'file_name' => $file->getClientOriginalName(),
+                        'file_path' => $path,
+                        'file_type' => $file->getClientMimeType(),
+                        'file_size' => $file->getSize(),
+                    ]);
+                }
+            }
+
+            // Update ticket status if it was resolved
+            if ($ticket->status === 'Resolved' || $ticket->status === 'Closed') {
+                $ticket->update(['status' => 'Awaiting Response']);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Reply sent successfully',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send reply: ' . $e->getMessage(),
+            ], 500);
         }
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Reply sent successfully',
-        ]);
     }
 }

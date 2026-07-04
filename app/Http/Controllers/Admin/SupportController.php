@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\SupportTicket;
 use App\Models\TicketMessage;
+use App\Models\TicketAttachment;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class SupportController extends Controller
 {
@@ -67,7 +69,7 @@ class SupportController extends Controller
      */
     public function show($id)
     {
-        $ticket = SupportTicket::with(['user', 'assignedStaff', 'messages.user'])
+        $ticket = SupportTicket::with(['user', 'assignedStaff', 'messages.user', 'messages.attachments'])
             ->findOrFail($id);
 
         // Get staff for reassignment
@@ -101,6 +103,8 @@ class SupportController extends Controller
     {
         $request->validate([
             'message' => 'required|string',
+            'attachments' => 'nullable|array|max:5',
+            'attachments.*' => 'file|max:10240|mimes:jpeg,png,jpg,pdf,doc,docx,xls,xlsx,zip,rar',
         ]);
 
         $ticket = SupportTicket::findOrFail($id);
@@ -108,12 +112,26 @@ class SupportController extends Controller
         DB::beginTransaction();
         try {
             // Create message
-            TicketMessage::create([
+            $message = TicketMessage::create([
                 'support_ticket_id' => $ticket->id,
                 'user_id' => Auth::id(),
                 'message' => $request->message,
                 'is_staff_reply' => true,
             ]);
+
+            // Handle file attachments
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $file) {
+                    $path = $file->store('ticket-attachments', 'public');
+                    TicketAttachment::create([
+                        'ticket_message_id' => $message->id,
+                        'file_name' => $file->getClientOriginalName(),
+                        'file_path' => $path,
+                        'file_type' => $file->getClientMimeType(),
+                        'file_size' => $file->getSize(),
+                    ]);
+                }
+            }
 
             // Update ticket status
             if ($ticket->status === 'Open' || $ticket->status === 'Awaiting Response') {

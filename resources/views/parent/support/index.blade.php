@@ -84,7 +84,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="newTicketForm">
+                <form id="newTicketForm" enctype="multipart/form-data">
                     @csrf
                     <div class="mb-3">
                         <label class="form-label">Ticket title/ title here</label>
@@ -106,6 +106,12 @@
                     <div class="mb-3">
                         <label class="form-label">Message</label>
                         <textarea class="form-control" name="message" rows="5" placeholder="Describe your issue..." required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Attachments <span class="text-muted">(Optional - Max 5 files, 10MB each)</span></label>
+                        <input type="file" class="form-control" name="attachments[]" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.rar">
+                        <div class="form-text">Supported formats: Images, PDF, Word, Excel, ZIP, RAR</div>
                     </div>
 
                     <div class="d-flex gap-2">
