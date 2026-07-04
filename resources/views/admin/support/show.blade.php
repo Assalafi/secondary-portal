@@ -271,7 +271,36 @@
 <script>
 // File preview for attachments
 document.getElementById('attachmentInput').addEventListener('change', function(e) {
-    const files = e.target.files;
+    const newFiles = e.target.files;
+    const preview = document.getElementById('filePreview');
+    
+    if (newFiles.length > 0) {
+        // Get existing files
+        const input = document.getElementById('attachmentInput');
+        const dt = new DataTransfer();
+        
+        // Add existing files
+        const existingFiles = input.files;
+        for (let i = 0; i < existingFiles.length; i++) {
+            dt.items.add(existingFiles[i]);
+        }
+        
+        // Add new files
+        for (let i = 0; i < newFiles.length; i++) {
+            dt.items.add(newFiles[i]);
+        }
+        
+        // Update input
+        input.files = dt.files;
+        
+        // Update preview
+        updateFilePreview();
+    }
+});
+
+function updateFilePreview() {
+    const input = document.getElementById('attachmentInput');
+    const files = input.files;
     const preview = document.getElementById('filePreview');
     preview.innerHTML = '';
     
@@ -293,7 +322,7 @@ document.getElementById('attachmentInput').addEventListener('change', function(e
         
         preview.appendChild(fileList);
     }
-});
+}
 
 function removeFile(index) {
     const input = document.getElementById('attachmentInput');
@@ -307,7 +336,7 @@ function removeFile(index) {
     }
     
     input.files = dt.files;
-    input.dispatchEvent(new Event('change'));
+    updateFilePreview();
 }
 </script>
 @endpush
