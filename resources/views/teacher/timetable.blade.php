@@ -29,13 +29,15 @@
 
 @section('content')
 @php
-    $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     $dayColors = [
         'Monday' => 'primary',
         'Tuesday' => 'success',
         'Wednesday' => 'warning',
         'Thursday' => 'danger',
-        'Friday' => 'purple'
+        'Friday' => 'purple',
+        'Saturday' => 'info',
+        'Sunday' => 'secondary'
     ];
 @endphp
 
