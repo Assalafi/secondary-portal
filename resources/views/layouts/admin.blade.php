@@ -178,6 +178,15 @@
                     </a>
                 </li>
 
+                {{-- Support Tickets --}}
+                <li class="menu-item">
+                    <a href="{{ route('admin.support.index') }}"
+                        class="menu-link {{ request()->routeIs('admin.support.*') ? 'active' : '' }}">
+                        <span class="material-symbols-outlined menu-icon">support_agent</span>
+                        <span class="title">Support Tickets</span>
+                    </a>
+                </li>
+
                 <li class="menu-item">
                     <a href="#" class="menu-link">
                         <span class="material-symbols-outlined menu-icon">analytics</span>
