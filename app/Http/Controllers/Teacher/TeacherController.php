@@ -49,7 +49,7 @@ class TeacherController extends Controller
 
         // Also count students from subject assignments (unique)
         $subjectClassArmIds = $mySubjects->pluck('class_arm_id')->unique();
-        $totalSubjectStudents = Student::whereIn('class_arm_id', $subjectClassArmIds)
+        $totalSubjectStudents = Student::whereIn('current_class_arm_id', $subjectClassArmIds)
             ->where('status', 'Active')
             ->count();
 
