@@ -187,17 +187,17 @@ class ProductionSeeder extends Seeder
         $this->command->info('Creating Classes & Arms...');
         
         $classData = [
-            ['level' => 'JSS 1', 'name' => 'JSS 1', 'numeric_level' => 1, 'group' => 'Junior', 'status' => 'Active'],
-            ['level' => 'JSS 2', 'name' => 'JSS 2', 'numeric_level' => 2, 'group' => 'Junior', 'status' => 'Active'],
-            ['level' => 'JSS 3', 'name' => 'JSS 3', 'numeric_level' => 3, 'group' => 'Junior', 'status' => 'Active'],
-            ['level' => 'SS 1', 'name' => 'SS 1', 'numeric_level' => 4, 'group' => 'Senior', 'status' => 'Active'],
-            ['level' => 'SS 2', 'name' => 'SS 2', 'numeric_level' => 5, 'group' => 'Senior', 'status' => 'Active'],
-            ['level' => 'SS 3', 'name' => 'SS 3', 'numeric_level' => 6, 'group' => 'Senior', 'status' => 'Active'],
+            ['level' => 'JSS', 'name' => 'JSS 1', 'numeric_level' => 1, 'group' => 'Junior', 'status' => 'Active'],
+            ['level' => 'JSS', 'name' => 'JSS 2', 'numeric_level' => 2, 'group' => 'Junior', 'status' => 'Active'],
+            ['level' => 'JSS', 'name' => 'JSS 3', 'numeric_level' => 3, 'group' => 'Junior', 'status' => 'Active'],
+            ['level' => 'SS', 'name' => 'SS 1', 'numeric_level' => 4, 'group' => 'Senior', 'status' => 'Active'],
+            ['level' => 'SS', 'name' => 'SS 2', 'numeric_level' => 5, 'group' => 'Senior', 'status' => 'Active'],
+            ['level' => 'SS', 'name' => 'SS 3', 'numeric_level' => 6, 'group' => 'Senior', 'status' => 'Active'],
         ];
 
         $classes = [];
         foreach ($classData as $c) {
-            $classes[$c['level']] = SchoolClass::firstOrCreate(['level' => $c['level']], $c);
+            $classes[$c['name']] = SchoolClass::firstOrCreate(['name' => $c['name']], $c);
         }
 
         // Create class arms (A, B for each class)
