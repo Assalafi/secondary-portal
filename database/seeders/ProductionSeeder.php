@@ -19,6 +19,7 @@ use App\Models\Term;
 use App\Models\Timetable;
 use App\Models\User;
 use App\Models\AssessmentSchedule;
+use Faker\Factory as Faker;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -106,6 +107,8 @@ class ProductionSeeder extends Seeder
 
     public function run(): void
     {
+        $faker = Faker::create();
+
         // ========================================
         // 1. ACADEMIC SESSION & TERMS
         // ========================================
@@ -272,7 +275,7 @@ class ProductionSeeder extends Seeder
                     'staff_id' => 'TCH/' . str_pad($index + 1, 3, '0', STR_PAD_LEFT),
                     'designation' => $td['designation'],
                     'department' => $td['department'],
-                    'date_of_employment' => fake()->dateTimeBetween('2015-01-01', '2023-08-01')->format('Y-m-d'),
+                    'date_of_employment' => $faker->dateTimeBetween('2015-01-01', '2023-08-01')->format('Y-m-d'),
                     'salary' => rand(150, 350) * 1000,
                     'qualifications' => $td['qualifications'],
                     'employment_type' => 'Full-time',
@@ -369,13 +372,13 @@ class ProductionSeeder extends Seeder
                     ]
                 );
 
-                $dob = fake()->dateTimeBetween('2007-01-01', '2012-12-31')->format('Y-m-d');
+                $dob = $faker->dateTimeBetween('2007-01-01', '2012-12-31')->format('Y-m-d');
                 $student = Student::firstOrCreate(
                     ['admission_no' => $admissionNo],
                     [
                         'user_id' => $studentUser->id,
                         'admission_no' => $admissionNo,
-                        'admission_date' => fake()->dateTimeBetween('2020-09-01', '2024-09-01')->format('Y-m-d'),
+                        'admission_date' => $faker->dateTimeBetween('2020-09-01', '2024-09-01')->format('Y-m-d'),
                         'surname' => $surname,
                         'first_name' => $firstName,
                         'middle_name' => $middleName,
