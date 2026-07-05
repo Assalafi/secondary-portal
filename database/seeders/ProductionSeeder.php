@@ -135,9 +135,9 @@ class ProductionSeeder extends Seeder
         // Create Session Terms
         $sessionTerms = [];
         $sessionTermData = [
-            ['academic_year' => '2024/2025', 'term_name' => '1st Term', 'start_date' => '2024-09-09', 'end_date' => '2024-12-13', 'is_current' => false, 'status' => 'completed'],
-            ['academic_year' => '2024/2025', 'term_name' => '2nd Term', 'start_date' => '2025-01-06', 'end_date' => '2025-04-04', 'is_current' => false, 'status' => 'completed'],
-            ['academic_year' => '2024/2025', 'term_name' => '3rd Term', 'start_date' => '2025-04-28', 'end_date' => '2025-07-18', 'is_current' => true, 'status' => 'active'],
+            ['academic_year' => '2024/2025', 'term_name' => '1st Term', 'start_date' => '2024-09-09', 'end_date' => '2024-12-13', 'is_current' => false, 'status' => 'Inactive'],
+            ['academic_year' => '2024/2025', 'term_name' => '2nd Term', 'start_date' => '2025-01-06', 'end_date' => '2025-04-04', 'is_current' => false, 'status' => 'Inactive'],
+            ['academic_year' => '2024/2025', 'term_name' => '3rd Term', 'start_date' => '2025-04-28', 'end_date' => '2025-07-18', 'is_current' => true, 'status' => 'Active'],
         ];
         foreach ($sessionTermData as $st) {
             $sessionTerms[] = SessionTerm::firstOrCreate(
