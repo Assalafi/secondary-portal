@@ -77,6 +77,27 @@
             border-radius: 12px;
             max-width: 100%;
         }
+        /* Compact Pagination */
+        .pagination {
+            margin-bottom: 0;
+            gap: 2px;
+        }
+        .pagination .page-link {
+            padding: 0.3rem 0.65rem;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            border-radius: 4px;
+        }
+        .pagination .page-item.active .page-link {
+            background-color: #556ee6;
+            border-color: #556ee6;
+        }
+        .pagination .page-link:hover {
+            background-color: #e9ecef;
+        }
+        .pagination .page-item.active .page-link:hover {
+            background-color: #556ee6;
+        }
     </style>
 
     <!-- Title -->
