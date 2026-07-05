@@ -615,7 +615,7 @@ class ProductionSeeder extends Seeder
         // ========================================
         $this->command->info('Creating Assessment Schedules...');
 
-        $adminUser = User::where('email', 'admin@school.com')->first();
+        $adminUser = User::where('email', 'admin@school.com')->first() ?? $teachers[0];
         $assessmentTypes = ['Test', 'Exam'];
 
         foreach ($classes as $level => $class) {
