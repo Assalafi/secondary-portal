@@ -139,7 +139,7 @@
                     <div class="card-header bg-white border-0">
                         <h5 class="mb-1 fw-bold">Assign Existing Student</h5>
                         <p class="text-muted mb-0 small">
-                            Search by student name, admission number, or class. Already linked students are shown but cannot be assigned again.
+                            Search by student name, admission number, or class. Assigned students are shown for clarity but cannot be selected.
                         </p>
                     </div>
                     <div class="card-body">
@@ -158,10 +158,12 @@
                             @forelse($students as $student)
                                 @php
                                     $isLinked = $linkedStudentIds->contains($student->id);
+                                    $isAssignedElsewhere = ! $isLinked && $assignedStudentIds->contains($student->id);
+                                    $isUnavailable = $isLinked || $isAssignedElsewhere;
                                     $studentName = $student->user->name ?? $student->full_name;
                                     $className = trim((optional(optional($student->classArm)->schoolClass)->name ?? 'N/A') . ' ' . (optional($student->classArm)->name ?? ''));
                                 @endphp
-                                <div class="student-option border rounded p-3 {{ $isLinked ? 'bg-light' : '' }}"
+                                <div class="student-option border rounded p-3 {{ $isUnavailable ? 'bg-light' : '' }}"
                                      data-search="{{ strtolower($studentName . ' ' . $student->full_name . ' ' . $student->admission_no . ' ' . $className) }}">
                                     <div class="d-flex justify-content-between gap-3">
                                         <div>
@@ -172,6 +174,8 @@
                                         <div class="text-end flex-shrink-0">
                                             @if($isLinked)
                                                 <span class="badge bg-success bg-opacity-10 text-success">Linked to you</span>
+                                            @elseif($isAssignedElsewhere)
+                                                <span class="badge bg-warning bg-opacity-10 text-warning">Assigned to another parent</span>
                                             @else
                                                 <span class="badge bg-secondary bg-opacity-10 text-secondary">Available</span>
                                             @endif
@@ -182,30 +186,24 @@
                                         @csrf
                                         <input type="hidden" name="student_id" value="{{ $student->id }}">
                                         <div class="row g-2 align-items-end">
-                                            <div class="col-12 col-sm-6">
+                                            <div class="col-12">
                                                 <label class="form-label small fw-semibold">Relationship</label>
-                                                <select name="relationship" class="form-select form-select-sm" {{ $isLinked ? 'disabled' : 'required' }}>
+                                                <select name="relationship" class="form-select form-select-sm" {{ $isUnavailable ? 'disabled' : 'required' }}>
                                                     @foreach($relationshipOptions as $relationship)
                                                         <option value="{{ $relationship }}">{{ $relationship }}</option>
                                                     @endforeach
                                                 </select>
                                             </div>
-                                            <div class="col-12 col-sm-6">
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input"
-                                                           type="checkbox"
-                                                           value="1"
-                                                           id="primary_{{ $student->id }}"
-                                                           name="is_primary"
-                                                           {{ $isLinked ? 'disabled' : '' }}>
-                                                    <label class="form-check-label small" for="primary_{{ $student->id }}">
-                                                        Make primary contact
-                                                    </label>
-                                                </div>
-                                            </div>
                                             <div class="col-12">
-                                                <button type="submit" class="btn btn-sm btn-primary w-100" {{ $isLinked ? 'disabled' : '' }}>
-                                                    <i class="ri-link me-1"></i>{{ $isLinked ? 'Already Assigned' : 'Assign Student' }}
+                                                <button type="submit" class="btn btn-sm btn-primary w-100" {{ $isUnavailable ? 'disabled' : '' }}>
+                                                    <i class="ri-link me-1"></i>
+                                                    @if($isLinked)
+                                                        Already Assigned
+                                                    @elseif($isAssignedElsewhere)
+                                                        Assigned to Another Parent
+                                                    @else
+                                                        Assign Student
+                                                    @endif
                                                 </button>
                                             </div>
                                         </div>

@@ -15,6 +15,7 @@ use App\Models\Timetable;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class DependentController extends Controller
 {
@@ -36,6 +37,10 @@ class DependentController extends Controller
             });
 
         $linkedStudentIds = $dependents->pluck('student.id')->filter()->values();
+        $assignedStudentIds = DB::table('parent_student')
+            ->distinct()
+            ->pluck('student_id')
+            ->values();
 
         $students = Student::with(['user', 'classArm.schoolClass'])
             ->where('status', 'Active')
@@ -50,6 +55,7 @@ class DependentController extends Controller
             'dependents',
             'students',
             'linkedStudentIds',
+            'assignedStudentIds',
             'relationshipOptions'
         ));
     }
@@ -62,7 +68,6 @@ class DependentController extends Controller
         $validated = $request->validate([
             'student_id' => ['required', 'integer', 'exists:students,id'],
             'relationship' => ['required', 'string', 'in:' . implode(',', $this->relationshipOptions())],
-            'is_primary' => ['nullable', 'boolean'],
         ]);
 
         $user = Auth::user();
@@ -73,18 +78,14 @@ class DependentController extends Controller
             return back()->with('info', 'This student is already linked to your account.');
         }
 
-        if ($request->boolean('is_primary')) {
-            $user->dependents()
-                ->pluck('students.id')
-                ->each(fn ($dependentId) => $user->dependents()->updateExistingPivot($dependentId, [
-                    'is_primary' => false,
-                ]));
+        if (DB::table('parent_student')->where('student_id', $student->id)->exists()) {
+            return back()->with('error', 'This student is already assigned to another parent/guardian. Please contact the school admin if this is wrong.');
         }
 
         $user->dependents()->attach($student->id, [
             'relationship' => $validated['relationship'],
             'date_added' => now()->toDateString(),
-            'is_primary' => $request->boolean('is_primary'),
+            'is_primary' => true,
         ]);
 
         return back()->with('success', "{$student->full_name} has been linked to your account.");

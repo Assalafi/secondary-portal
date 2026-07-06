@@ -23,7 +23,6 @@ class ParentDependentAssignmentTest extends TestCase
             ->post(route('parent.dependents.assign'), [
                 'student_id' => $student->id,
                 'relationship' => 'Mother',
-                'is_primary' => '1',
             ])
             ->assertRedirect();
 
@@ -40,6 +39,42 @@ class ParentDependentAssignmentTest extends TestCase
             ->assertSee('Adebayo Garba')
             ->assertSee('Linked to you')
             ->assertSee('Already Assigned');
+    }
+
+    public function test_parent_cannot_assign_a_student_already_assigned_to_another_parent(): void
+    {
+        $parent = User::factory()->create(['name' => 'Mrs. Parent']);
+        $otherParent = User::factory()->create(['name' => 'Mr. Other Parent']);
+        $student = $this->createActiveStudent('Adebayo Garba');
+
+        DB::table('parent_student')->insert([
+            'parent_id' => $otherParent->id,
+            'student_id' => $student->id,
+            'relationship' => 'Father',
+            'date_added' => now()->toDateString(),
+            'is_primary' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->actingAs($parent)
+            ->get(route('parent.dependents.index'))
+            ->assertOk()
+            ->assertSee('Assigned to another parent')
+            ->assertSee('Assigned to Another Parent');
+
+        $this->actingAs($parent)
+            ->post(route('parent.dependents.assign'), [
+                'student_id' => $student->id,
+                'relationship' => 'Mother',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseMissing('parent_student', [
+            'parent_id' => $parent->id,
+            'student_id' => $student->id,
+        ]);
     }
 
     public function test_parent_cannot_assign_the_same_student_twice(): void
