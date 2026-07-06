@@ -225,9 +225,9 @@
 
             <!-- Download Button -->
             <div class="text-center mb-4">
-                <button class="btn btn-dark btn-lg px-5">
-                    <i class="ri-download-line me-2"></i>Download Report Card
-                </button>
+                <a href="{{ route('parent.report-cards') }}" class="btn btn-dark btn-lg px-5">
+                    <i class="ri-download-line me-2"></i>View Report Cards
+                </a>
             </div>
         @endif
     </div>
