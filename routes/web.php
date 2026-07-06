@@ -44,12 +44,14 @@ Route::get('/verify-result/{verificationCode}', [ReportCardController::class, 'v
 Route::middleware(['auth'])->prefix('student')->name('student.')->group(function () {
     Route::get('/report-cards', [ReportCardController::class, 'studentReports'])->name('report-cards');
     Route::get('/report-cards/{id}', [ReportCardController::class, 'studentReportShow'])->name('report-cards.show');
+    Route::get('/report-cards/{id}/download', [ReportCardController::class, 'studentDownloadPDF'])->name('report-cards.download');
 });
 
 // Parent Portal Routes
 Route::middleware(['auth'])->prefix('parent')->name('parent.')->group(function () {
     Route::get('/report-cards', [ReportCardController::class, 'parentReports'])->name('report-cards');
     Route::get('/report-cards/{id}', [ReportCardController::class, 'parentReportShow'])->name('report-cards.show');
+    Route::get('/report-cards/{id}/download', [ReportCardController::class, 'parentDownloadPDF'])->name('report-cards.download');
 });
 
 // Protected Routes

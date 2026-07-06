@@ -170,11 +170,11 @@ class ReportCardController extends Controller
             ->first();
 
         if (!$profile) {
-            // Use default grading scale
-            if ($score >= 80) return ['grade' => 'A', 'remark' => 'Excellent', 'grade_point' => 5];
-            if ($score >= 70) return ['grade' => 'B', 'remark' => 'Very Good', 'grade_point' => 4];
-            if ($score >= 60) return ['grade' => 'C', 'remark' => 'Good', 'grade_point' => 3];
-            if ($score >= 50) return ['grade' => 'D', 'remark' => 'Fair', 'grade_point' => 2];
+            // Use Nigerian grading scale
+            if ($score >= 75) return ['grade' => 'A', 'remark' => 'Excellent', 'grade_point' => 5];
+            if ($score >= 65) return ['grade' => 'B', 'remark' => 'Very Good', 'grade_point' => 4];
+            if ($score >= 55) return ['grade' => 'C', 'remark' => 'Good', 'grade_point' => 3];
+            if ($score >= 45) return ['grade' => 'D', 'remark' => 'Fair', 'grade_point' => 2];
             return ['grade' => 'F', 'remark' => 'Fail', 'grade_point' => 1];
         }
 
@@ -542,7 +542,17 @@ class ReportCardController extends Controller
 
         $settings = ReportSettings::getSettings();
 
-        $pdf = PDF::loadView('admin.report-cards.pdf', compact('reportCard', 'settings'));
+        // Helper variables for the view
+        $ordinal = $this->getOrdinal($reportCard->class_position);
+        $gradeClasses = [
+            'A' => 'grade-excellent',
+            'B' => 'grade-very-good',
+            'C' => 'grade-good',
+            'D' => 'grade-fair',
+            'F' => 'grade-fail',
+        ];
+
+        $pdf = PDF::loadView('admin.report-cards.pdf', compact('reportCard', 'settings', 'ordinal', 'gradeClasses'));
         
         // Set PDF options
         $pdf->setPaper('a4', 'portrait');
@@ -552,7 +562,7 @@ class ReportCardController extends Controller
             'defaultFont' => 'Times New Roman',
         ]);
 
-        $filename = "report_card_{$reportCard->student->admission_number}_{$reportCard->academicSession->name}_{$reportCard->term->name}.pdf";
+        $filename = "report_card_{$reportCard->student->admission_no}_{$reportCard->academicSession->name}_{$reportCard->term->name}.pdf";
         
         // Save PDF path
         $pdfPath = "report_cards/" . $filename;
@@ -564,6 +574,16 @@ class ReportCardController extends Controller
         ]);
 
         return $pdf->download($filename);
+    }
+
+    private function getOrdinal($number)
+    {
+        if (!$number) return '';
+        $ends = ['th','st','nd','rd','th','th','th','th','th','th'];
+        if ((($number % 100) >= 11) && (($number % 100) <= 13))
+            return $number . 'th';
+        else
+            return $number . $ends[$number % 10];
     }
 
     public function downloadPDF($id)
@@ -661,6 +681,11 @@ class ReportCardController extends Controller
         return view('student.report-cards.show', compact('reportCard'));
     }
 
+    public function studentDownloadPDF($id)
+    {
+        return $this->generatePDF($id);
+    }
+
     public function parentReports()
     {
         $parentId = auth()->id();
@@ -708,5 +733,10 @@ class ReportCardController extends Controller
             ->firstOrFail();
 
         return view('parent.report-cards.show', compact('reportCard'));
+    }
+
+    public function parentDownloadPDF($id)
+    {
+        return $this->generatePDF($id);
     }
 }
