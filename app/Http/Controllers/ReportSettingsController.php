@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ReportSettings;
 use App\Models\GradingProfile;
+use App\Models\ReportSettings;
 use Illuminate\Http\Request;
 
 class ReportSettingsController extends Controller
@@ -12,7 +12,7 @@ class ReportSettingsController extends Controller
     {
         $settings = ReportSettings::getSettings();
         $gradingProfiles = GradingProfile::active()->get();
-        
+
         return view('admin.report-settings.index', compact('settings', 'gradingProfiles'));
     }
 
@@ -21,7 +21,17 @@ class ReportSettingsController extends Controller
         $request->validate([
             'default_grading_profile_id' => 'nullable|exists:grading_profiles,id',
             'ca_max_score' => 'required|integer|min:0|max:100',
-            'exam_max_score' => 'required|integer|min:0|max:100',
+            'exam_max_score' => [
+                'required',
+                'integer',
+                'min:0',
+                'max:100',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ((int) $request->ca_max_score + (int) $value !== 100) {
+                        $fail('The CA and examination maximum scores must add up to 100.');
+                    }
+                },
+            ],
             'show_subject_position' => 'boolean',
             'show_class_average' => 'boolean',
             'show_highest_lowest' => 'boolean',

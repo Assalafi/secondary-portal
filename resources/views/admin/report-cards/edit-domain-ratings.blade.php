@@ -22,7 +22,7 @@
                                     <tr>
                                         <td><strong>Student:</strong> {{ $reportCard->student->full_name }}</td>
                                         <td><strong>Class:</strong> {{ $reportCard->class->name }}</td>
-                                        <td><strong>Term:</strong> {{ $reportCard->term->name ?? 'Annual' }}</td>
+                                        <td><strong>Term:</strong> {{ $reportCard->term_name }}</td>
                                     </tr>
                                 </table>
                             </div>
@@ -56,11 +56,11 @@
                                             <td>
                                                 <select name="affective_ratings[{{ $trait->id }}]" class="form-select" required>
                                                     <option value="">Select Rating</option>
-                                                    <option value="5" {{ $reportCard->affectiveRatings->where('trait_id', $trait->id)->first()->rating_value == 5 ? 'selected' : '' }}>5 - Excellent</option>
-                                                    <option value="4" {{ $reportCard->affectiveRatings->where('trait_id', $trait->id)->first()->rating_value == 4 ? 'selected' : '' }}>4 - Very Good</option>
-                                                    <option value="3" {{ $reportCard->affectiveRatings->where('trait_id', $trait->id)->first()->rating_value == 3 ? 'selected' : '' }}>3 - Good</option>
-                                                    <option value="2" {{ $reportCard->affectiveRatings->where('trait_id', $trait->id)->first()->rating_value == 2 ? 'selected' : '' }}>2 - Fair</option>
-                                                    <option value="1" {{ $reportCard->affectiveRatings->where('trait_id', $trait->id)->first()->rating_value == 1 ? 'selected' : '' }}>1 - Poor</option>
+                                                    <option value="5" {{ ($reportCard->affectiveRatings->firstWhere('trait_id', $trait->id)?->rating_value ?? 3) == 5 ? 'selected' : '' }}>5 - Excellent</option>
+                                                    <option value="4" {{ ($reportCard->affectiveRatings->firstWhere('trait_id', $trait->id)?->rating_value ?? 3) == 4 ? 'selected' : '' }}>4 - Very Good</option>
+                                                    <option value="3" {{ ($reportCard->affectiveRatings->firstWhere('trait_id', $trait->id)?->rating_value ?? 3) == 3 ? 'selected' : '' }}>3 - Good</option>
+                                                    <option value="2" {{ ($reportCard->affectiveRatings->firstWhere('trait_id', $trait->id)?->rating_value ?? 3) == 2 ? 'selected' : '' }}>2 - Fair</option>
+                                                    <option value="1" {{ ($reportCard->affectiveRatings->firstWhere('trait_id', $trait->id)?->rating_value ?? 3) == 1 ? 'selected' : '' }}>1 - Poor</option>
                                                 </select>
                                             </td>
                                             <td>{{ $trait->description }}</td>
@@ -94,11 +94,11 @@
                                             <td>
                                                 <select name="psychomotor_ratings[{{ $trait->id }}]" class="form-select" required>
                                                     <option value="">Select Rating</option>
-                                                    <option value="5" {{ $reportCard->psychomotorRatings->where('trait_id', $trait->id)->first()->rating_value == 5 ? 'selected' : '' }}>5 - Excellent</option>
-                                                    <option value="4" {{ $reportCard->psychomotorRatings->where('trait_id', $trait->id)->first()->rating_value == 4 ? 'selected' : '' }}>4 - Very Good</option>
-                                                    <option value="3" {{ $reportCard->psychomotorRatings->where('trait_id', $trait->id)->first()->rating_value == 3 ? 'selected' : '' }}>3 - Good</option>
-                                                    <option value="2" {{ $reportCard->psychomotorRatings->where('trait_id', $trait->id)->first()->rating_value == 2 ? 'selected' : '' }}>2 - Fair</option>
-                                                    <option value="1" {{ $reportCard->psychomotorRatings->where('trait_id', $trait->id)->first()->rating_value == 1 ? 'selected' : '' }}>1 - Poor</option>
+                                                    <option value="5" {{ ($reportCard->psychomotorRatings->firstWhere('trait_id', $trait->id)?->rating_value ?? 3) == 5 ? 'selected' : '' }}>5 - Excellent</option>
+                                                    <option value="4" {{ ($reportCard->psychomotorRatings->firstWhere('trait_id', $trait->id)?->rating_value ?? 3) == 4 ? 'selected' : '' }}>4 - Very Good</option>
+                                                    <option value="3" {{ ($reportCard->psychomotorRatings->firstWhere('trait_id', $trait->id)?->rating_value ?? 3) == 3 ? 'selected' : '' }}>3 - Good</option>
+                                                    <option value="2" {{ ($reportCard->psychomotorRatings->firstWhere('trait_id', $trait->id)?->rating_value ?? 3) == 2 ? 'selected' : '' }}>2 - Fair</option>
+                                                    <option value="1" {{ ($reportCard->psychomotorRatings->firstWhere('trait_id', $trait->id)?->rating_value ?? 3) == 1 ? 'selected' : '' }}>1 - Poor</option>
                                                 </select>
                                             </td>
                                             <td>{{ $trait->description }}</td>

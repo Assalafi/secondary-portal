@@ -55,10 +55,10 @@
                             <tr>
                                 <td>{{ $reportCard->student->surname }}, {{ $reportCard->student->first_name }}</td>
                                 <td>{{ $reportCard->class->name }}</td>
-                                <td>{{ $reportCard->academicSession->name ?? 'N/A' }}</td>
-                                <td>{{ $reportCard->term->name ?? 'Annual' }}</td>
+                                <td>{{ $reportCard->session_name }}</td>
+                                <td>{{ $reportCard->term_name }}</td>
                                 <td>{{ ucfirst($reportCard->report_type) }}</td>
-                                <td><span class="badge bg-{{ $reportCard->final_grade == 'A' ? 'success' : ($reportCard->final_grade == 'B' ? 'primary' : ($reportCard->final_grade == 'C' ? 'warning' : ($reportCard->final_grade == 'D' ? 'info' : 'danger'))) }}">{{ $reportCard->final_grade }}</span></td>
+                                <td><span class="badge bg-{{ str_starts_with($reportCard->final_grade, 'A') ? 'success' : (str_starts_with($reportCard->final_grade, 'B') ? 'primary' : (str_starts_with($reportCard->final_grade, 'C') ? 'warning' : 'danger')) }}">{{ $reportCard->final_grade }}</span></td>
                                 <td>{{ $reportCard->class_position ?? 'N/A' }}/{{ $reportCard->number_in_class ?? 'N/A' }}</td>
                                 <td>
                                     <span class="badge bg-{{ $reportCard->status == 'published' ? 'success' : ($reportCard->status == 'approved' ? 'primary' : 'secondary') }}">

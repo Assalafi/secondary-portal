@@ -6,6 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class ReportCard extends Model
 {
+    protected $appends = [
+        'session_name',
+        'term_name',
+    ];
+
     protected $fillable = [
         'student_id',
         'class_id',
@@ -146,5 +151,17 @@ class ReportCard extends Model
     public function scopeByTerm($query, $termId)
     {
         return $query->where('term_id', $termId);
+    }
+
+    public function getSessionNameAttribute(): string
+    {
+        return $this->academicSession?->academic_year ?? 'N/A';
+    }
+
+    public function getTermNameAttribute(): string
+    {
+        return $this->report_type === 'annual'
+            ? 'Annual'
+            : ($this->term?->term_name ?? 'N/A');
     }
 }

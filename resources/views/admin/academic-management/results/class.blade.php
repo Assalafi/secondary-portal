@@ -17,12 +17,6 @@
         </nav>
     </div>
 
-    @php
-        $classArm = \App\Models\ClassArm::with(['schoolClass', 'students.user'])->findOrFail($classId);
-        $currentSession = \App\Models\AcademicSession::where('is_current', true)->first();
-        $currentTerm = \App\Models\Term::first();
-    @endphp
-
     <div class="card shadow-sm border-0 rounded-lg">
         <div class="card-body p-4">
             @if(session('success'))
@@ -36,6 +30,17 @@
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     {{ session('error') }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            @if(session('bulk_report_warnings'))
+                <div class="alert alert-warning">
+                    <strong>Some students were skipped:</strong>
+                    <ul class="mb-0 mt-2">
+                        @foreach(session('bulk_report_warnings') as $warning)
+                            <li>{{ $warning }}</li>
+                        @endforeach
+                    </ul>
                 </div>
             @endif
 
@@ -81,6 +86,30 @@
                     <div>
                         <button type="submit" class="btn btn-primary">Filter</button>
                         <a href="{{ route('admin.academic-management.results.class', $classId) }}" class="btn btn-outline-secondary">Reset</a>
+                    </div>
+                </div>
+            </form>
+
+            <form method="POST" action="{{ route('admin.academic-management.results.bulk-generate', $classId) }}" class="card border bg-light mb-4">
+                @csrf
+                <div class="card-body">
+                    <div class="d-flex flex-column flex-lg-row align-items-lg-end gap-3">
+                        <div class="flex-grow-1">
+                            <label class="form-label fw-semibold">Bulk report-card generation</label>
+                            <p class="text-muted small mb-0">Generate or refresh report cards for every student with scores in this class.</p>
+                        </div>
+                        <input type="hidden" name="session_id" value="{{ $sessionId }}">
+                        <input type="hidden" name="term_id" value="{{ $termId }}">
+                        <div>
+                            <label class="form-label">Report type</label>
+                            <select name="report_type" class="form-select">
+                                <option value="termly">Termly</option>
+                                <option value="annual">Annual</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-success" onclick="return confirm('Generate report cards for all eligible students in this class?')">
+                            <i class="ri-file-add-line me-1"></i>Generate for Class
+                        </button>
                     </div>
                 </div>
             </form>
@@ -132,7 +161,7 @@
                                         </button>
                                         <ul class="dropdown-menu">
                                             <li>
-                                                <form action="{{ route('admin.academic-management.report-cards.generate-termly', [$classId, $student->id]) }}" method="POST">
+                                                <form action="{{ route('admin.academic-management.results.generate-termly-card', [$classId, $student->id]) }}" method="POST">
                                                     @csrf
                                                     <input type="hidden" name="session_id" value="{{ request('session') ?? ($currentSession->id ?? '') }}">
                                                     <input type="hidden" name="term_id" value="{{ request('term') ?? ($currentTerm->id ?? '') }}">
@@ -140,7 +169,7 @@
                                                 </form>
                                             </li>
                                             <li>
-                                                <form action="{{ route('admin.academic-management.report-cards.generate-annual', [$classId, $student->id]) }}" method="POST">
+                                                <form action="{{ route('admin.academic-management.results.generate-annual-card', [$classId, $student->id]) }}" method="POST">
                                                     @csrf
                                                     <input type="hidden" name="session_id" value="{{ request('session') ?? ($currentSession->id ?? '') }}">
                                                     <button type="submit" class="dropdown-item">Annual Report Card</button>

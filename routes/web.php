@@ -1,27 +1,27 @@
 <?php
 
-use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\AcademicManagementController;
-use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\AssignmentController;
-use App\Http\Controllers\Admin\TimetableController;
-use App\Http\Controllers\Admin\TestExamScheduleController;
-use App\Http\Controllers\Admin\ScoreUploadController;
-use App\Http\Controllers\Admin\ResultController;
+use App\Http\Controllers\Admin\AttendanceController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GradingSystemController;
+use App\Http\Controllers\Admin\ResultController;
+use App\Http\Controllers\Admin\ScoreUploadController;
+use App\Http\Controllers\Admin\TestExamScheduleController;
+use App\Http\Controllers\Admin\TimetableController;
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\ClassSubjectController;
+use App\Http\Controllers\LandingPageController;
+use App\Http\Controllers\LocationController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ReportCardController;
 use App\Http\Controllers\ReportSettingsController;
-use App\Http\Controllers\StudentController;
-use App\Http\Controllers\StaffController;
-use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\ClassSubjectController;
 use App\Http\Controllers\SettingsController;
-use App\Http\Controllers\LocationController;
-use App\Http\Controllers\LandingPageController;
+use App\Http\Controllers\StaffController;
 use App\Http\Controllers\Student\StudentDashboardController;
-use App\Http\Controllers\Student\StudentPortalController;
 use App\Http\Controllers\Student\StudentPaymentController;
+use App\Http\Controllers\Student\StudentPortalController;
+use App\Http\Controllers\StudentController;
 use Illuminate\Support\Facades\Route;
 
 // Landing Page
@@ -56,17 +56,17 @@ Route::middleware(['auth'])->prefix('parent')->name('parent.')->group(function (
 
 // Protected Routes
 Route::middleware(['auth'])->group(function () {
-    
+
     // Admin Routes
     Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-        
+
         // Student Management Routes
         Route::prefix('students')->name('students.')->group(function () {
             // Overview and main pages
             Route::get('/', [StudentController::class, 'index'])->name('index');
             Route::get('/overview', [StudentController::class, 'overview'])->name('overview');
-            
+
             // Enrollment multi-step form
             Route::get('/enroll/step1', [StudentController::class, 'enrollStep1'])->name('enroll.step1');
             Route::post('/enroll/step2', [StudentController::class, 'enrollStep2'])->name('enroll.step2');
@@ -76,7 +76,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/enroll/step4', [StudentController::class, 'enrollStep4'])->name('enroll.step4');
             Route::get('/enroll/step4', [StudentController::class, 'showEnrollStep4'])->name('enroll.step4.show');
             Route::post('/enroll/complete', [StudentController::class, 'completeEnrollment'])->name('enroll.complete');
-            
+
             // Student profile tabs
             Route::get('/{student}/profile/overview', [StudentController::class, 'profileOverview'])->name('profile.overview');
             Route::get('/{student}/profile/academic', [StudentController::class, 'profileAcademic'])->name('profile.academic');
@@ -87,13 +87,13 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{student}/profile/attendance/pdf', [StudentController::class, 'profileAttendancePdf'])->name('profile.attendance.pdf');
             Route::get('/{student}/profile/documents', [StudentController::class, 'profileDocuments'])->name('profile.documents');
             Route::get('/{student}/profile/pdf', [StudentController::class, 'profilePdf'])->name('profile.pdf');
-            
+
             // Promote/Transfer
             Route::get('/promote', [StudentController::class, 'promoteIndex'])->name('promote.index');
             Route::get('/promote/{class}', [StudentController::class, 'promoteClass'])->name('promote.class');
             Route::post('/promote/execute', [StudentController::class, 'executePromotion'])->name('promote.execute');
             Route::post('/transfer/execute', [StudentController::class, 'executeTransfer'])->name('transfer.execute');
-            
+
             // Import
             Route::get('/import', [StudentController::class, 'importForm'])->name('import');
             Route::post('/import', [StudentController::class, 'import'])->name('import.process');
@@ -106,12 +106,12 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{student}/edit', [StudentController::class, 'edit'])->name('edit');
             Route::put('/{student}', [StudentController::class, 'update'])->name('update');
             Route::delete('/{student}', [StudentController::class, 'destroy'])->name('destroy');
-            
+
             // Additional actions
             Route::post('/{student}/reset-password', [StudentController::class, 'resetPassword'])->name('reset-password');
             Route::post('/bulk-action', [StudentController::class, 'bulkAction'])->name('bulk-action');
         });
-        
+
         // Utility routes
         Route::get('/get-class-arms', [StudentController::class, 'getClassArms'])->name('get-class-arms');
     });
@@ -151,7 +151,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/invoice/{invoice}', [PaymentController::class, 'showInvoice'])->name('invoice.show');
         Route::get('/invoice/{invoice}/receipt', [PaymentController::class, 'downloadInvoiceReceipt'])->name('invoice.receipt');
     });
-    
+
     // API Routes for AJAX calls
     Route::get('/api/students/all', [PaymentController::class, 'getStudents'])->middleware(['auth'])->name('api.students.all');
 
@@ -166,15 +166,15 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('admin/staff')->name('admin.staff.')->middleware(['auth'])->group(function () {
         // Staff Overview (default page)
         Route::get('/', [StaffController::class, 'overview'])->name('overview');
-        
+
         // Staff Directory
         Route::get('/directory', [StaffController::class, 'index'])->name('index');
-        
+
         // Staff Assignments
         Route::get('/assignments', [StaffController::class, 'assignments'])->name('assignments');
         Route::get('/get-class-arms/{classId}', [StaffController::class, 'getClassArms'])->name('get-class-arms');
         Route::post('/assign-role-class', [StaffController::class, 'assignRoleClass'])->name('assign-role-class');
-        
+
         // Staff Enrollment (Multi-step)
         Route::prefix('enroll')->name('enroll.')->group(function () {
             Route::get('/step1', [StaffController::class, 'enrollStep1'])->name('step1');
@@ -186,46 +186,46 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/step4', [StaffController::class, 'enrollStep4'])->name('step4');
             Route::post('/complete', [StaffController::class, 'completeEnrollment'])->name('complete');
         });
-        
+
         // Staff Profile Routes
         Route::prefix('profile')->name('profile.')->group(function () {
             Route::get('/{staff}/overview', [StaffController::class, 'show'])->name('overview');
         });
-        
+
         // CRUD operations
         Route::get('/{staff}', [StaffController::class, 'show'])->name('show');
         Route::get('/{staff}/edit', [StaffController::class, 'edit'])->name('edit');
         Route::put('/{staff}', [StaffController::class, 'update'])->name('update');
         Route::delete('/{staff}', [StaffController::class, 'destroy'])->name('destroy');
-        
+
         // Additional actions
         Route::post('/{staff}/reset-password', [StaffController::class, 'resetPassword'])->name('reset-password');
         Route::post('/bulk-action', [StaffController::class, 'bulkAction'])->name('bulk-action');
     });
-    
+
     // Admin Routes - Parent/Guardian Management
     Route::prefix('admin/parent-guardians')->name('admin.parent-guardians.')->middleware(['auth'])->group(function () {
         // Overview page
         Route::get('/', [\App\Http\Controllers\ParentGuardianController::class, 'overview'])->name('overview');
-        
+
         // Directory/List
         Route::get('/directory', [\App\Http\Controllers\ParentGuardianController::class, 'index'])->name('index');
-        
+
         // Create new parent/guardian
         Route::get('/create', [\App\Http\Controllers\ParentGuardianController::class, 'create'])->name('create');
         Route::post('/', [\App\Http\Controllers\ParentGuardianController::class, 'store'])->name('store');
-        
+
         // View, Edit, Delete specific parent/guardian
         Route::get('/{parentGuardian}', [\App\Http\Controllers\ParentGuardianController::class, 'show'])->name('show');
         Route::get('/{parentGuardian}/edit', [\App\Http\Controllers\ParentGuardianController::class, 'edit'])->name('edit');
         Route::put('/{parentGuardian}', [\App\Http\Controllers\ParentGuardianController::class, 'update'])->name('update');
         Route::delete('/{parentGuardian}', [\App\Http\Controllers\ParentGuardianController::class, 'destroy'])->name('destroy');
-        
+
         // Additional actions
         Route::post('/{parentGuardian}/reset-password', [\App\Http\Controllers\ParentGuardianController::class, 'resetPassword'])->name('reset-password');
         Route::post('/bulk-action', [\App\Http\Controllers\ParentGuardianController::class, 'bulkAction'])->name('bulk-action');
     });
-    
+
     // Admin Routes - Admission Applications
     Route::prefix('admin/admissions')->name('admin.admissions.')->middleware(['auth'])->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\AdmissionApplicationController::class, 'index'])->name('index');
@@ -235,13 +235,13 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{application}/reject', [\App\Http\Controllers\Admin\AdmissionApplicationController::class, 'reject'])->name('reject');
         Route::delete('/{application}', [\App\Http\Controllers\Admin\AdmissionApplicationController::class, 'destroy'])->name('destroy');
     });
-    
+
     // Admin Routes - Classes & Subjects
     Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
-        
+
         // Classes & Subjects Overview
         Route::get('/classes-subjects', [ClassSubjectController::class, 'overview'])->name('classes-subjects.overview');
-        
+
         // Classes management
         Route::prefix('classes')->name('classes.')->group(function () {
             Route::get('/', [ClassSubjectController::class, 'classesIndex'])->name('index');
@@ -254,7 +254,7 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('/{class}', [ClassSubjectController::class, 'classesDestroy'])->name('destroy');
             Route::delete('/{class}/students/{student}/remove', [ClassSubjectController::class, 'removeStudentFromClass'])->name('students.remove');
         });
-        
+
         // Subjects management
         Route::prefix('subjects')->name('subjects.')->group(function () {
             Route::get('/', [ClassSubjectController::class, 'subjectsIndex'])->name('index');
@@ -272,14 +272,14 @@ Route::middleware(['auth'])->group(function () {
 
         // Utility endpoint for dynamic dropdowns on Subjects modal
         Route::get('/get-class-details-by-level', [ClassSubjectController::class, 'getClassDetailsByLevel'])->name('get-class-details-by-level');
-        
+
         // Teacher Assignment
         Route::prefix('teachers')->name('teachers.')->group(function () {
             Route::get('/assign', [ClassSubjectController::class, 'teacherAssign'])->name('assign');
             Route::post('/assign', [ClassSubjectController::class, 'teacherAssignStore'])->name('assign.store');
             Route::delete('/assign/{class_arm}', [ClassSubjectController::class, 'removeTeacher'])->name('assign.remove');
         });
-        
+
         Route::delete('/class-arms/{class_arm}/subjects/{subject}/remove', [ClassSubjectController::class, 'removeSubjectFromClass'])->name('class-arms.subjects.remove');
         Route::post('/class-arms/{class_arm}/subjects/add', [ClassSubjectController::class, 'addSubjectToClass'])->name('class-arms.subjects.add');
 
@@ -294,7 +294,7 @@ Route::middleware(['auth'])->group(function () {
         // Academic Management Routes
         Route::prefix('academic-management')->name('academic-management.')->group(function () {
             Route::get('/', [AcademicManagementController::class, 'index'])->name('index');
-            
+
             // Attendance Routes
             Route::prefix('attendance')->name('attendance.')->group(function () {
                 Route::get('/', [AttendanceController::class, 'index'])->name('index');
@@ -303,7 +303,7 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{classId}/history', [AttendanceController::class, 'history'])->name('history');
                 Route::get('/{classId}/history/pdf', [AttendanceController::class, 'historyPdf'])->name('history.pdf');
             });
-            
+
             // Assignment Routes
             Route::prefix('assignments')->name('assignments.')->group(function () {
                 Route::get('/', [AssignmentController::class, 'index'])->name('index');
@@ -336,7 +336,7 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{classId}/create', [TestExamScheduleController::class, 'create'])->name('create');
                 Route::post('/{classId}', [TestExamScheduleController::class, 'store'])->name('store');
             });
-            
+
             // Score Upload Routes
             Route::prefix('score-upload')->name('score-upload.')->group(function () {
                 Route::get('/', [ScoreUploadController::class, 'index'])->name('index');
@@ -344,17 +344,18 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{classId}/{subjectId}', [ScoreUploadController::class, 'subject'])->name('subject');
                 Route::post('/', [ScoreUploadController::class, 'store'])->name('store');
             });
-            
+
             // Result & Grades Routes
             Route::prefix('results')->name('results.')->group(function () {
                 Route::get('/', [ResultController::class, 'index'])->name('index');
                 Route::get('/{classId}', [ResultController::class, 'classResults'])->name('class');
+                Route::post('/{classId}/bulk-generate', [ResultController::class, 'generateBulkReportCards'])->name('bulk-generate');
                 Route::get('/{classId}/{studentId}', [ResultController::class, 'studentResult'])->name('student');
                 Route::post('/{classId}/{studentId}/generate-termly', [ResultController::class, 'generateTermlyReportCard'])->name('generate-termly-card');
                 Route::post('/{classId}/{studentId}/generate-annual', [ResultController::class, 'generateAnnualReportCard'])->name('generate-annual-card');
                 Route::get('/{classId}/{studentId}/view-report', [ResultController::class, 'viewReportCard'])->name('view-report-card');
             });
-            
+
             // Report Card Routes
             Route::prefix('report-cards')->name('report-cards.')->group(function () {
                 Route::get('/', [ReportCardController::class, 'index'])->name('index');
@@ -379,55 +380,55 @@ Route::middleware(['auth'])->group(function () {
             });
         });
 
-        // 
+        //
         // Settings Routes
         Route::prefix('settings')->name('settings.')->group(function () {
             Route::get('/', [SettingsController::class, 'index'])->name('index');
-            
+
             // School Information
             Route::get('/school-info', [SettingsController::class, 'schoolInfo'])->name('school-info');
             Route::post('/school-info', [SettingsController::class, 'updateSchoolInfo'])->name('school-info.update');
-            
+
             // Grading System
             Route::get('/grading-system', [GradingSystemController::class, 'index'])->name('grading-system');
             Route::post('/grading-system', [GradingSystemController::class, 'store'])->name('grading-system.store');
             Route::put('/grading-system/{id}', [GradingSystemController::class, 'update'])->name('grading-system.update');
             Route::delete('/grading-system/{id}', [GradingSystemController::class, 'destroy'])->name('grading-system.destroy');
-            
+
             // Report Settings
             Route::get('/report-settings', [ReportSettingsController::class, 'index'])->name('report-settings');
             Route::post('/report-settings', [ReportSettingsController::class, 'update'])->name('report-settings.update');
-            
+
             // Session/Term Management
             Route::get('/session-term', [SettingsController::class, 'sessionTerm'])->name('session-term');
             Route::post('/session-term', [SettingsController::class, 'storeSessionTerm'])->name('session-term.store');
             Route::post('/session-term/{session}/set-current', [SettingsController::class, 'setCurrentSession'])->name('session-term.set-current');
-            
+
             // Security Settings
             Route::get('/security', [SettingsController::class, 'security'])->name('security');
             Route::post('/security', [SettingsController::class, 'updateSecurity'])->name('security.update');
-            
+
             // User Management
             Route::get('/user-management', [SettingsController::class, 'userManagement'])->name('user-management');
             Route::post('/user-management', [SettingsController::class, 'createUser'])->name('user-management.store');
-            
+
             // Role & Permissions
             Route::get('/role-permissions', [SettingsController::class, 'rolePermissions'])->name('role-permissions');
             Route::post('/role-permissions', [SettingsController::class, 'createRole'])->name('role-permissions.store');
-            
+
             // Notification Preferences
             Route::get('/notification-preferences', [SettingsController::class, 'notificationPreferences'])->name('notification-preferences');
             Route::post('/notification-preferences', [SettingsController::class, 'updateNotificationPreferences'])->name('notification-preferences.update');
-            
+
             // System Configuration
             Route::get('/system-config', [SettingsController::class, 'systemConfig'])->name('system-config');
             Route::post('/system-config', [SettingsController::class, 'updateSystemConfig'])->name('system-config.update');
-            
+
             // Backup & Restore
             Route::get('/backup-restore', [SettingsController::class, 'backupRestore'])->name('backup-restore');
         });
     });
-    
+
     // Teacher Routes
     Route::prefix('teacher')->name('teacher.')->middleware(['auth'])->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\Teacher\TeacherController::class, 'dashboard'])->name('dashboard');
@@ -464,21 +465,21 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/{id}/status', [\App\Http\Controllers\Staff\SupportController::class, 'updateStatus'])->name('updateStatus');
         });
     });
-    
+
     // Accountant Routes
     Route::prefix('accountant')->name('accountant.')->middleware(['auth'])->group(function () {
         Route::get('/dashboard', function () {
             return view('accountant.dashboard');
         })->name('dashboard');
     });
-    
+
     // Librarian Routes
     Route::prefix('librarian')->name('librarian.')->middleware(['auth'])->group(function () {
         Route::get('/dashboard', function () {
             return view('librarian.dashboard');
         })->name('dashboard');
     });
-    
+
     // Student Routes
     Route::prefix('student')->name('student.')->middleware(['auth'])->group(function () {
         Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
@@ -519,12 +520,12 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/remita/verify', [StudentPaymentController::class, 'verifyRemita'])->name('remita.verify');
         });
     });
-    
+
     // Parent Routes
     Route::prefix('parent')->name('parent.')->middleware(['auth'])->group(function () {
         // Dashboard
         Route::get('/dashboard', [App\Http\Controllers\Parent\ParentDashboardController::class, 'index'])->name('dashboard');
-        
+
         // My Dependents
         Route::prefix('dependents')->name('dependents.')->group(function () {
             Route::get('/', [App\Http\Controllers\Parent\DependentController::class, 'index'])->name('index');
@@ -540,7 +541,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}/payments', [App\Http\Controllers\Parent\DependentController::class, 'payments'])->name('payments');
             Route::post('/{id}/remove', [App\Http\Controllers\Parent\DependentController::class, 'remove'])->name('remove');
         });
-        
+
         // Payments
         Route::prefix('payments')->name('payments.')->group(function () {
             Route::get('/', [App\Http\Controllers\Parent\PaymentController::class, 'index'])->name('index');
@@ -551,7 +552,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/remita/verify', [App\Http\Controllers\Parent\PaymentController::class, 'verifyRemita'])->name('remita.verify');
             Route::post('/verify-status', [App\Http\Controllers\Parent\PaymentController::class, 'verifyStatus'])->name('verify-status');
         });
-        
+
         // Support Tickets
         Route::prefix('support')->name('support.')->group(function () {
             Route::get('/', [App\Http\Controllers\Parent\SupportController::class, 'index'])->name('index');
@@ -560,7 +561,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}', [App\Http\Controllers\Parent\SupportController::class, 'show'])->name('show');
             Route::post('/{id}/reply', [App\Http\Controllers\Parent\SupportController::class, 'reply'])->name('reply');
         });
-        
+
         // Admission Applications
         Route::prefix('admission')->name('admission.')->group(function () {
             Route::get('/', [App\Http\Controllers\Parent\AdmissionApplicationController::class, 'index'])->name('index');
@@ -574,7 +575,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{application}', [App\Http\Controllers\Parent\AdmissionApplicationController::class, 'show'])->name('show');
             Route::delete('/{application}', [App\Http\Controllers\Parent\AdmissionApplicationController::class, 'destroy'])->name('destroy');
         });
-        
+
         // Account Settings
         Route::prefix('account')->name('account.')->group(function () {
             Route::get('/', [App\Http\Controllers\Parent\AccountController::class, 'index'])->name('index');
@@ -583,7 +584,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/notifications', [App\Http\Controllers\Parent\AccountController::class, 'updateNotifications'])->name('notifications.update');
         });
     });
-    
+
     // General Dashboard Route
     Route::get('/dashboard', function () {
         return redirect()->route('admin.dashboard');

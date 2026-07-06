@@ -27,8 +27,8 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-3">
                             <div>
-                                <h6 class="fw-bold mb-1">{{ optional($report->academicSession)->name ?? 'N/A' }}</h6>
-                                <span class="badge bg-primary">{{ optional($report->term)->name ?? 'N/A' }}</span>
+                                <h6 class="fw-bold mb-1">{{ $report->session_name }}</h6>
+                                <span class="badge bg-primary">{{ $report->term_name }}</span>
                             </div>
                             <span class="badge bg-success">Published</span>
                         </div>

@@ -2,254 +2,72 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ReportCard;
-use App\Models\ReportCardItem;
-use App\Models\Student;
-use App\Models\SchoolClass;
-use App\Models\SessionTerm;
-use App\Models\Result;
-use App\Models\Score;
-use App\Models\GradingProfile;
-use App\Models\GradingScale;
+use App\Models\AcademicSession;
 use App\Models\AffectiveTrait;
+use App\Models\ClassArm;
+use App\Models\ParentGuardian;
 use App\Models\PsychomotorTrait;
+use App\Models\ReportCard;
+use App\Models\ReportSettings;
+use App\Models\SchoolClass;
+use App\Models\SchoolSettings;
+use App\Models\Student;
 use App\Models\StudentAffectiveRating;
 use App\Models\StudentPsychomotorRating;
-use App\Models\ReportSettings;
+use App\Models\Term;
+use App\Services\ReportCardService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Barryvdh\DomPDF\Facade\Pdf;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class ReportCardController extends Controller
 {
-    public function generateTermlyReport(Request $request, $classId, $studentId)
-    {
+    public function generateTermlyReport(
+        Request $request,
+        $classId,
+        $studentId,
+        ReportCardService $reportCards
+    ) {
         $request->validate([
-            'session_id' => 'required|exists:session_terms,id',
-            'term_id' => 'required|exists:session_terms,id',
+            'session_id' => 'required|exists:academic_sessions,id',
+            'term_id' => 'required|exists:terms,id',
         ]);
 
         $student = Student::findOrFail($studentId);
         $class = SchoolClass::findOrFail($classId);
-        $session = SessionTerm::findOrFail($request->session_id);
-        $term = SessionTerm::findOrFail($request->term_id);
+        $classArm = ClassArm::whereKey($student->current_class_arm_id)
+            ->where('school_class_id', $class->id)
+            ->firstOrFail();
+        $session = AcademicSession::findOrFail($request->session_id);
+        $term = Term::findOrFail($request->term_id);
+        $reportCard = $reportCards->generate($student, $classArm, $session, $term);
 
-        // Check if report card already exists
-        $existingReport = ReportCard::where('student_id', $studentId)
-            ->where('class_id', $classId)
-            ->where('academic_session_id', $request->session_id)
-            ->where('term_id', $request->term_id)
-            ->where('report_type', 'termly')
-            ->first();
-
-        if ($existingReport) {
-            return redirect()->route('admin.report-cards.show', $existingReport->id)
-                ->with('info', 'Report card already exists for this student.');
-        }
-
-        // Generate report card
-        $reportCard = $this->generateReportCard($student, $class, $session, $term, 'termly');
-
-        return redirect()->route('admin.report-cards.show', $reportCard->id)
+        return redirect()->route('admin.academic-management.report-cards.show', $reportCard)
             ->with('success', 'Termly report card generated successfully.');
     }
 
-    public function generateAnnualReport(Request $request, $classId, $studentId)
-    {
+    public function generateAnnualReport(
+        Request $request,
+        $classId,
+        $studentId,
+        ReportCardService $reportCards
+    ) {
         $request->validate([
-            'session_id' => 'required|exists:session_terms,id',
+            'session_id' => 'required|exists:academic_sessions,id',
         ]);
 
         $student = Student::findOrFail($studentId);
         $class = SchoolClass::findOrFail($classId);
-        $session = SessionTerm::findOrFail($request->session_id);
+        $classArm = ClassArm::whereKey($student->current_class_arm_id)
+            ->where('school_class_id', $class->id)
+            ->firstOrFail();
+        $session = AcademicSession::findOrFail($request->session_id);
+        $reportCard = $reportCards->generate($student, $classArm, $session, null, 'annual');
 
-        // Check if annual report already exists
-        $existingReport = ReportCard::where('student_id', $studentId)
-            ->where('class_id', $classId)
-            ->where('academic_session_id', $request->session_id)
-            ->where('report_type', 'annual')
-            ->first();
-
-        if ($existingReport) {
-            return redirect()->route('admin.report-cards.show', $existingReport->id)
-                ->with('info', 'Annual report card already exists for this student.');
-        }
-
-        // Generate annual report card
-        $reportCard = $this->generateReportCard($student, $class, $session, null, 'annual');
-
-        return redirect()->route('admin.report-cards.show', $reportCard->id)
+        return redirect()->route('admin.academic-management.report-cards.show', $reportCard)
             ->with('success', 'Annual report card generated successfully.');
-    }
-
-    private function generateReportCard($student, $class, $session, $term, $reportType)
-    {
-        DB::beginTransaction();
-        try {
-            $settings = ReportSettings::getSettings();
-            
-            // Get scores for the student
-            $scores = Score::where('student_id', $student->id)
-                ->whereHas('scoreBatch', function($query) use ($class, $session, $term) {
-                    $query->where('class_id', $class->id);
-                    if ($session) {
-                        $query->where('session_id', $session->id);
-                    }
-                    if ($term) {
-                        $query->where('term_id', $term->id);
-                    }
-                })
-                ->with('subject')
-                ->get();
-
-            // Calculate totals and averages
-            $totalScore = $scores->sum('total_score');
-            $maximumScore = $scores->count() * 100;
-            $averageScore = $maximumScore > 0 ? ($totalScore / $maximumScore) * 100 : 0;
-
-            // Get grade and remark
-            $grade = $this->calculateGrade($averageScore, $class->level);
-            $remark = $grade['remark'] ?? '';
-
-            // Create report card
-            $reportCard = ReportCard::create([
-                'student_id' => $student->id,
-                'class_id' => $class->id,
-                'academic_session_id' => $session->id ?? null,
-                'term_id' => $term->id ?? null,
-                'report_type' => $reportType,
-                'status' => 'draft',
-                'total_score' => $totalScore,
-                'maximum_score' => $maximumScore,
-                'average_score' => $averageScore,
-                'final_grade' => $grade['grade'] ?? '',
-                'final_remark' => $remark,
-                'verification_code' => $this->generateVerificationCode($student, $session, $term),
-            ]);
-
-            // Create report card items
-            foreach ($scores as $score) {
-                $itemGrade = $this->calculateGrade($score->total_score, $class->level);
-                
-                ReportCardItem::create([
-                    'report_card_id' => $reportCard->id,
-                    'subject_id' => $score->subject_id,
-                    'subject_name' => $score->subject->name,
-                    'ca_score' => $score->ca_score,
-                    'exam_score' => $score->exam_score,
-                    'total_score' => $score->total_score,
-                    'grade' => $itemGrade['grade'] ?? '',
-                    'grade_point' => $itemGrade['grade_point'] ?? 0,
-                    'remark' => $itemGrade['remark'] ?? '',
-                    'teacher_id' => $score->subject->teacher_id ?? null,
-                ]);
-            }
-
-            // Calculate class position
-            $this->calculateClassPosition($reportCard);
-
-            // Initialize affective and psychomotor ratings with defaults
-            $this->initializeDomainRatings($reportCard);
-
-            DB::commit();
-            return $reportCard->fresh();
-        } catch (\Exception $e) {
-            DB::rollback();
-            throw $e;
-        }
-    }
-
-    private function calculateGrade($score, $level)
-    {
-        $profile = GradingProfile::where('level', $level)
-            ->where('is_default', true)
-            ->first();
-
-        if (!$profile) {
-            // Use Nigerian grading scale
-            if ($score >= 75) return ['grade' => 'A', 'remark' => 'Excellent', 'grade_point' => 5];
-            if ($score >= 65) return ['grade' => 'B', 'remark' => 'Very Good', 'grade_point' => 4];
-            if ($score >= 55) return ['grade' => 'C', 'remark' => 'Good', 'grade_point' => 3];
-            if ($score >= 45) return ['grade' => 'D', 'remark' => 'Fair', 'grade_point' => 2];
-            return ['grade' => 'F', 'remark' => 'Fail', 'grade_point' => 1];
-        }
-
-        $scale = $profile->scales()
-            ->where('min_score', '<=', $score)
-            ->where('max_score', '>=', $score)
-            ->first();
-
-        return [
-            'grade' => $scale->grade ?? 'F',
-            'remark' => $scale->remark ?? 'Fail',
-            'grade_point' => $scale->grade_point ?? 1,
-        ];
-    }
-
-    private function calculateClassPosition($reportCard)
-    {
-        $allReports = ReportCard::where('class_id', $reportCard->class_id)
-            ->where('academic_session_id', $reportCard->academic_session_id)
-            ->where('term_id', $reportCard->term_id)
-            ->where('report_type', $reportCard->report_type)
-            ->orderBy('average_score', 'desc')
-            ->get();
-
-        $position = 1;
-        foreach ($allReports as $index => $otherReport) {
-            if ($otherReport->id === $reportCard->id) {
-                $reportCard->class_position = $position;
-                $reportCard->number_in_class = $allReports->count();
-                $reportCard->save();
-                break;
-            }
-            if ($otherReport->average_score > $reportCard->average_score) {
-                $position++;
-            }
-        }
-
-        // Calculate class statistics
-        $reportCard->class_highest_average = $allReports->max('average_score');
-        $reportCard->class_lowest_average = $allReports->min('average_score');
-        $reportCard->class_average = $allReports->avg('average_score');
-        $reportCard->save();
-    }
-
-    private function initializeDomainRatings($reportCard)
-    {
-        // Initialize affective ratings with default values (3 = Good)
-        $affectiveTraits = AffectiveTrait::active()->ordered()->get();
-        foreach ($affectiveTraits as $trait) {
-            StudentAffectiveRating::create([
-                'report_card_id' => $reportCard->id,
-                'student_id' => $reportCard->student_id,
-                'trait_id' => $trait->id,
-                'rating_value' => 3, // Default to Good
-            ]);
-        }
-
-        // Initialize psychomotor ratings with default values (3 = Good)
-        $psychomotorTraits = PsychomotorTrait::active()->ordered()->get();
-        foreach ($psychomotorTraits as $trait) {
-            StudentPsychomotorRating::create([
-                'report_card_id' => $reportCard->id,
-                'student_id' => $reportCard->student_id,
-                'trait_id' => $trait->id,
-                'rating_value' => 3, // Default to Good
-            ]);
-        }
-    }
-
-    private function generateVerificationCode($student, $session, $term)
-    {
-        $sessionPart = $session ? $session->id : 'ANNUAL';
-        $termPart = $term ? $term->id : 'ALL';
-        $randomPart = strtoupper(Str::random(4));
-        return "RPT-{$sessionPart}-{$termPart}-{$student->id}-{$randomPart}";
     }
 
     public function index()
@@ -263,25 +81,15 @@ class ReportCardController extends Controller
 
     public function show($id)
     {
-        $reportCard = ReportCard::with([
-            'student',
-            'class',
-            'academicSession',
-            'term',
-            'items.subject',
-            'affectiveRatings.trait',
-            'psychomotorRatings.trait',
-            'classTeacher',
-            'approvedBy',
-            'publishedBy'
-        ])->findOrFail($id);
+        $reportCard = $this->loadReportCard($id);
 
-        return view('admin.report-cards.show', compact('reportCard'));
+        return view('admin.report-cards.show', $this->cardViewData($reportCard));
     }
 
     public function editComments($id)
     {
         $reportCard = ReportCard::with(['student', 'class'])->findOrFail($id);
+
         return view('admin.report-cards.edit-comments', compact('reportCard'));
     }
 
@@ -300,7 +108,7 @@ class ReportCardController extends Controller
             'parent_comment' => $request->parent_comment,
         ]);
 
-        return redirect()->route('admin.report-cards.show', $reportCard->id)
+        return redirect()->route('admin.academic-management.report-cards.show', $reportCard)
             ->with('success', 'Comments updated successfully.');
     }
 
@@ -310,7 +118,7 @@ class ReportCardController extends Controller
             'student',
             'class',
             'affectiveRatings.trait',
-            'psychomotorRatings.trait'
+            'psychomotorRatings.trait',
         ])->findOrFail($id);
 
         $affectiveTraits = AffectiveTrait::active()->ordered()->get();
@@ -327,7 +135,9 @@ class ReportCardController extends Controller
     {
         $request->validate([
             'affective_ratings' => 'required|array',
+            'affective_ratings.*' => 'required|integer|between:1,5',
             'psychomotor_ratings' => 'required|array',
+            'psychomotor_ratings.*' => 'required|integer|between:1,5',
         ]);
 
         $reportCard = ReportCard::findOrFail($id);
@@ -340,6 +150,7 @@ class ReportCardController extends Controller
                     'trait_id' => $traitId,
                 ],
                 [
+                    'student_id' => $reportCard->student_id,
                     'rating_value' => $rating,
                     'rated_by' => auth()->id(),
                 ]
@@ -354,13 +165,14 @@ class ReportCardController extends Controller
                     'trait_id' => $traitId,
                 ],
                 [
+                    'student_id' => $reportCard->student_id,
                     'rating_value' => $rating,
                     'rated_by' => auth()->id(),
                 ]
             );
         }
 
-        return redirect()->route('admin.report-cards.show', $reportCard->id)
+        return redirect()->route('admin.academic-management.report-cards.show', $reportCard)
             ->with('success', 'Domain ratings updated successfully.');
     }
 
@@ -372,7 +184,7 @@ class ReportCardController extends Controller
             'approved_by' => auth()->id(),
         ]);
 
-        return redirect()->route('admin.report-cards.show', $reportCard->id)
+        return redirect()->route('admin.academic-management.report-cards.show', $reportCard)
             ->with('success', 'Report card approved successfully.');
     }
 
@@ -393,23 +205,23 @@ class ReportCardController extends Controller
             'verification_url' => url("/verify-result/{$reportCard->verification_code}"),
         ]);
 
-        return redirect()->route('admin.report-cards.show', $reportCard->id)
+        return redirect()->route('admin.academic-management.report-cards.show', $reportCard)
             ->with('success', 'Report card published successfully.');
     }
 
     public function broadsheet($classId)
     {
         $class = SchoolClass::findOrFail($classId);
-        
+
         $request = request();
         $sessionId = $request->query('session_id');
         $termId = $request->query('term_id');
 
         $reportCards = ReportCard::where('class_id', $classId)
-            ->when($sessionId, function($query) use ($sessionId) {
+            ->when($sessionId, function ($query) use ($sessionId) {
                 return $query->where('academic_session_id', $sessionId);
             })
-            ->when($termId, function($query) use ($termId) {
+            ->when($termId, function ($query) use ($termId) {
                 return $query->where('term_id', $termId);
             })
             ->with(['student', 'items'])
@@ -423,7 +235,7 @@ class ReportCardController extends Controller
     {
         $reportCard = ReportCard::with(['student', 'class', 'nextClass'])->findOrFail($id);
         $classes = SchoolClass::where('level', $reportCard->class->level)->get();
-        
+
         return view('admin.report-cards.edit-promotion', compact('reportCard', 'classes'));
     }
 
@@ -448,7 +260,7 @@ class ReportCardController extends Controller
             'outstanding_balance' => $request->outstanding_balance,
         ]);
 
-        return redirect()->route('admin.report-cards.show', $reportCard->id)
+        return redirect()->route('admin.academic-management.report-cards.show', $reportCard)
             ->with('success', 'Promotion decision updated successfully.');
     }
 
@@ -461,28 +273,28 @@ class ReportCardController extends Controller
         // Determine promotion decision based on average score
         if ($averageScore >= $passingScore) {
             $decision = 'Promoted';
-            
+
             // Auto-assign next class
             $currentClass = $reportCard->class;
             $nextClass = SchoolClass::where('level', $currentClass->level)
                 ->where('id', '>', $currentClass->id)
                 ->orderBy('id')
                 ->first();
-            
+
             $reportCard->update([
                 'promotion_decision' => $decision,
                 'next_class_id' => $nextClass ? $nextClass->id : null,
             ]);
         } elseif ($averageScore >= 40) {
             $decision = 'Promoted on Trial';
-            
+
             // Auto-assign next class
             $currentClass = $reportCard->class;
             $nextClass = SchoolClass::where('level', $currentClass->level)
                 ->where('id', '>', $currentClass->id)
                 ->orderBy('id')
                 ->first();
-            
+
             $reportCard->update([
                 'promotion_decision' => $decision,
                 'next_class_id' => $nextClass ? $nextClass->id : null,
@@ -495,14 +307,14 @@ class ReportCardController extends Controller
             ]);
         }
 
-        return redirect()->route('admin.report-cards.edit-promotion', $reportCard->id)
+        return redirect()->route('admin.academic-management.report-cards.edit-promotion', $reportCard)
             ->with('success', 'Promotion decision auto-calculated based on academic performance.');
     }
 
     public function editAttendance($id)
     {
         $reportCard = ReportCard::with(['student', 'class'])->findOrFail($id);
-        
+
         return view('admin.report-cards.edit-attendance', compact('reportCard'));
     }
 
@@ -510,18 +322,18 @@ class ReportCardController extends Controller
     {
         $request->validate([
             'attendance_opened' => 'required|integer|min:0',
-            'attendance_present' => 'required|integer|min:0',
-            'attendance_absent' => 'required|integer|min:0',
-            'attendance_late' => 'required|integer|min:0',
+            'attendance_present' => 'required|integer|min:0|lte:attendance_opened',
+            'attendance_absent' => 'required|integer|min:0|lte:attendance_opened',
+            'attendance_late' => 'required|integer|min:0|lte:attendance_present',
         ]);
 
         $reportCard = ReportCard::findOrFail($id);
-        
+
         // Calculate attendance percentage
         $totalDays = $request->attendance_opened;
         $presentDays = $request->attendance_present;
         $attendancePercentage = $totalDays > 0 ? ($presentDays / $totalDays) * 100 : 0;
-        
+
         $reportCard->update([
             'attendance_opened' => $request->attendance_opened,
             'attendance_present' => $request->attendance_present,
@@ -530,76 +342,20 @@ class ReportCardController extends Controller
             'attendance_percentage' => $attendancePercentage,
         ]);
 
-        return redirect()->route('admin.report-cards.show', $reportCard->id)
+        return redirect()->route('admin.academic-management.report-cards.show', $reportCard)
             ->with('success', 'Attendance summary updated successfully.');
     }
 
     public function generatePDF($id)
     {
-        $reportCard = ReportCard::with([
-            'student',
-            'class',
-            'academicSession',
-            'term',
-            'items.subject',
-            'affectiveRatings.trait',
-            'psychomotorRatings.trait',
-            'classTeacher',
-            'approvedBy',
-            'publishedBy'
-        ])->findOrFail($id);
-
-        $settings = ReportSettings::getSettings();
-
-        // Helper variables for the view
-        $ordinal = $this->getOrdinal($reportCard->class_position);
-        $gradeClasses = [
-            'A' => 'grade-excellent',
-            'B' => 'grade-very-good',
-            'C' => 'grade-good',
-            'D' => 'grade-fair',
-            'F' => 'grade-fail',
-        ];
-
-        $pdf = PDF::loadView('admin.report-cards.pdf', compact('reportCard', 'settings', 'ordinal', 'gradeClasses'));
-        
-        // Set PDF options
-        $pdf->setPaper('a4', 'portrait');
-        $pdf->setOptions([
-            'isHtml5ParserEnabled' => true,
-            'isRemoteEnabled' => true,
-            'defaultFont' => 'Times New Roman',
-        ]);
-
-        $filename = "report_card_{$reportCard->student->admission_no}_{$reportCard->academicSession->name}_{$reportCard->term->name}.pdf";
-        
-        // Save PDF path
-        $pdfPath = "report_cards/" . $filename;
-        $pdf->save(storage_path('app/public/' . $pdfPath));
-        
-        // Update report card with PDF URL
-        $reportCard->update([
-            'pdf_url' => Storage::url($pdfPath)
-        ]);
-
-        return $pdf->download($filename);
-    }
-
-    private function getOrdinal($number)
-    {
-        if (!$number) return '';
-        $ends = ['th','st','nd','rd','th','th','th','th','th','th'];
-        if ((($number % 100) >= 11) && (($number % 100) <= 13))
-            return $number . 'th';
-        else
-            return $number . $ends[$number % 10];
+        return $this->downloadReportPdf($this->loadReportCard($id));
     }
 
     public function downloadPDF($id)
     {
         $reportCard = ReportCard::findOrFail($id);
-        
-        if (!$reportCard->pdf_url) {
+
+        if (! $reportCard->pdf_url) {
             return redirect()->back()
                 ->with('error', 'PDF not generated yet. Please generate the PDF first.');
         }
@@ -610,30 +366,30 @@ class ReportCardController extends Controller
     public function generateQRCode($id)
     {
         $reportCard = ReportCard::findOrFail($id);
-        
-        if (!$reportCard->verification_code) {
+
+        if (! $reportCard->verification_code) {
             return redirect()->back()
                 ->with('error', 'Verification code not generated. Please publish the report card first.');
         }
 
         $verificationUrl = $reportCard->verification_url;
-        
+
         // Generate QR code
         $qrCode = QrCode::format('png')
             ->size(200)
             ->margin(2)
             ->generate($verificationUrl);
-        
+
         // Save QR code
         $qrCodePath = "qr_codes/report_card_{$reportCard->id}.png";
         Storage::disk('public')->put($qrCodePath, $qrCode);
-        
+
         // Update report card with QR code URL
         $reportCard->update([
-            'qr_code_url' => Storage::url($qrCodePath)
+            'qr_code_url' => Storage::url($qrCodePath),
         ]);
 
-        return redirect()->route('admin.report-cards.show', $reportCard->id)
+        return redirect()->route('admin.academic-management.report-cards.show', $reportCard)
             ->with('success', 'QR code generated successfully.');
     }
 
@@ -641,14 +397,14 @@ class ReportCardController extends Controller
     {
         $reportCard = ReportCard::where('verification_code', $verificationCode)
             ->where('status', 'published')
-            ->with(['student', 'class', 'academicSession', 'term', 'items'])
+            ->with($this->cardRelations())
             ->first();
 
-        if (!$reportCard) {
+        if (! $reportCard) {
             return view('errors.404', ['message' => 'Invalid verification code or report not published.']);
         }
 
-        return view('public.verify-result', compact('reportCard'));
+        return view('public.verify-result', $this->cardViewData($reportCard));
     }
 
     public function studentReports()
@@ -673,37 +429,27 @@ class ReportCardController extends Controller
         $reportCard = ReportCard::where('id', $id)
             ->where('student_id', $studentId)
             ->where('status', 'published')
-            ->with([
-                'student',
-                'class',
-                'academicSession',
-                'term',
-                'items.subject',
-                'affectiveRatings.trait',
-                'psychomotorRatings.trait',
-                'classTeacher',
-                'approvedBy',
-                'publishedBy'
-            ])
+            ->with($this->cardRelations())
             ->firstOrFail();
 
-        return view('student.report-cards.show', compact('reportCard'));
+        return view('student.report-cards.show', $this->cardViewData($reportCard));
     }
 
     public function studentDownloadPDF($id)
     {
-        return $this->generatePDF($id);
+        $studentId = auth()->user()->student?->id ?? 0;
+        $reportCard = ReportCard::whereKey($id)
+            ->where('student_id', $studentId)
+            ->where('status', 'published')
+            ->with($this->cardRelations())
+            ->firstOrFail();
+
+        return $this->downloadReportPdf($reportCard);
     }
 
     public function parentReports()
     {
-        $parentId = auth()->id();
-        // Get all students associated with this parent
-        $studentIds = \App\Models\ParentGuardian::where('user_id', $parentId)
-            ->with('students')
-            ->first()
-            ->students
-            ->pluck('id');
+        $studentIds = $this->parentStudentIds();
 
         $reportCards = ReportCard::whereIn('student_id', $studentIds)
             ->where('status', 'published')
@@ -711,41 +457,99 @@ class ReportCardController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('parent.report-cards.index', compact('reportCards'));
+        $reportSettings = ReportSettings::getSettings();
+
+        return view('parent.report-cards.index', compact('reportCards', 'reportSettings'));
     }
 
     public function parentReportShow($id)
     {
-        $parentId = auth()->id();
-        // Get all students associated with this parent
-        $studentIds = \App\Models\ParentGuardian::where('user_id', $parentId)
-            ->with('students')
-            ->first()
-            ->students
-            ->pluck('id');
+        $studentIds = $this->parentStudentIds();
 
         $reportCard = ReportCard::where('id', $id)
             ->whereIn('student_id', $studentIds)
             ->where('status', 'published')
-            ->with([
-                'student',
-                'class',
-                'academicSession',
-                'term',
-                'items.subject',
-                'affectiveRatings.trait',
-                'psychomotorRatings.trait',
-                'classTeacher',
-                'approvedBy',
-                'publishedBy'
-            ])
+            ->with($this->cardRelations())
             ->firstOrFail();
 
-        return view('parent.report-cards.show', compact('reportCard'));
+        return view('parent.report-cards.show', $this->cardViewData($reportCard));
     }
 
     public function parentDownloadPDF($id)
     {
-        return $this->generatePDF($id);
+        abort_unless(ReportSettings::getSettings()->allow_parent_download, 403);
+
+        $reportCard = ReportCard::whereKey($id)
+            ->whereIn('student_id', $this->parentStudentIds())
+            ->where('status', 'published')
+            ->with($this->cardRelations())
+            ->firstOrFail();
+
+        return $this->downloadReportPdf($reportCard);
+    }
+
+    private function parentStudentIds()
+    {
+        $parent = ParentGuardian::where('user_id', auth()->id())->first();
+
+        return $parent ? $parent->students()->pluck('students.id') : collect();
+    }
+
+    private function cardRelations(): array
+    {
+        return [
+            'student',
+            'class',
+            'academicSession',
+            'term',
+            'items.subject',
+            'affectiveRatings.trait',
+            'psychomotorRatings.trait',
+            'classTeacher.user',
+            'approvedBy',
+            'publishedBy',
+            'nextClass',
+        ];
+    }
+
+    private function loadReportCard($id): ReportCard
+    {
+        return ReportCard::with($this->cardRelations())->findOrFail($id);
+    }
+
+    private function cardViewData(ReportCard $reportCard): array
+    {
+        return [
+            'reportCard' => $reportCard,
+            'reportSettings' => ReportSettings::getSettings(),
+            'schoolSettings' => SchoolSettings::first(),
+        ];
+    }
+
+    private function downloadReportPdf(ReportCard $reportCard)
+    {
+        $reportCard->loadMissing($this->cardRelations());
+        $data = $this->cardViewData($reportCard);
+        $pdf = PDF::loadView('admin.report-cards.pdf', $data)
+            ->setPaper('a4', 'landscape')
+            ->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+                'defaultFont' => 'Times New Roman',
+            ]);
+
+        $filename = sprintf(
+            'report-card-%s-%s-%s.pdf',
+            Str::slug($reportCard->student->admission_no ?: $reportCard->student->full_name),
+            Str::slug($reportCard->session_name),
+            Str::slug($reportCard->term_name)
+        );
+        $pdfPath = 'report_cards/'.$filename;
+
+        Storage::disk('public')->makeDirectory('report_cards');
+        $pdf->save(storage_path('app/public/'.$pdfPath));
+        $reportCard->update(['pdf_url' => Storage::disk('public')->url($pdfPath)]);
+
+        return $pdf->download($filename);
     }
 }

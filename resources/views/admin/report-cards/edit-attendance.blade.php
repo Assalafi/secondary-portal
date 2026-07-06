@@ -22,7 +22,7 @@
                                     <tr>
                                         <td><strong>Student:</strong> {{ $reportCard->student->full_name }}</td>
                                         <td><strong>Class:</strong> {{ $reportCard->class->name }}</td>
-                                        <td><strong>Term:</strong> {{ $reportCard->term->name ?? 'Annual' }}</td>
+                                        <td><strong>Term:</strong> {{ $reportCard->term_name }}</td>
                                     </tr>
                                 </table>
                             </div>

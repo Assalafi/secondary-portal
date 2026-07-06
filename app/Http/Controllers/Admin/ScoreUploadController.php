@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AcademicSession;
 use App\Models\ClassArm;
 use App\Models\GradingSystem;
-use App\Models\ScoreBatch;
 use App\Models\Score;
-use App\Models\Student;
-use App\Models\AcademicSession;
-use App\Models\Term;
+use App\Models\ScoreBatch;
 use App\Models\SessionTerm;
+use App\Models\Student;
+use App\Models\Term;
 use Illuminate\Http\Request;
 
 class ScoreUploadController extends Controller
@@ -29,29 +29,29 @@ class ScoreUploadController extends Controller
     {
         $classArm = ClassArm::with(['schoolClass', 'students.user'])->findOrFail($classId);
         $level = $classArm->schoolClass->level ?? 'Primary';
-        
+
         // Get grading system for this level
         $gradingSystems = GradingSystem::where('level', $level)
             ->where('is_active', true)
             ->orderBy('min_score')
             ->get();
-        
+
         // Get current session and term from SessionTerm (source of truth)
         $currentSessionTerm = SessionTerm::where('is_current', true)->first();
-        $currentSession = $currentSessionTerm 
+        $currentSession = $currentSessionTerm
             ? AcademicSession::where('name', $currentSessionTerm->academic_year)->first()
             : AcademicSession::where('is_current', true)->first();
-        $currentTerm = $currentSessionTerm 
+        $currentTerm = $currentSessionTerm
             ? Term::where('name', $currentSessionTerm->term_name)->first()
             : Term::first();
-        
+
         // Get existing score batch for this class, subject, session, and term
         $scoreBatch = ScoreBatch::where('class_id', $classArm->school_class_id)
             ->where('subject_id', $subjectId)
             ->where('academic_session_id', $currentSession->id ?? null)
             ->where('term_id', $currentTerm->id ?? null)
             ->first();
-        
+
         // Get existing scores if batch exists
         $existingScores = [];
         if ($scoreBatch) {
@@ -59,11 +59,11 @@ class ScoreUploadController extends Controller
                 ->get()
                 ->keyBy('student_id');
         }
-        
+
         return view('admin.academic-management.score-upload.subject', compact(
-            'classId', 
-            'subjectId', 
-            'gradingSystems', 
+            'classId',
+            'subjectId',
+            'gradingSystems',
             'level',
             'existingScores',
             'scoreBatch',
@@ -86,10 +86,12 @@ class ScoreUploadController extends Controller
             'scores' => 'required|array',
         ]);
 
+        $classArm = ClassArm::findOrFail($validated['class_id']);
+
         // Find or create score batch
         $scoreBatch = ScoreBatch::firstOrCreate(
             [
-                'class_id' => $validated['class_id'],
+                'class_id' => $classArm->school_class_id,
                 'subject_id' => $validated['subject_id'],
                 'academic_session_id' => $validated['academic_session_id'],
                 'term_id' => $validated['term_id'],

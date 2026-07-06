@@ -102,7 +102,7 @@
 
             <form method="POST" action="{{ route('admin.academic-management.score-upload.store') }}">
                 @csrf
-                <input type="hidden" name="class_id" value="{{ $classArm->school_class_id }}">
+                <input type="hidden" name="class_id" value="{{ $classArm->id }}">
                 <input type="hidden" name="subject_id" value="{{ $subjectId }}">
                 <input type="hidden" name="academic_session_id" value="{{ $currentSession->id ?? '' }}">
                 <input type="hidden" name="term_id" value="{{ $currentTerm->id ?? '' }}">

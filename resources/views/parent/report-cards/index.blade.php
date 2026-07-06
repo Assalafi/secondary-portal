@@ -41,17 +41,19 @@
                                 <tr>
                                     <td>{{ $reportCard->student->surname }}, {{ $reportCard->student->first_name }}</td>
                                     <td>{{ $reportCard->class->name }}</td>
-                                    <td>{{ $reportCard->academicSession->name ?? 'N/A' }}</td>
-                                    <td>{{ $reportCard->term->name ?? 'Annual' }}</td>
-                                    <td><span class="badge bg-{{ $reportCard->final_grade == 'A' ? 'success' : ($reportCard->final_grade == 'B' ? 'primary' : ($reportCard->final_grade == 'C' ? 'warning' : ($reportCard->final_grade == 'D' ? 'info' : 'danger'))) }}">{{ $reportCard->final_grade }}</span></td>
+                                    <td>{{ $reportCard->session_name }}</td>
+                                    <td>{{ $reportCard->term_name }}</td>
+                                    <td><span class="badge bg-{{ str_starts_with($reportCard->final_grade, 'A') ? 'success' : (str_starts_with($reportCard->final_grade, 'B') ? 'primary' : (str_starts_with($reportCard->final_grade, 'C') ? 'warning' : 'danger')) }}">{{ $reportCard->final_grade }}</span></td>
                                     <td>{{ $reportCard->class_position ?? 'N/A' }}/{{ $reportCard->number_in_class ?? 'N/A' }}</td>
                                     <td>
                                         <a href="{{ route('parent.report-cards.show', $reportCard->id) }}" class="btn btn-sm btn-primary">
                                             <i class="ri-eye-line"></i> View
                                         </a>
-                                        <a href="{{ route('parent.report-cards.download', $reportCard->id) }}" class="btn btn-sm btn-dark">
-                                            <i class="ri-download-line"></i> PDF
-                                        </a>
+                                        @if($reportSettings->allow_parent_download)
+                                            <a href="{{ route('parent.report-cards.download', $reportCard->id) }}" class="btn btn-sm btn-dark">
+                                                <i class="ri-download-line"></i> PDF
+                                            </a>
+                                        @endif
                                     </td>
                                 </tr>
                                 @endforeach
