@@ -118,17 +118,13 @@
                                 @endphp
                                 @foreach($subjectResults as $subjectName => $subjectResultList)
                                     @php
-                                        // Calculate average for this subject
-                                        $avgScore = $subjectResultList->avg('score');
-                                        $caScore = round($avgScore * 0.3); // Assume 30% CA
-                                        $examScore = round($avgScore * 0.7); // Assume 70% Exam
-                                        $totalScore = round($avgScore);
-                                        
-                                        // Determine grade
-                                        $subjectGrade = $totalScore >= 80 ? 'A' : ($totalScore >= 70 ? 'B' : ($totalScore >= 60 ? 'C' : ($totalScore >= 50 ? 'D' : 'F')));
-                                        
-                                        // Determine remark
-                                        $remark = $totalScore >= 80 ? 'Excellent' : ($totalScore >= 70 ? 'Very Good' : ($totalScore >= 60 ? 'Good' : ($totalScore >= 50 ? 'Fair' : 'Poor')));
+                                        // Get the latest score for this subject
+                                        $score = $subjectResultList->first();
+                                        $caScore = $score->first_ca + $score->second_ca + $score->third_ca;
+                                        $examScore = $score->exam;
+                                        $totalScore = $score->total;
+                                        $subjectGrade = $score->grade;
+                                        $remark = $score->remark;
                                     @endphp
                                     <tr>
                                         <td>{{ $index++ }}</td>

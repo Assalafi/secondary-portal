@@ -8,6 +8,8 @@ use App\Models\AssessmentResult;
 use App\Models\Attendance;
 use App\Models\Invoice;
 use App\Models\Payment;
+use App\Models\Score;
+use App\Models\ScoreBatch;
 use App\Models\Student;
 use App\Models\Timetable;
 use Carbon\Carbon;
@@ -263,41 +265,41 @@ class DependentController extends Controller
     {
         $user = Auth::user();
         $student = $user->dependents()->with(['user', 'classArm.schoolClass'])->findOrFail($id);
-        
-        // Get all assessment results for the student
-        $query = AssessmentResult::where('student_id', $id)
-            ->with(['assessment.subject', 'assessment.term', 'assessment.academicSession']);
-        
+
+        // Get all scores for the student
+        $query = Score::where('student_id', $id)
+            ->with(['scoreBatch.subject', 'scoreBatch.academicSession', 'scoreBatch.term']);
+
         // Apply session filter
         if ($request->has('session') && $request->session) {
-            $query->whereHas('assessment.academicSession', function($q) use ($request) {
+            $query->whereHas('scoreBatch.academicSession', function($q) use ($request) {
                 $q->where('name', $request->session);
             });
         }
-        
+
         // Apply term filter
         if ($request->has('term') && $request->term) {
-            $query->whereHas('assessment.term', function($q) use ($request) {
+            $query->whereHas('scoreBatch.term', function($q) use ($request) {
                 $q->where('name', $request->term);
             });
         }
-        
-        $results = $query->latest('created_at')->get();
-        
+
+        $results = $query->latest()->get();
+
         // Group results by subject for display
         $subjectResults = $results->groupBy(function($result) {
-            return $result->assessment->subject->name ?? 'Unknown';
+            return $result->scoreBatch->subject->name ?? 'Unknown';
         });
-        
+
         // Calculate statistics
-        $totalScore = $results->sum('score');
-        $averageScore = $results->avg('score');
+        $totalScore = $results->sum('total');
+        $averageScore = $results->avg('total');
         $totalSubjects = $subjectResults->count();
-        
+
         // Get available sessions and terms for filters
         $sessions = \App\Models\AcademicSession::orderBy('start_date', 'desc')->get();
         $terms = \App\Models\Term::all();
-        
+
         return view('parent.dependents.results', compact('student', 'results', 'subjectResults', 'totalScore', 'averageScore', 'totalSubjects', 'sessions', 'terms'));
     }
     
