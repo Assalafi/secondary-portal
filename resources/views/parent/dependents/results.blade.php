@@ -120,18 +120,18 @@
                                     @php
                                         // Get the latest score for this subject
                                         $score = $subjectResultList->first();
-                                        $caScore = $score->first_ca + $score->second_ca + $score->third_ca;
-                                        $examScore = $score->exam;
-                                        $totalScore = $score->total;
-                                        $subjectGrade = $score->grade;
-                                        $remark = $score->remark;
+                                        $caScore = $score ? ($score->first_ca + $score->second_ca + $score->third_ca) : 0;
+                                        $examScore = $score ? $score->exam : 0;
+                                        $totalScore = $score ? $score->total : 0;
+                                        $subjectGrade = $score ? $score->grade : 'N/A';
+                                        $remark = $score ? $score->remark : 'N/A';
                                     @endphp
                                     <tr>
                                         <td>{{ $index++ }}</td>
                                         <td>{{ $subjectName }}</td>
-                                        <td class="text-center">{{ $caScore }}</td>
-                                        <td class="text-center">{{ $examScore }}</td>
-                                        <td class="text-center fw-bold">{{ $totalScore }}</td>
+                                        <td class="text-center">{{ number_format($caScore, 1) }}</td>
+                                        <td class="text-center">{{ number_format($examScore, 1) }}</td>
+                                        <td class="text-center fw-bold">{{ number_format($totalScore, 1) }}</td>
                                         <td class="text-center fw-bold">{{ $subjectGrade }}</td>
                                         <td>{{ $remark }}</td>
                                     </tr>
