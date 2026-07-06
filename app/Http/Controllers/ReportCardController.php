@@ -528,7 +528,7 @@ class ReportCardController extends Controller
         $reportCard->loadMissing($this->cardRelations());
         $data = $this->cardViewData($reportCard);
         $pdf = PDF::loadView('admin.report-cards.pdf', $data)
-            ->setPaper('a4', 'landscape')
+            ->setPaper('a4', 'portrait')
             ->setOptions([
                 'isHtml5ParserEnabled' => true,
                 'isRemoteEnabled' => true,
