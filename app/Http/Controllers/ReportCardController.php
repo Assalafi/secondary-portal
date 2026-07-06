@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\AcademicSession;
 use App\Models\AffectiveTrait;
 use App\Models\ClassArm;
-use App\Models\ParentGuardian;
 use App\Models\PsychomotorTrait;
 use App\Models\ReportCard;
 use App\Models\ReportSettings;
@@ -490,9 +489,7 @@ class ReportCardController extends Controller
 
     private function parentStudentIds()
     {
-        $parent = ParentGuardian::where('user_id', auth()->id())->first();
-
-        return $parent ? $parent->students()->pluck('students.id') : collect();
+        return auth()->user()?->dependents()->pluck('students.id') ?? collect();
     }
 
     private function cardRelations(): array
