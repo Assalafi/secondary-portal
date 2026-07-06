@@ -529,6 +529,7 @@ Route::middleware(['auth'])->group(function () {
         // My Dependents
         Route::prefix('dependents')->name('dependents.')->group(function () {
             Route::get('/', [App\Http\Controllers\Parent\DependentController::class, 'index'])->name('index');
+            Route::post('/assign', [App\Http\Controllers\Parent\DependentController::class, 'assign'])->name('assign');
             Route::get('/{id}', [App\Http\Controllers\Parent\DependentController::class, 'show'])->name('show');
             Route::get('/{id}/profile', [App\Http\Controllers\Parent\DependentController::class, 'profile'])->name('profile');
             Route::post('/{id}/profile/personal', [App\Http\Controllers\Parent\DependentController::class, 'updatePersonal'])->name('profile.personal.update');

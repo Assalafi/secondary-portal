@@ -34,8 +34,60 @@ class DependentController extends Controller
                     'attendance' => $attendance,
                 ];
             });
-        
-        return view('parent.dependents.index', compact('dependents'));
+
+        $linkedStudentIds = $dependents->pluck('student.id')->filter()->values();
+
+        $students = Student::with(['user', 'classArm.schoolClass'])
+            ->where('status', 'Active')
+            ->orderBy('surname')
+            ->orderBy('first_name')
+            ->orderBy('admission_no')
+            ->get();
+
+        $relationshipOptions = $this->relationshipOptions();
+
+        return view('parent.dependents.index', compact(
+            'dependents',
+            'students',
+            'linkedStudentIds',
+            'relationshipOptions'
+        ));
+    }
+
+    /**
+     * Assign an existing student to the logged-in parent.
+     */
+    public function assign(Request $request)
+    {
+        $validated = $request->validate([
+            'student_id' => ['required', 'integer', 'exists:students,id'],
+            'relationship' => ['required', 'string', 'in:' . implode(',', $this->relationshipOptions())],
+            'is_primary' => ['nullable', 'boolean'],
+        ]);
+
+        $user = Auth::user();
+
+        $student = Student::where('status', 'Active')->findOrFail($validated['student_id']);
+
+        if ($user->dependents()->where('students.id', $student->id)->exists()) {
+            return back()->with('info', 'This student is already linked to your account.');
+        }
+
+        if ($request->boolean('is_primary')) {
+            $user->dependents()
+                ->pluck('students.id')
+                ->each(fn ($dependentId) => $user->dependents()->updateExistingPivot($dependentId, [
+                    'is_primary' => false,
+                ]));
+        }
+
+        $user->dependents()->attach($student->id, [
+            'relationship' => $validated['relationship'],
+            'date_added' => now()->toDateString(),
+            'is_primary' => $request->boolean('is_primary'),
+        ]);
+
+        return back()->with('success', "{$student->full_name} has been linked to your account.");
     }
     
     /**
@@ -332,7 +384,7 @@ class DependentController extends Controller
     /**
      * Remove a dependent from the parent's account.
      */
-    public function remove($id)
+    public function remove(Request $request, $id)
     {
         try {
             $user = Auth::user();
@@ -343,17 +395,43 @@ class DependentController extends Controller
             // Detach the dependent from the parent
             $user->dependents()->detach($id);
             
-            return response()->json([
+            $response = [
                 'success' => true,
                 'message' => 'Dependent removed successfully!'
-            ]);
+            ];
+
+            if ($request->expectsJson()) {
+                return response()->json($response);
+            }
+
+            return back()->with('success', $response['message']);
             
         } catch (\Exception $e) {
-            return response()->json([
+            $response = [
                 'success' => false,
                 'message' => 'Failed to remove dependent. ' . $e->getMessage()
-            ], 500);
+            ];
+
+            if ($request->expectsJson()) {
+                return response()->json($response, 500);
+            }
+
+            return back()->with('error', $response['message']);
         }
+    }
+
+    private function relationshipOptions(): array
+    {
+        return [
+            'Father',
+            'Mother',
+            'Guardian',
+            'Uncle',
+            'Aunt',
+            'Grandfather',
+            'Grandmother',
+            'Other',
+        ];
     }
     
     private function calculateAttendance($studentId)
