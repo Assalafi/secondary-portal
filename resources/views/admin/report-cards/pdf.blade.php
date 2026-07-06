@@ -4,19 +4,20 @@
     <meta charset="utf-8">
     <title>Report Card - {{ $reportCard->student->full_name }}</title>
     <style>
-        @page { size: A4 portrait; margin: 7mm; }
+        @page { size: A4 portrait; margin: 0; }
         * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; }
         body {
-            margin: 0;
             color: #18241f;
             font-family: "DejaVu Sans", sans-serif;
             font-size: {{ $reportCard->items->count() > 12 ? '7.5pt' : '8.5pt' }};
             line-height: 1.18;
         }
         .report-card {
-            width: 100%;
+            width: 188mm;
+            margin: 7mm auto 0;
             border: 1.5px solid #174c38;
-            padding: 5mm;
+            padding: 4mm;
         }
         table { width: 100%; border-collapse: collapse; }
         th, td { border: .6px solid #52655d; padding: 2.2mm 1.5mm; vertical-align: middle; }
