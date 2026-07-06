@@ -121,11 +121,30 @@
                                     @endif
                                 </td>
                                 <td class="text-end">
-                                    @if($result && $result['subject_count'] > 0)
-                                        <a href="{{ route('admin.academic-management.results.student', [$classId, $student->id]) }}" class="btn btn-sm btn-outline-primary">View Details</a>
-                                    @else
-                                        <button class="btn btn-sm btn-outline-secondary" disabled>No Results</button>
-                                    @endif
+                                    <div class="btn-group btn-group-sm">
+                                        @if($result && $result['subject_count'] > 0)
+                                            <a href="{{ route('admin.academic-management.results.student', [$classId, $student->id]) }}" class="btn btn-outline-primary">View Details</a>
+                                        @else
+                                            <button class="btn btn-outline-secondary" disabled>No Results</button>
+                                        @endif
+                                        <button type="button" class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                            Generate Report
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <form action="{{ route('admin.academic-management.report-cards.generate-termly', [$classId, $student->id]) }}" method="POST">
+                                                    @csrf
+                                                    <button type="submit" class="dropdown-item">Termly Report Card</button>
+                                                </form>
+                                            </li>
+                                            <li>
+                                                <form action="{{ route('admin.academic-management.report-cards.generate-annual', [$classId, $student->id]) }}" method="POST">
+                                                    @csrf
+                                                    <button type="submit" class="dropdown-item">Annual Report Card</button>
+                                                </form>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
