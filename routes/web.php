@@ -357,6 +357,7 @@ Route::middleware(['auth'])->group(function () {
             
             // Report Card Routes
             Route::prefix('report-cards')->name('report-cards.')->group(function () {
+                Route::get('/', [ReportCardController::class, 'index'])->name('index');
                 Route::get('/{id}', [ReportCardController::class, 'show'])->name('show');
                 Route::post('/{id}/comments', [ReportCardController::class, 'updateComments'])->name('update-comments');
                 Route::get('/{id}/comments/edit', [ReportCardController::class, 'editComments'])->name('edit-comments');

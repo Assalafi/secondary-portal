@@ -252,6 +252,15 @@ class ReportCardController extends Controller
         return "RPT-{$sessionPart}-{$termPart}-{$student->id}-{$randomPart}";
     }
 
+    public function index()
+    {
+        $reportCards = ReportCard::with(['student', 'class', 'academicSession', 'term'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return view('admin.report-cards.index', compact('reportCards'));
+    }
+
     public function show($id)
     {
         $reportCard = ReportCard::with([

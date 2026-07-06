@@ -16,6 +16,18 @@
         </nav>
     </div>
 
+    <div class="card shadow-sm border-0 rounded-lg mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="fw-semibold mb-0">Report Cards Management</h5>
+                <a href="{{ route('admin.report-cards.index') }}" class="btn btn-primary">
+                    <i class="ri-file-list-line me-2"></i>Manage Report Cards
+                </a>
+            </div>
+            <p class="text-muted small mb-0">Generate, approve, publish, and download Nigerian-style report cards for students.</p>
+        </div>
+    </div>
+
     <div class="card shadow-sm border-0 rounded-lg">
         <div class="card-body p-4">
             <h5 class="fw-semibold mb-4">Select Class to View Results</h5>
