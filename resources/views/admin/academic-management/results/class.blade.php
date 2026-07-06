@@ -134,12 +134,15 @@
                                             <li>
                                                 <form action="{{ route('admin.academic-management.report-cards.generate-termly', [$classId, $student->id]) }}" method="POST">
                                                     @csrf
+                                                    <input type="hidden" name="session_id" value="{{ request('session') ?? ($currentSession->id ?? '') }}">
+                                                    <input type="hidden" name="term_id" value="{{ request('term') ?? ($currentTerm->id ?? '') }}">
                                                     <button type="submit" class="dropdown-item">Termly Report Card</button>
                                                 </form>
                                             </li>
                                             <li>
                                                 <form action="{{ route('admin.academic-management.report-cards.generate-annual', [$classId, $student->id]) }}" method="POST">
                                                     @csrf
+                                                    <input type="hidden" name="session_id" value="{{ request('session') ?? ($currentSession->id ?? '') }}">
                                                     <button type="submit" class="dropdown-item">Annual Report Card</button>
                                                 </form>
                                             </li>
