@@ -67,11 +67,11 @@
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <a href="{{ route('admin.report-cards.show', $reportCard->id) }}" class="btn btn-outline-primary" title="View">
+                                        <a href="{{ route('admin.academic-management.report-cards.show', $reportCard->id) }}" class="btn btn-outline-primary" title="View">
                                             <i class="ri-eye-line"></i>
                                         </a>
                                         @if($reportCard->status == 'draft')
-                                            <form action="{{ route('admin.report-cards.approve', $reportCard->id) }}" method="POST" class="d-inline">
+                                            <form action="{{ route('admin.academic-management.report-cards.approve', $reportCard->id) }}" method="POST" class="d-inline">
                                                 @csrf
                                                 <button type="submit" class="btn btn-outline-success" title="Approve">
                                                     <i class="ri-check-line"></i>
@@ -79,14 +79,14 @@
                                             </form>
                                         @endif
                                         @if($reportCard->status == 'approved')
-                                            <form action="{{ route('admin.report-cards.publish', $reportCard->id) }}" method="POST" class="d-inline">
+                                            <form action="{{ route('admin.academic-management.report-cards.publish', $reportCard->id) }}" method="POST" class="d-inline">
                                                 @csrf
                                                 <button type="submit" class="btn btn-outline-success" title="Publish">
                                                     <i class="ri-send-plane-line"></i>
                                                 </button>
                                             </form>
                                         @endif
-                                        <a href="{{ route('admin.report-cards.generate-pdf', $reportCard->id) }}" class="btn btn-outline-dark" title="Generate PDF">
+                                        <a href="{{ route('admin.academic-management.report-cards.generate-pdf', $reportCard->id) }}" class="btn btn-outline-dark" title="Generate PDF">
                                             <i class="ri-file-pdf-line"></i>
                                         </a>
                                     </div>

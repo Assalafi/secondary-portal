@@ -20,7 +20,7 @@
         <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h5 class="fw-semibold mb-0">Report Cards Management</h5>
-                <a href="{{ route('admin.report-cards.index') }}" class="btn btn-primary">
+                <a href="{{ route('admin.academic-management.report-cards.index') }}" class="btn btn-primary">
                     <i class="ri-file-list-line me-2"></i>Manage Report Cards
                 </a>
             </div>
