@@ -73,22 +73,32 @@
 
     <!-- Filters -->
     <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body">
+        <div class="card-body pb-0">
             <form method="GET" action="{{ route('admin.audit-logs.index') }}" id="filterForm">
-                <div class="row g-3 align-items-end">
-                    <div class="col-12 col-md-3">
+                <!-- Search + Quick Filters Row -->
+                <div class="row g-3 mb-3 align-items-end">
+                    <div class="col-12 col-md-4">
                         <label class="form-label small fw-medium">Search</label>
                         <div class="input-group">
-                            <span class="input-group-text bg-white"><span class="material-symbols-outlined" style="font-size:18px;">search</span></span>
-                            <input type="text" class="form-control" name="search" value="{{ request('search') }}" placeholder="Search logs...">
+                            <span class="input-group-text bg-white border-end-0"><span class="material-symbols-outlined" style="font-size:18px;">search</span></span>
+                            <input type="text" class="form-control border-start-0" name="search" value="{{ request('search') }}" placeholder="Search description, user, IP, URL...">
                         </div>
                     </div>
                     <div class="col-6 col-md-2">
-                        <label class="form-label small fw-medium">Module</label>
-                        <select class="form-select" name="module">
-                            <option value="">All Modules</option>
-                            @foreach($modules as $module)
-                                <option value="{{ $module }}" {{ request('module') == $module ? 'selected' : '' }}>{{ ucfirst(str_replace('-', ' ', $module)) }}</option>
+                        <label class="form-label small fw-medium">User</label>
+                        <select class="form-select" name="user_id">
+                            <option value="">All Users</option>
+                            @foreach($users as $user)
+                                <option value="{{ $user->id }}" {{ request('user_id') == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label small fw-medium">Role</label>
+                        <select class="form-select" name="role">
+                            <option value="">All Roles</option>
+                            @foreach($roles as $role)
+                                <option value="{{ $role }}" {{ request('role') == $role ? 'selected' : '' }}>{{ $role }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -102,6 +112,19 @@
                         </select>
                     </div>
                     <div class="col-6 col-md-2">
+                        <label class="form-label small fw-medium">Module</label>
+                        <select class="form-select" name="module">
+                            <option value="">All Modules</option>
+                            @foreach($modules as $module)
+                                <option value="{{ $module }}" {{ request('module') == $module ? 'selected' : '' }}>{{ ucfirst(str_replace('-', ' ', $module)) }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Advanced Filters Row -->
+                <div class="row g-3 mb-3 align-items-end">
+                    <div class="col-6 col-md-2">
                         <label class="form-label small fw-medium">Date From</label>
                         <input type="date" class="form-control" name="date_from" value="{{ request('date_from') }}">
                     </div>
@@ -109,13 +132,58 @@
                         <label class="form-label small fw-medium">Date To</label>
                         <input type="date" class="form-control" name="date_to" value="{{ request('date_to') }}">
                     </div>
-                    <div class="col-12 col-md-1">
-                        <div class="d-flex gap-1">
-                            <button type="submit" class="btn btn-primary w-100"><span class="material-symbols-outlined" style="font-size:18px;">filter_alt</span></button>
-                            <a href="{{ route('admin.audit-logs.index') }}" class="btn btn-outline-secondary"><span class="material-symbols-outlined" style="font-size:18px;">refresh</span></a>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label small fw-medium">IP Address</label>
+                        <select class="form-select" name="ip_address">
+                            <option value="">All IPs</option>
+                            @foreach($ipAddresses as $ip)
+                                <option value="{{ $ip }}" {{ request('ip_address') == $ip ? 'selected' : '' }}>{{ $ip }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-6">
+                        <div class="d-flex gap-2 justify-content-end">
+                            <button type="submit" class="btn btn-primary">
+                                <span class="material-symbols-outlined align-middle me-1" style="font-size:18px;">filter_alt</span>Apply Filters
+                            </button>
+                            <a href="{{ route('admin.audit-logs.index') }}" class="btn btn-outline-secondary">
+                                <span class="material-symbols-outlined align-middle me-1" style="font-size:18px;">refresh</span>Reset
+                            </a>
                         </div>
                     </div>
                 </div>
+
+                @if($activeFilters > 0)
+                <div class="border-top pt-2 pb-3">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="small text-muted fw-medium">Active Filters ({{ $activeFilters }}):</span>
+                        @if(request('search'))
+                            <span class="badge bg-primary bg-opacity-10 text-primary d-flex align-items-center gap-1">Search: "{{ request('search') }}" <a href="{{ route('admin.audit-logs.index', array_diff_key(request()->query(), ['search' => ''])) }}" class="text-primary">&times;</a></span>
+                        @endif
+                        @if(request('user_id'))
+                            <span class="badge bg-info bg-opacity-10 text-info d-flex align-items-center gap-1">User: {{ $users->firstWhere('id', request('user_id'))->name ?? request('user_id') }} <a href="{{ route('admin.audit-logs.index', array_diff_key(request()->query(), ['user_id' => ''])) }}" class="text-info">&times;</a></span>
+                        @endif
+                        @if(request('role'))
+                            <span class="badge bg-warning bg-opacity-10 text-warning d-flex align-items-center gap-1">Role: {{ request('role') }} <a href="{{ route('admin.audit-logs.index', array_diff_key(request()->query(), ['role' => ''])) }}" class="text-warning">&times;</a></span>
+                        @endif
+                        @if(request('event'))
+                            <span class="badge bg-success bg-opacity-10 text-success d-flex align-items-center gap-1">Event: {{ ucfirst(request('event')) }} <a href="{{ route('admin.audit-logs.index', array_diff_key(request()->query(), ['event' => ''])) }}" class="text-success">&times;</a></span>
+                        @endif
+                        @if(request('module'))
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary d-flex align-items-center gap-1">Module: {{ ucfirst(str_replace('-', ' ', request('module'))) }} <a href="{{ route('admin.audit-logs.index', array_diff_key(request()->query(), ['module' => ''])) }}" class="text-secondary">&times;</a></span>
+                        @endif
+                        @if(request('ip_address'))
+                            <span class="badge bg-dark bg-opacity-10 text-dark d-flex align-items-center gap-1">IP: {{ request('ip_address') }} <a href="{{ route('admin.audit-logs.index', array_diff_key(request()->query(), ['ip_address' => ''])) }}" class="text-dark">&times;</a></span>
+                        @endif
+                        @if(request('date_from'))
+                            <span class="badge bg-primary bg-opacity-10 text-primary d-flex align-items-center gap-1">From: {{ request('date_from') }} <a href="{{ route('admin.audit-logs.index', array_diff_key(request()->query(), ['date_from' => ''])) }}" class="text-primary">&times;</a></span>
+                        @endif
+                        @if(request('date_to'))
+                            <span class="badge bg-primary bg-opacity-10 text-primary d-flex align-items-center gap-1">To: {{ request('date_to') }} <a href="{{ route('admin.audit-logs.index', array_diff_key(request()->query(), ['date_to' => ''])) }}" class="text-primary">&times;</a></span>
+                        @endif
+                    </div>
+                </div>
+                @endif
             </form>
         </div>
     </div>
