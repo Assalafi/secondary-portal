@@ -12,6 +12,7 @@ use App\Models\SalaryStructure;
 use App\Models\PayrollRecord;
 use App\Models\PaymentSetup;
 use App\Models\SchoolClass;
+use App\Models\SessionTerm;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -452,8 +453,21 @@ class PaymentController extends Controller
         ];
         
         $levels = SchoolClass::distinct()->pluck('level');
-        $terms = \App\Models\Term::all();
-        $sessions = \App\Models\AcademicSession::orderBy('name', 'desc')->get();
+        $configuredSessionNames = SessionTerm::query()
+            ->where('status', 'Active')
+            ->distinct()
+            ->pluck('academic_year');
+        $configuredTermNames = SessionTerm::query()
+            ->where('status', 'Active')
+            ->distinct()
+            ->pluck('term_name');
+
+        $sessions = $configuredSessionNames->isNotEmpty()
+            ? \App\Models\AcademicSession::whereIn('name', $configuredSessionNames)->orderBy('name', 'desc')->get()
+            : \App\Models\AcademicSession::orderBy('name', 'desc')->get();
+        $terms = $configuredTermNames->isNotEmpty()
+            ? \App\Models\Term::whereIn('name', $configuredTermNames)->orderBy('number')->get()
+            : \App\Models\Term::orderBy('number')->get();
 
         return view('admin.payments.fees-income', compact('transactions', 'stats', 'levels', 'terms', 'sessions'));
     }

@@ -166,9 +166,9 @@
                                 <label class="form-label">Term <span class="text-danger">*</span></label>
                                 <select class="form-select" name="term_name" required>
                                     <option value="">Select Term</option>
-                                    <option value="First Term">First Term</option>
-                                    <option value="Second Term">Second Term</option>
-                                    <option value="Third Term">Third Term</option>
+                                    <option value="1st Term">1st Term</option>
+                                    <option value="2nd Term">2nd Term</option>
+                                    <option value="3rd Term">3rd Term</option>
                                 </select>
                             </div>
                         </div>
@@ -236,9 +236,9 @@
                                 <label class="form-label">Term <span class="text-danger">*</span></label>
                                 <select class="form-select" name="term_name" id="editTermName" required>
                                     <option value="">Select Term</option>
-                                    <option value="First Term">First Term</option>
-                                    <option value="Second Term">Second Term</option>
-                                    <option value="Third Term">Third Term</option>
+                                    <option value="1st Term">1st Term</option>
+                                    <option value="2nd Term">2nd Term</option>
+                                    <option value="3rd Term">3rd Term</option>
                                 </select>
                             </div>
                         </div>
@@ -351,6 +351,17 @@
 
 @push('scripts')
 <script>
+    async function parseJsonResponse(response) {
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || Object.values(data.errors || {}).flat().join('\n') ||
+                `HTTP error! status: ${response.status}`);
+        }
+
+        return data;
+    }
+
     // Add session form submission
     document.getElementById('addSessionForm').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -367,9 +378,10 @@
             body: formData,
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
             }
         })
-        .then(response => response.json())
+        .then(parseJsonResponse)
         .then(data => {
             if (data.success) {
                 document.getElementById('successMessage').textContent = data.message;
@@ -383,7 +395,7 @@
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred. Please try again.');
+            alert(error.message || 'An error occurred. Please try again.');
         })
         .finally(() => {
             submitBtn.innerHTML = originalText;
@@ -408,6 +420,49 @@
         }
     });
 
+    // Edit session form submission
+    document.getElementById('editSessionForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const sessionId = document.getElementById('editSessionId').value;
+        const formData = new FormData(this);
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+
+        submitBtn.innerHTML = '<i class="ri-loader-4-line spinner-border spinner-border-sm me-1"></i>Updating...';
+        submitBtn.disabled = true;
+
+        fetch(`/admin/settings/session-term/${sessionId}`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'X-HTTP-Method-Override': 'PUT',
+                'Accept': 'application/json',
+            }
+        })
+        .then(parseJsonResponse)
+        .then(data => {
+            if (data.success) {
+                document.getElementById('successMessage').textContent = data.message;
+                new bootstrap.Modal(document.getElementById('successModal')).show();
+                document.getElementById('editSessionModal').querySelector('.btn-close').click();
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert(error.message || 'An error occurred. Please try again.');
+        })
+        .finally(() => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        });
+    });
+
     // Set current session functionality
     document.addEventListener('click', function(e) {
         if (e.target.classList.contains('set-current-btn') || e.target.closest('.set-current-btn')) {
@@ -421,10 +476,11 @@
                     method: 'POST',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
                     }
                 })
-                .then(response => response.json())
+                .then(parseJsonResponse)
                 .then(data => {
                     if (data.success) {
                         document.getElementById('successMessage').textContent = data.message;
@@ -436,7 +492,41 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('An error occurred. Please try again.');
+                    alert(error.message || 'An error occurred. Please try again.');
+                });
+            }
+        }
+    });
+
+    // Delete session functionality
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('delete-session-btn') || e.target.closest('.delete-session-btn')) {
+            const btn = e.target.classList.contains('delete-session-btn') ? e.target : e.target.closest('.delete-session-btn');
+            e.preventDefault();
+
+            if (confirm('Delete this session/term from settings? Historical invoices/results will remain untouched.')) {
+                fetch(`/admin/settings/session-term/${btn.dataset.id}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'X-HTTP-Method-Override': 'DELETE',
+                        'Accept': 'application/json',
+                    }
+                })
+                .then(parseJsonResponse)
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('successMessage').textContent = data.message;
+                        new bootstrap.Modal(document.getElementById('successModal')).show();
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(error.message || 'An error occurred. Please try again.');
                 });
             }
         }

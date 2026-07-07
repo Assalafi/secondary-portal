@@ -293,48 +293,42 @@
                     <div class="mb-3">
                         <label class="form-label fw-bold">Select Session(s)</label>
                         <div class="row">
-                            <div class="col-12 col-md-4">
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input session-select" type="checkbox" value="2024/2025" id="session1">
-                                    <label class="form-check-label" for="session1">2024/2025</label>
+                            @forelse($sessions as $session)
+                                <div class="col-12 col-md-4">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input session-select"
+                                               type="checkbox"
+                                               value="{{ $session->name }}"
+                                               id="session{{ $session->id }}">
+                                        <label class="form-check-label" for="session{{ $session->id }}">{{ $session->name }}</label>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-12 col-md-4">
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input session-select" type="checkbox" value="2023/2024" id="session2">
-                                    <label class="form-check-label" for="session2">2023/2024</label>
+                            @empty
+                                <div class="col-12">
+                                    <p class="text-muted mb-0">No academic sessions configured yet.</p>
                                 </div>
-                            </div>
-                            <div class="col-12 col-md-4">
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input session-select" type="checkbox" value="2022/2023" id="session3">
-                                    <label class="form-check-label" for="session3">2022/2023</label>
-                                </div>
-                            </div>
+                            @endforelse
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label fw-bold">Select Term(s)</label>
                         <div class="row">
-                            <div class="col-12 col-md-4">
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input term-select" type="checkbox" value="1st term" id="term1">
-                                    <label class="form-check-label" for="term1">1st Term</label>
+                            @forelse($terms as $term)
+                                <div class="col-12 col-md-4">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input term-select"
+                                               type="checkbox"
+                                               value="{{ $term->name }}"
+                                               id="term{{ $term->id }}">
+                                        <label class="form-check-label" for="term{{ $term->id }}">{{ $term->name }}</label>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-12 col-md-4">
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input term-select" type="checkbox" value="2nd term" id="term2">
-                                    <label class="form-check-label" for="term2">2nd Term</label>
+                            @empty
+                                <div class="col-12">
+                                    <p class="text-muted mb-0">No terms configured yet.</p>
                                 </div>
-                            </div>
-                            <div class="col-12 col-md-4">
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input term-select" type="checkbox" value="3rd term" id="term3">
-                                    <label class="form-check-label" for="term3">3rd Term</label>
-                                </div>
-                            </div>
+                            @endforelse
                         </div>
                     </div>
 

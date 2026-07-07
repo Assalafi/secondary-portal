@@ -31,9 +31,22 @@ class PaymentController extends Controller
         $dependents = $user->dependents()->with(['user', 'classArm.schoolClass'])->get();
         $dependentIds = $dependents->pluck('id');
         
-        // Get all sessions and terms for filters
-        $sessions = AcademicSession::orderBy('name', 'desc')->get();
-        $terms = Term::orderBy('id')->get();
+        // Get sessions and terms from Session/Term settings source
+        $configuredSessionNames = SessionTerm::query()
+            ->where('status', 'Active')
+            ->distinct()
+            ->pluck('academic_year');
+        $configuredTermNames = SessionTerm::query()
+            ->where('status', 'Active')
+            ->distinct()
+            ->pluck('term_name');
+
+        $sessions = $configuredSessionNames->isNotEmpty()
+            ? AcademicSession::whereIn('name', $configuredSessionNames)->orderBy('name', 'desc')->get()
+            : AcademicSession::orderBy('name', 'desc')->get();
+        $terms = $configuredTermNames->isNotEmpty()
+            ? Term::whereIn('name', $configuredTermNames)->orderBy('number')->get()
+            : Term::orderBy('number')->get();
         
         // Get filter values
         $filterSession = $request->input('session');

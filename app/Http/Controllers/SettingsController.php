@@ -12,8 +12,10 @@ use App\Models\User;
 use App\Models\Role;
 use App\Models\Staff;
 use App\Models\Student;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class SettingsController extends Controller
 {
@@ -236,7 +238,7 @@ class SettingsController extends Controller
     public function sessionTerm()
     {
         $sessions = SessionTerm::orderBy('academic_year', 'desc')
-            ->orderBy('term_name')
+            ->orderByRaw("CASE term_name WHEN '1st Term' THEN 1 WHEN 'First Term' THEN 1 WHEN '2nd Term' THEN 2 WHEN 'Second Term' THEN 2 WHEN '3rd Term' THEN 3 WHEN 'Third Term' THEN 3 ELSE 4 END")
             ->get();
         return view('admin.settings.session-term', compact('sessions'));
     }
@@ -246,52 +248,26 @@ class SettingsController extends Controller
      */
     public function storeSessionTerm(Request $request)
     {
-        $request->validate([
-            'academic_year' => 'required|string|max:20',
-            'term_name' => 'required|string|max:50',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after:start_date',
-        ]);
+        $validated = $request->validate($this->sessionTermRules());
+        $validated['term_name'] = $this->normaliseTermName($validated['term_name']);
 
         try {
-            // If marked as current, remove current flag from others
-            if ($request->boolean('is_current')) {
-                SessionTerm::where('is_current', true)->update(['is_current' => false]);
-            }
-
-            $sessionTerm = SessionTerm::create(array_merge($request->all(), [
-                'status' => 'Active',
-                'is_current' => $request->boolean('is_current')
-            ]));
-
-            // Sync other tables if this is set as current
-            if ($request->boolean('is_current')) {
-                // Sync AcademicSession table
-                AcademicSession::where('is_current', true)->update(['is_current' => false]);
-                $academicSession = AcademicSession::firstOrCreate(
-                    ['name' => $sessionTerm->academic_year],
-                    [
-                        'start_date' => $sessionTerm->start_date,
-                        'end_date' => $sessionTerm->end_date,
-                    ]
-                );
-                $academicSession->update(['is_current' => true]);
-
-                // Sync Term table
-                Term::firstOrCreate(
-                    ['name' => $sessionTerm->term_name],
-                    ['number' => $this->getTermNumber($sessionTerm->term_name)]
-                );
-
-                // Update SchoolSettings table
-                $schoolSettings = SchoolSettings::first();
-                if ($schoolSettings) {
-                    $schoolSettings->update([
-                        'academic_session' => $sessionTerm->academic_year,
-                        'current_term' => $sessionTerm->term_name,
-                    ]);
+            DB::transaction(function () use ($request, $validated, &$sessionTerm) {
+                if ($request->boolean('is_current')) {
+                    SessionTerm::where('is_current', true)->update(['is_current' => false]);
                 }
-            }
+
+                $sessionTerm = SessionTerm::create([
+                    'academic_year' => $validated['academic_year'],
+                    'term_name' => $validated['term_name'],
+                    'start_date' => $validated['start_date'],
+                    'end_date' => $validated['end_date'],
+                    'status' => 'Active',
+                    'is_current' => $request->boolean('is_current'),
+                ]);
+
+                $this->syncSessionTerm($sessionTerm, $request->boolean('is_current'));
+            });
 
             return response()->json([
                 'success' => true,
@@ -301,6 +277,73 @@ class SettingsController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create session/term: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update an existing session/term.
+     */
+    public function updateSessionTerm(Request $request, SessionTerm $session)
+    {
+        $validated = $request->validate($this->sessionTermRules($session));
+        $validated['term_name'] = $this->normaliseTermName($validated['term_name']);
+
+        try {
+            DB::transaction(function () use ($request, $session, $validated) {
+                if ($request->boolean('is_current')) {
+                    SessionTerm::where('is_current', true)
+                        ->whereKeyNot($session->id)
+                        ->update(['is_current' => false]);
+                }
+
+                $session->update([
+                    'academic_year' => $validated['academic_year'],
+                    'term_name' => $validated['term_name'],
+                    'start_date' => $validated['start_date'],
+                    'end_date' => $validated['end_date'],
+                    'status' => 'Active',
+                    'is_current' => $request->boolean('is_current'),
+                ]);
+
+                $this->syncSessionTerm($session, $request->boolean('is_current'));
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Session/Term updated successfully!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update session/term: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete a configured session/term.
+     */
+    public function deleteSessionTerm(SessionTerm $session)
+    {
+        if ($session->is_current) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You cannot delete the current session/term. Set another session/term as current first.'
+            ], 422);
+        }
+
+        try {
+            $session->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Session/Term deleted successfully!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete session/term: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -521,38 +564,11 @@ class SettingsController extends Controller
     public function setCurrentSession(SessionTerm $session)
     {
         try {
-            // Remove current flag from all session_terms
-            SessionTerm::where('is_current', true)->update(['is_current' => false]);
-            
-            // Set this session as current
-            $session->update(['is_current' => true]);
-
-            // Sync AcademicSession table
-            AcademicSession::where('is_current', true)->update(['is_current' => false]);
-            $academicSession = AcademicSession::firstOrCreate(
-                ['name' => $session->academic_year],
-                [
-                    'start_date' => $session->start_date,
-                    'end_date' => $session->end_date,
-                ]
-            );
-            $academicSession->update(['is_current' => true]);
-
-            // Sync Term table
-            $termName = $session->term_name;
-            $term = Term::firstOrCreate(
-                ['name' => $termName],
-                ['number' => $this->getTermNumber($termName)]
-            );
-
-            // Update SchoolSettings table
-            $schoolSettings = SchoolSettings::first();
-            if ($schoolSettings) {
-                $schoolSettings->update([
-                    'academic_session' => $session->academic_year,
-                    'current_term' => $session->term_name,
-                ]);
-            }
+            DB::transaction(function () use ($session) {
+                SessionTerm::where('is_current', true)->update(['is_current' => false]);
+                $session->update(['is_current' => true, 'status' => 'Active']);
+                $this->syncSessionTerm($session, true);
+            });
 
             return response()->json([
                 'success' => true,
@@ -564,6 +580,86 @@ class SettingsController extends Controller
                 'message' => 'Failed to set current session: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    private function sessionTermRules(?SessionTerm $session = null): array
+    {
+        return [
+            'academic_year' => [
+                'required',
+                'string',
+                'max:20',
+                'regex:/^\d{4}\/\d{4}$/',
+                Rule::unique('session_terms', 'academic_year')
+                    ->where(fn ($query) => $query->where('term_name', $this->normaliseTermName(request('term_name'))))
+                    ->ignore($session?->id),
+            ],
+            'term_name' => ['required', Rule::in($this->termOptions())],
+            'start_date' => ['required', 'date'],
+            'end_date' => ['required', 'date', 'after:start_date'],
+        ];
+    }
+
+    private function syncSessionTerm(SessionTerm $sessionTerm, bool $makeCurrent = false): void
+    {
+        $termName = $this->normaliseTermName($sessionTerm->term_name);
+
+        $academicSession = AcademicSession::firstOrNew(['name' => $sessionTerm->academic_year]);
+        $academicSession->start_date = $academicSession->exists
+            ? min($academicSession->start_date?->toDateString() ?? $sessionTerm->start_date->toDateString(), $sessionTerm->start_date->toDateString())
+            : $sessionTerm->start_date;
+        $academicSession->end_date = $academicSession->exists
+            ? max($academicSession->end_date?->toDateString() ?? $sessionTerm->end_date->toDateString(), $sessionTerm->end_date->toDateString())
+            : $sessionTerm->end_date;
+
+        if ($makeCurrent) {
+            AcademicSession::where('is_current', true)->update(['is_current' => false]);
+            $academicSession->is_current = true;
+        }
+
+        $academicSession->save();
+
+        if ($makeCurrent) {
+            Term::where('is_current', true)->update(['is_current' => false]);
+        }
+
+        $term = Term::firstOrNew(['name' => $termName]);
+        $term->number = $this->getTermNumber($termName);
+
+        if ($makeCurrent) {
+            $term->is_current = true;
+        }
+
+        $term->save();
+
+        if ($makeCurrent) {
+            SchoolSettings::firstOrNew()->fill([
+                'academic_session' => $sessionTerm->academic_year,
+                'current_term' => $termName,
+            ])->save();
+        }
+    }
+
+    private function termOptions(): array
+    {
+        return [
+            '1st Term',
+            '2nd Term',
+            '3rd Term',
+            'First Term',
+            'Second Term',
+            'Third Term',
+        ];
+    }
+
+    private function normaliseTermName(?string $termName): string
+    {
+        return match (trim((string) $termName)) {
+            'First Term', 'first term', '1st term', '1st Term' => '1st Term',
+            'Second Term', 'second term', '2nd term', '2nd Term' => '2nd Term',
+            'Third Term', 'third term', '3rd term', '3rd Term' => '3rd Term',
+            default => trim((string) $termName),
+        };
     }
 
     /**

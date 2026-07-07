@@ -8,6 +8,7 @@ use App\Models\AcademicSession;
 use App\Models\Term;
 use App\Models\PaymentSetup;
 use App\Models\SchoolSettings;
+use App\Models\SessionTerm;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -33,8 +34,21 @@ class StudentPaymentController extends Controller
             ]);
         }
 
-        $sessions = AcademicSession::orderBy('name', 'desc')->get();
-        $terms = Term::orderBy('id')->get();
+        $configuredSessionNames = SessionTerm::query()
+            ->where('status', 'Active')
+            ->distinct()
+            ->pluck('academic_year');
+        $configuredTermNames = SessionTerm::query()
+            ->where('status', 'Active')
+            ->distinct()
+            ->pluck('term_name');
+
+        $sessions = $configuredSessionNames->isNotEmpty()
+            ? AcademicSession::whereIn('name', $configuredSessionNames)->orderBy('name', 'desc')->get()
+            : AcademicSession::orderBy('name', 'desc')->get();
+        $terms = $configuredTermNames->isNotEmpty()
+            ? Term::whereIn('name', $configuredTermNames)->orderBy('number')->get()
+            : Term::orderBy('number')->get();
 
         $filterSession = $request->input('session');
         $filterTerm = $request->input('term');

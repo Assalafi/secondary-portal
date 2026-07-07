@@ -402,6 +402,8 @@ Route::middleware(['auth'])->group(function () {
             // Session/Term Management
             Route::get('/session-term', [SettingsController::class, 'sessionTerm'])->name('session-term');
             Route::post('/session-term', [SettingsController::class, 'storeSessionTerm'])->name('session-term.store');
+            Route::put('/session-term/{session}', [SettingsController::class, 'updateSessionTerm'])->name('session-term.update');
+            Route::delete('/session-term/{session}', [SettingsController::class, 'deleteSessionTerm'])->name('session-term.delete');
             Route::post('/session-term/{session}/set-current', [SettingsController::class, 'setCurrentSession'])->name('session-term.set-current');
 
             // Security Settings
