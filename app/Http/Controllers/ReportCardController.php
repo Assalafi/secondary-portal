@@ -178,10 +178,7 @@ class ReportCardController extends Controller
     public function approve($id)
     {
         $reportCard = ReportCard::findOrFail($id);
-        $reportCard->update([
-            'status' => 'approved',
-            'approved_by' => auth()->id(),
-        ]);
+        $this->approveReportCard($reportCard);
 
         return redirect()->route('admin.academic-management.report-cards.show', $reportCard)
             ->with('success', 'Report card approved successfully.');
@@ -197,15 +194,90 @@ class ReportCardController extends Controller
                 ->with('error', 'Report card must be approved before publishing.');
         }
 
-        $reportCard->update([
-            'status' => 'published',
-            'published_by' => auth()->id(),
-            'published_at' => now(),
-            'verification_url' => url("/verify-result/{$reportCard->verification_code}"),
-        ]);
+        $this->publishReportCard($reportCard);
 
         return redirect()->route('admin.academic-management.report-cards.show', $reportCard)
             ->with('success', 'Report card published successfully.');
+    }
+
+    public function bulkAction(Request $request)
+    {
+        $validated = $request->validate([
+            'action' => 'required|in:approve,publish,approve_publish',
+            'report_card_ids' => 'required|array|min:1',
+            'report_card_ids.*' => 'integer|exists:report_cards,id',
+        ]);
+
+        $settings = ReportSettings::getSettings();
+        $reportCards = ReportCard::whereIn('id', $validated['report_card_ids'])->get();
+
+        $approved = 0;
+        $published = 0;
+        $skipped = [];
+
+        foreach ($reportCards as $reportCard) {
+            if ($validated['action'] === 'approve') {
+                if ($reportCard->status === 'draft') {
+                    $this->approveReportCard($reportCard);
+                    $approved++;
+                } else {
+                    $skipped[] = $this->bulkSkipLabel($reportCard, 'Only draft report cards can be approved.');
+                }
+
+                continue;
+            }
+
+            if ($validated['action'] === 'publish') {
+                if ($reportCard->status === 'published') {
+                    $skipped[] = $this->bulkSkipLabel($reportCard, 'Already published.');
+                    continue;
+                }
+
+                if ($settings->require_principal_approval && $reportCard->status !== 'approved') {
+                    $skipped[] = $this->bulkSkipLabel($reportCard, 'Approval is required before publishing.');
+                    continue;
+                }
+
+                $this->publishReportCard($reportCard);
+                $published++;
+                continue;
+            }
+
+            if ($validated['action'] === 'approve_publish') {
+                if ($reportCard->status === 'published') {
+                    $skipped[] = $this->bulkSkipLabel($reportCard, 'Already published.');
+                    continue;
+                }
+
+                if ($reportCard->status === 'draft') {
+                    $this->approveReportCard($reportCard);
+                    $reportCard->refresh();
+                    $approved++;
+                }
+
+                if ($reportCard->status === 'approved') {
+                    $this->publishReportCard($reportCard);
+                    $published++;
+                } else {
+                    $skipped[] = $this->bulkSkipLabel($reportCard, 'Only draft or approved report cards can be published.');
+                }
+            }
+        }
+
+        $messageParts = [];
+
+        if ($approved > 0) {
+            $messageParts[] = "{$approved} report card" . ($approved === 1 ? '' : 's') . ' approved';
+        }
+
+        if ($published > 0) {
+            $messageParts[] = "{$published} report card" . ($published === 1 ? '' : 's') . ' published';
+        }
+
+        return redirect()
+            ->route('admin.academic-management.report-cards.index')
+            ->with($messageParts ? 'success' : 'info', $messageParts ? implode(' and ', $messageParts) . '.' : 'No report cards were updated.')
+            ->with('bulk_report_card_warnings', $skipped);
     }
 
     public function broadsheet($classId)
@@ -490,6 +562,42 @@ class ReportCardController extends Controller
     private function parentStudentIds()
     {
         return auth()->user()?->dependents()->pluck('students.id') ?? collect();
+    }
+
+    private function approveReportCard(ReportCard $reportCard): void
+    {
+        if ($reportCard->status === 'published') {
+            return;
+        }
+
+        $reportCard->update([
+            'status' => 'approved',
+            'approved_by' => auth()->id(),
+        ]);
+    }
+
+    private function publishReportCard(ReportCard $reportCard): void
+    {
+        if (! $reportCard->verification_code) {
+            $reportCard->verification_code = 'RPT-' . now()->format('Ymd') . '-' . strtoupper(Str::random(8));
+        }
+
+        $reportCard->status = 'published';
+        $reportCard->published_by = auth()->id();
+        $reportCard->published_at = now();
+        $reportCard->verification_url = url("/verify-result/{$reportCard->verification_code}");
+        $reportCard->save();
+    }
+
+    private function bulkSkipLabel(ReportCard $reportCard, string $reason): string
+    {
+        $reportCard->loadMissing('student');
+        $studentName = collect([
+            $reportCard->student?->surname,
+            $reportCard->student?->first_name,
+        ])->filter()->implode(', ');
+
+        return ($studentName ?: "Report card #{$reportCard->id}") . ": {$reason}";
     }
 
     private function cardRelations(): array
