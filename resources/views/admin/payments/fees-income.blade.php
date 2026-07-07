@@ -613,12 +613,39 @@
         // Store selected student's level
         let selectedStudentLevel = null;
 
+        function cleanTermName(termText) {
+            return (termText || '').replace('(Current)', '').trim();
+        }
+
+        function termAliases(termName) {
+            const clean = cleanTermName(termName);
+            const aliases = {
+                '1st Term': ['1st Term', 'Term 1'],
+                '2nd Term': ['2nd Term', 'Term 2'],
+                '3rd Term': ['3rd Term', 'Term 3'],
+                'Term 1': ['1st Term', 'Term 1'],
+                'Term 2': ['2nd Term', 'Term 2'],
+                'Term 3': ['3rd Term', 'Term 3'],
+            };
+
+            return [...(aliases[clean] || [clean]), 'All'];
+        }
+
+        function levelMatches(setupLevel, studentLevel) {
+            return setupLevel === studentLevel ||
+                setupLevel === 'All' ||
+                (setupLevel === 'Secondary' && ['JSS', 'SS'].includes(studentLevel));
+        }
+
         // Auto-populate amount when payment type is selected
         document.getElementById('paymentSetupSelect').addEventListener('change', function() {
             const selectedOption = this.options[this.selectedIndex];
             const amount = selectedOption.getAttribute('data-amount');
             const paymentType = selectedOption.getAttribute('data-payment-type');
             const setupLevel = selectedOption.getAttribute('data-level');
+            const selectedTermOption = document.querySelector('select[name="term_id"]')?.selectedOptions[0];
+            const selectedTermName = cleanTermName(selectedTermOption?.textContent || '');
+            const acceptedTerms = termAliases(selectedTermName);
 
             // If School Fees is selected and student level is known
             if (paymentType === 'School Fees') {
@@ -635,25 +662,37 @@
                 const paymentSetupSelect = document.getElementById('paymentSetupSelect');
                 let correctOption = null;
                 let correctAmount = null;
+                let bestPriority = Number.MAX_SAFE_INTEGER;
 
                 for (let i = 0; i < paymentSetupSelect.options.length; i++) {
                     const opt = paymentSetupSelect.options[i];
+                    const optLevel = opt.getAttribute('data-level');
+                    const optTerm = opt.getAttribute('data-term');
+
                     if (opt.getAttribute('data-payment-type') === 'School Fees' &&
-                        opt.getAttribute('data-level') === selectedStudentLevel) {
+                        levelMatches(optLevel, selectedStudentLevel) &&
+                        acceptedTerms.includes(optTerm)) {
+                        const levelPriority = optLevel === selectedStudentLevel ? 0 :
+                            (optLevel === 'Secondary' ? 1 : 2);
+                        const termPriority = optTerm === acceptedTerms[0] ? 0 :
+                            (optTerm === acceptedTerms[1] ? 1 : 2);
+                        const priority = (levelPriority * 10) + termPriority;
+
+                        if (priority >= bestPriority) {
+                            continue;
+                        }
+
+                        bestPriority = priority;
                         correctAmount = opt.getAttribute('data-amount');
                         correctOption = opt;
-                        // Silently select the correct option if not already selected
-                        if (paymentSetupSelect.selectedIndex !== i) {
-                            paymentSetupSelect.selectedIndex = i;
-                        }
-                        break;
                     }
                 }
 
                 if (correctAmount) {
+                    paymentSetupSelect.value = correctOption.value;
                     document.getElementById('amountInput').value = parseFloat(correctAmount).toFixed(2);
                     document.getElementById('paymentTypeHint').innerHTML =
-                        `<span class="text-success"><i class="ri-check-line"></i> ✓ Auto-calculated for ${selectedStudentLevel}: ₦${parseFloat(correctAmount).toLocaleString()}</span>`;
+                        `<span class="text-success"><i class="ri-check-line"></i> ✓ Auto-calculated for ${selectedStudentLevel}, ${selectedTermName || 'all terms'}: ₦${parseFloat(correctAmount).toLocaleString()}</span>`;
                 } else {
                     // No specific setup for this level, use the selected one or show warning
                     if (amount) {
@@ -672,6 +711,14 @@
                     document.getElementById('paymentTypeHint').innerHTML =
                         `<span class="text-success"><i class="ri-check-line"></i> Amount: ₦${parseFloat(amount).toLocaleString()}</span>`;
                 }
+            }
+        });
+
+        document.querySelector('select[name="term_id"]')?.addEventListener('change', function() {
+            const paymentSetupSelect = document.getElementById('paymentSetupSelect');
+
+            if (paymentSetupSelect.value) {
+                paymentSetupSelect.dispatchEvent(new Event('change'));
             }
         });
 

@@ -45,6 +45,7 @@
                                     <tr>
                                         <th>PAYMENT TYPE</th>
                                         <th>LEVEL</th>
+                                        <th>TERM</th>
                                         <th>AMOUNT</th>
                                         <th>LAST UPDATED</th>
                                         <th>STATUS</th>
@@ -61,6 +62,7 @@
                                                     {{ $setup->level }}
                                                 </span>
                                             </td>
+                                            <td>{{ $setup->term }}</td>
                                             <td class="fw-bold text-success">₦{{ number_format($setup->amount) }}</td>
                                             <td>{{ $setup->last_updated->format('M d, Y') }}</td>
                                             <td>
@@ -117,6 +119,7 @@
                                     <tr>
                                         <th>PAYMENT TYPE</th>
                                         <th>LEVEL</th>
+                                        <th>TERM</th>
                                         <th>AMOUNT</th>
                                         <th>LAST UPDATED</th>
                                         <th>STATUS</th>
@@ -131,6 +134,7 @@
                                                 <span
                                                     class="badge bg-secondary-subtle text-secondary">{{ $setup->level }}</span>
                                             </td>
+                                            <td>{{ $setup->term }}</td>
                                             <td class="fw-bold text-success">₦{{ number_format($setup->amount) }}</td>
                                             <td>{{ $setup->last_updated->format('M d, Y') }}</td>
                                             <td>
@@ -215,10 +219,9 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Term</label>
                                 <select class="form-select" name="term" required>
-                                    <option value="All">All</option>
-                                    <option value="Term 1">Term 1</option>
-                                    <option value="Term 2">Term 2</option>
-                                    <option value="Term 3">Term 3</option>
+                                    @foreach ($terms as $term)
+                                        <option value="{{ $term }}">{{ $term }}</option>
+                                    @endforeach
                                 </select>
                             </div>
 
@@ -302,10 +305,9 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Term</label>
                                 <select class="form-select" id="editTerm" name="term" required>
-                                    <option value="All">All</option>
-                                    <option value="Term 1">Term 1</option>
-                                    <option value="Term 2">Term 2</option>
-                                    <option value="Term 3">Term 3</option>
+                                    @foreach ($terms as $term)
+                                        <option value="{{ $term }}">{{ $term }}</option>
+                                    @endforeach
                                 </select>
                             </div>
 
@@ -366,6 +368,17 @@
 
 @push('scripts')
     <script>
+        async function parseJsonResponse(response) {
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || Object.values(data.errors || {}).flat().join('\n') ||
+                    `HTTP error! status: ${response.status}`);
+            }
+
+            return data;
+        }
+
         // Handle form submission
         document.getElementById('paymentSetupForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -376,10 +389,11 @@
                     method: 'POST',
                     body: formData,
                     headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
                     }
                 })
-                .then(response => response.json())
+                .then(parseJsonResponse)
                 .then(data => {
                     if (data.success) {
                         // Hide add modal
@@ -401,7 +415,7 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('An error occurred while creating payment setup');
+                    alert(error.message || 'An error occurred while creating payment setup');
                 });
         });
 
@@ -452,15 +466,11 @@
                     body: formData,
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'X-HTTP-Method-Override': 'PUT'
+                        'X-HTTP-Method-Override': 'PUT',
+                        'Accept': 'application/json'
                     }
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
+                .then(parseJsonResponse)
                 .then(data => {
                     if (data.success) {
                         // Hide edit modal
@@ -486,9 +496,7 @@
                 })
                 .catch(error => {
                     console.error('Edit payment setup error:', error);
-                    alert(
-                        `❌ Network Error: Unable to update payment setup. Please check your connection and try again.`
-                        );
+                    alert(`❌ Error: ${error.message || 'Unable to update payment setup'}`);
                 });
         });
 

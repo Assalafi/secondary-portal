@@ -13,6 +13,8 @@ use App\Models\PayrollRecord;
 use App\Models\PaymentSetup;
 use App\Models\SchoolClass;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 
@@ -29,7 +31,7 @@ class PaymentController extends Controller
                 return [
                     'id' => $student->id,
                     'name' => $student->user->name ?? 'Unknown',
-                    'student_id' => $student->student_id,
+                    'student_id' => $student->admission_no,
                     'class' => optional($student->classArm->schoolClass)->name . ' ' . optional($student->classArm)->name,
                     'level' => optional($student->classArm->schoolClass)->level
                 ];
@@ -242,9 +244,10 @@ class PaymentController extends Controller
     public function paymentSetup()
     {
         $paymentSetups = PaymentSetup::orderBy('created_at', 'desc')->get();
-        $levels = SchoolClass::distinct()->pluck('level');
+        $levels = $this->validPaymentLevels()->reject(fn ($level) => $level === 'All')->values();
+        $terms = PaymentSetup::TERM_OPTIONS;
         
-        return view('admin.payments.setup', compact('paymentSetups', 'levels'));
+        return view('admin.payments.setup', compact('paymentSetups', 'levels', 'terms'));
     }
 
     /**
@@ -252,29 +255,17 @@ class PaymentController extends Controller
      */
     public function storePaymentSetup(Request $request)
     {
-        // Get valid levels from database
-        $validLevels = SchoolClass::distinct()->pluck('level')->toArray();
-        $validLevels[] = 'All'; // Add 'All' option
-        
-        $request->validate([
-            'payment_type' => 'required|string|max:255',
-            'level' => 'required|in:' . implode(',', $validLevels),
-            'term' => 'required|in:All,Term 1,Term 2,Term 3',
-            'amount' => 'required|numeric|min:0',
-            'effective_date' => 'required|date',
-            'status' => 'required|in:Active,Inactive',
-            'description' => 'nullable|string'
-        ]);
+        $validated = $request->validate($this->paymentSetupRules());
 
         PaymentSetup::create([
-            'payment_type' => $request->payment_type,
-            'level' => $request->level,
-            'term' => $request->term,
-            'amount' => $request->amount,
-            'effective_date' => $request->effective_date,
+            'payment_type' => $validated['payment_type'],
+            'level' => $validated['level'],
+            'term' => PaymentSetup::normaliseTerm($validated['term']),
+            'amount' => $validated['amount'],
+            'effective_date' => $validated['effective_date'],
             'last_updated' => now(),
-            'status' => $request->status,
-            'description' => $request->description,
+            'status' => $validated['status'],
+            'description' => $validated['description'] ?? null,
         ]);
 
         return response()->json([
@@ -288,29 +279,17 @@ class PaymentController extends Controller
      */
     public function updatePaymentSetup(Request $request, PaymentSetup $paymentSetup)
     {
-        // Get valid levels from database
-        $validLevels = SchoolClass::distinct()->pluck('level')->toArray();
-        $validLevels[] = 'All'; // Add 'All' option
-        
-        $request->validate([
-            'payment_type' => 'required|string|max:255',
-            'level' => 'required|in:' . implode(',', $validLevels),
-            'term' => 'required|in:All,Term 1,Term 2,Term 3',
-            'amount' => 'required|numeric|min:0',
-            'effective_date' => 'required|date',
-            'status' => 'required|in:Active,Inactive',
-            'description' => 'nullable|string'
-        ]);
+        $validated = $request->validate($this->paymentSetupRules());
 
         $paymentSetup->update([
-            'payment_type' => $request->payment_type,
-            'level' => $request->level,
-            'term' => $request->term,
-            'amount' => $request->amount,
-            'effective_date' => $request->effective_date,
+            'payment_type' => $validated['payment_type'],
+            'level' => $validated['level'],
+            'term' => PaymentSetup::normaliseTerm($validated['term']),
+            'amount' => $validated['amount'],
+            'effective_date' => $validated['effective_date'],
             'last_updated' => now(),
-            'status' => $request->status,
-            'description' => $request->description,
+            'status' => $validated['status'],
+            'description' => $validated['description'] ?? null,
         ]);
 
         return response()->json([
@@ -350,6 +329,61 @@ class PaymentController extends Controller
                 'message' => 'Failed to delete payment setup: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    private function paymentSetupRules(): array
+    {
+        return [
+            'payment_type' => ['required', 'string', 'max:255'],
+            'level' => ['required', Rule::in($this->validPaymentLevels()->all())],
+            'term' => ['required', Rule::in($this->validPaymentTerms())],
+            'amount' => ['required', 'numeric', 'min:0'],
+            'effective_date' => ['required', 'date'],
+            'status' => ['required', Rule::in(['Active', 'Inactive'])],
+            'description' => ['nullable', 'string'],
+        ];
+    }
+
+    private function validPaymentLevels(): \Illuminate\Support\Collection
+    {
+        return SchoolClass::query()
+            ->distinct()
+            ->pluck('level')
+            ->filter()
+            ->merge(['All', 'Nursery', 'Primary', 'JSS', 'SS', 'Secondary'])
+            ->unique()
+            ->values();
+    }
+
+    private function validPaymentTerms(): array
+    {
+        return array_values(array_unique(array_merge(
+            PaymentSetup::TERM_OPTIONS,
+            PaymentSetup::LEGACY_TERM_OPTIONS
+        )));
+    }
+
+    private function resolvePaymentSetupForStudent(Request $request): PaymentSetup
+    {
+        $selectedSetup = PaymentSetup::findOrFail($request->payment_setup_id);
+
+        if ($selectedSetup->payment_type !== 'School Fees') {
+            return $selectedSetup;
+        }
+
+        $student = Student::with('classArm.schoolClass')->findOrFail($request->student_id);
+        $term = \App\Models\Term::find($request->term_id);
+        $classLevel = $student->classArm?->schoolClass?->level;
+
+        $paymentSetup = PaymentSetup::schoolFeeFor($classLevel, $term?->name);
+
+        if (! $paymentSetup) {
+            throw ValidationException::withMessages([
+                'payment_setup_id' => "No active school fee setup found for {$classLevel} and " . ($term?->name ?? 'the selected term') . ". Please configure it in Payment Setup.",
+            ]);
+        }
+
+        return $paymentSetup;
     }
 
     /**
@@ -440,20 +474,22 @@ class PaymentController extends Controller
             'description' => 'nullable|string'
         ]);
 
+        $paymentSetup = $this->resolvePaymentSetupForStudent($request);
+        $paymentAmount = $paymentSetup->payment_type === 'School Fees'
+            ? $paymentSetup->amount
+            : $request->amount;
+
         try {
             DB::beginTransaction();
 
-            // Get payment setup details
-            $paymentSetup = PaymentSetup::findOrFail($request->payment_setup_id);
-            
             // Create invoice
             $invoice = Invoice::create([
                 'invoice_number' => 'INV-' . strtoupper(uniqid()),
                 'student_id' => $request->student_id,
                 'academic_session_id' => $request->session_id,
                 'term_id' => $request->term_id,
-                'total_amount' => $request->amount,
-                'amount_paid' => $request->amount,
+                'total_amount' => $paymentAmount,
+                'amount_paid' => $paymentAmount,
                 'balance' => 0,
                 'due_date' => $request->payment_date,
                 'status' => 'Paid',
@@ -471,7 +507,7 @@ class PaymentController extends Controller
             DB::table('invoice_items')->insert([
                 'invoice_id' => $invoice->id,
                 'payment_setup_id' => $paymentSetup->id,
-                'amount' => $request->amount,
+                'amount' => $paymentAmount,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -480,7 +516,7 @@ class PaymentController extends Controller
             $payment = Payment::create([
                 'invoice_id' => $invoice->id,
                 'payment_reference' => 'PAY-' . strtoupper(uniqid()),
-                'amount' => $request->amount,
+                'amount' => $paymentAmount,
                 'payment_date' => $request->payment_date,
                 'payment_method' => $request->payment_method,
                 'transaction_id' => 'MANUAL-' . time(),
@@ -553,12 +589,14 @@ class PaymentController extends Controller
             'amount' => 'required|numeric|min:0'
         ]);
 
+        $paymentSetup = $this->resolvePaymentSetupForStudent($request);
+        $paymentAmount = $paymentSetup->payment_type === 'School Fees'
+            ? $paymentSetup->amount
+            : $request->amount;
+        $student = Student::with('user')->findOrFail($request->student_id);
+
         try {
             DB::beginTransaction();
-
-            // Get payment setup details
-            $paymentSetup = PaymentSetup::findOrFail($request->payment_setup_id);
-            $student = Student::with('user')->findOrFail($request->student_id);
 
             // Generate unique order ID for Remita (to avoid duplicate transaction ID)
             $orderId = 'ADMIN_' . strtoupper(uniqid()) . '_' . time();
@@ -569,9 +607,9 @@ class PaymentController extends Controller
                 'student_id' => $request->student_id,
                 'academic_session_id' => $request->session_id,
                 'term_id' => $request->term_id,
-                'total_amount' => $request->amount,
+                'total_amount' => $paymentAmount,
                 'amount_paid' => 0,
-                'balance' => $request->amount,
+                'balance' => $paymentAmount,
                 'due_date' => now()->addDays(30),
                 'status' => 'Pending',
                 'notes' => $request->description ?? 'Admin initiated payment via Remita - ' . $paymentSetup->payment_type,
@@ -588,7 +626,7 @@ class PaymentController extends Controller
             DB::table('invoice_items')->insert([
                 'invoice_id' => $invoice->id,
                 'payment_setup_id' => $paymentSetup->id,
-                'amount' => $request->amount,
+                'amount' => $paymentAmount,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -596,11 +634,11 @@ class PaymentController extends Controller
             // Generate RRR via Remita
             $remitaService = new \App\Services\RemitaService();
             $rrr = $remitaService->generateRRR([
-                'amount' => $request->amount,
+                'amount' => $paymentAmount,
                 'payerName' => $student->user->name,
                 'payerEmail' => $student->user->email,
                 'payerPhone' => $student->user->phone ?? '08000000000',
-                'description' => $paymentSetup->payment_type . ' - ' . $student->student_id,
+                'description' => $paymentSetup->payment_type . ' - ' . $student->admission_no,
                 'orderId' => $orderId
             ]);
 
@@ -623,7 +661,7 @@ class PaymentController extends Controller
                 'success' => true,
                 'rrr' => $rrr,
                 'orderId' => $orderId,
-                'amount' => $request->amount,
+                'amount' => $paymentAmount,
                 'invoiceId' => $invoice->id,
                 'publicKey' => config('remita.public_key'),
                 'merchantId' => config('remita.merchant_id')

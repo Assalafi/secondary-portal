@@ -319,15 +319,7 @@ class PaymentController extends Controller
                     // Loop through each term and session for calculation
                     foreach ($data['terms'] as $termName) {
                         foreach ($data['sessions'] as $sessionNameOrId) {
-                            // Look up fee - use "All" term setup (works for any session/term)
-                            $paymentSetup = PaymentSetup::where('payment_type', 'School Fees')
-                                ->where('status', 'Active')
-                                ->where(function($query) use ($classLevel) {
-                                    $query->where('level', $classLevel)
-                                          ->orWhere('level', 'All');
-                                })
-                                ->where('term', 'All')
-                                ->first();
+                            $paymentSetup = PaymentSetup::schoolFeeFor($classLevel, $termName);
                             
                             if ($paymentSetup) {
                                 $totalAmount += $paymentSetup->amount;
@@ -347,7 +339,7 @@ class PaymentController extends Controller
                     foreach ($missingFees as $missing) {
                         $errorMessage .= "- {$missing['student']} ({$missing['level']})\n";
                     }
-                    $errorMessage .= "\nPlease contact the school administrator to configure fee amounts in the payment setup with Term = 'All'.";
+                    $errorMessage .= "\nPlease contact the school administrator to configure fee amounts in Payment Setup for this class level/term, or use Term = All.";
                     
                     Log::warning('Missing payment setup configuration', [
                         'missing_fees' => $missingFees,
@@ -543,14 +535,7 @@ class PaymentController extends Controller
                                 Log::info('Created term', ['term' => $term->name]);
                             }
                             
-                            // Get fee amount - use "All" term setup
-                            $paymentSetup = PaymentSetup::where('payment_type', 'School Fees')
-                                ->where('status', 'Active')
-                                ->where(function($query) use ($classLevel) {
-                                    $query->where('level', $classLevel)->orWhere('level', 'All');
-                                })
-                                ->where('term', 'All')
-                                ->first();
+                            $paymentSetup = PaymentSetup::schoolFeeFor($classLevel, $mappedTerm);
                             
                             if (!$paymentSetup) continue;
                             
@@ -1444,15 +1429,7 @@ class PaymentController extends Controller
                 // Loop through each term and session for calculation
                 foreach ($data['terms'] as $termName) {
                     foreach ($data['sessions'] as $sessionNameOrId) {
-                        // Look up fee - use "All" term setup (works for any session/term)
-                        $paymentSetup = PaymentSetup::where('payment_type', 'School Fees')
-                            ->where('status', 'Active')
-                            ->where(function($query) use ($classLevel) {
-                                $query->where('level', $classLevel)
-                                      ->orWhere('level', 'All');
-                            })
-                            ->where('term', 'All')
-                            ->first();
+                        $paymentSetup = PaymentSetup::schoolFeeFor($classLevel, $termName);
                         
                         if ($paymentSetup) {
                             $studentAmount += $paymentSetup->amount;
