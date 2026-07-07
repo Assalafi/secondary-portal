@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Assignment extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, Auditable;
+
+    protected $auditModule = 'assignments';
+    protected $auditIdentifier = 'title';
 
     protected $fillable = [
         'title',

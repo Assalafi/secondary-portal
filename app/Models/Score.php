@@ -2,11 +2,16 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Score extends Model
 {
+    use Auditable;
+
+    protected $auditModule = 'scores';
+
     protected $fillable = [
         'score_batch_id',
         'student_id',

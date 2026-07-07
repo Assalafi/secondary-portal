@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AdmissionApplication extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, Auditable;
+
+    protected $auditModule = 'admissions';
+    protected $auditIdentifier = 'application_number';
 
     protected $fillable = [
         'application_number',

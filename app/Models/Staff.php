@@ -2,12 +2,18 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Staff extends Model
 {
+    use Auditable;
+
+    protected $auditModule = 'staff';
+    protected $auditIdentifier = 'staff_id';
+
     protected $fillable = [
         'user_id',
         'staff_id',

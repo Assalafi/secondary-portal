@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AcademicManagementController;
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\AssignmentController;
 use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -379,6 +380,12 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}/pdf/download', [ReportCardController::class, 'downloadPDF'])->name('download-pdf');
                 Route::get('/{id}/qr/generate', [ReportCardController::class, 'generateQRCode'])->name('generate-qr');
             });
+        });
+
+        // Audit Logs
+        Route::prefix('audit-logs')->name('audit-logs.')->group(function () {
+            Route::get('/', [AuditLogController::class, 'index'])->name('index');
+            Route::get('/{id}', [AuditLogController::class, 'show'])->name('show');
         });
 
         //

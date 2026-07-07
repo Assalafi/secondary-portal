@@ -207,6 +207,15 @@
                     </a>
                 </li>
 
+                {{-- Audit Logs --}}
+                <li class="menu-item">
+                    <a href="{{ route('admin.audit-logs.index') }}"
+                        class="menu-link {{ request()->routeIs('admin.audit-logs.*') ? 'active' : '' }}">
+                        <span class="material-symbols-outlined menu-icon">history</span>
+                        <span class="title">Audit Logs</span>
+                    </a>
+                </li>
+
                 {{-- Support Tickets --}}
                 <li class="menu-item">
                     <a href="{{ route('admin.support.index') }}"

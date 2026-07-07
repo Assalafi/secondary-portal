@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Student;
@@ -61,9 +62,17 @@ class AuthController extends Controller
                 ]);
             }
 
+            // Log successful login
+            AuditLog::record('login', 'auth', "User {$user->name} logged in", $user);
+
             // Redirect based on user role
             return $this->redirectBasedOnRole($user);
         }
+
+        // Log failed login attempt
+        AuditLog::record('failed_login', 'auth', "Failed login attempt for {$loginInput}", null, null, [
+            'attempted_email' => $loginInput,
+        ]);
 
         throw ValidationException::withMessages([
             'email' => 'The provided credentials do not match our records.',
@@ -75,6 +84,11 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
+        $user = Auth::user();
+        if ($user) {
+            AuditLog::record('logout', 'auth', "User {$user->name} logged out", $user);
+        }
+
         Auth::logout();
         
         $request->session()->invalidate();
